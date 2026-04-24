@@ -24,19 +24,19 @@ export const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/80 border-b border-border/40 transition-colors duration-500 relative">
       <div className="container mx-auto px-4">
-        <div className="flex h-20 items-center justify-between gap-2 overflow-hidden">
+        <div className="flex h-20 items-center justify-between gap-2">
           
           {/* 1. Stacked Aston Martin Logo */}
           <Link to="/" className="flex flex-col items-center justify-center flex-shrink-0 hover:opacity-90 transition-opacity duration-300 group mt-1">
             <img 
               src="/vozilahrlogo-light.svg" 
               alt="Vozila hr logo" 
-              className="h-5 lg:h-6 w-auto object-contain transform group-hover:scale-105 transition-transform duration-300 block dark:hidden"
+              className="h-5 lg:h-6 w-auto object-contain transition-all duration-500 ease-premium group-hover:drop-shadow-[0_0_8px_rgba(0,130,210,0.4)] group-hover:opacity-90 block dark:hidden"
             />
             <img 
               src="/vozilahrlogo-dark.svg" 
               alt="Vozila hr logo dark" 
-              className="h-5 lg:h-6 w-auto object-contain transform group-hover:scale-105 transition-transform duration-300 hidden dark:block"
+              className="h-5 lg:h-6 w-auto object-contain transition-all duration-500 ease-premium group-hover:drop-shadow-[0_0_8px_rgba(255,40,0,0.4)] group-hover:opacity-90 hidden dark:block"
             />
             <span className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.3em] mt-1.5 text-slate-900 dark:text-slate-300 transition-colors duration-300">
               VOZILA HR
