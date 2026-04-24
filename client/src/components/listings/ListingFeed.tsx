@@ -17,14 +17,15 @@ export const ListingFeed = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold text-foreground">
-            {currentCategory ? currentCategory.label : 'Svi oglasi'}
+       <div className="space-y-4">
+          {/* Aston Martin Premium Spaced Title */}
+          <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-widest text-slate-900 dark:text-slate-100">
+            {currentCategory ? currentCategory.label : 'SVI OGLASI'}
           </h2>
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground leading-relaxed">
             {currentCategory 
-              ? `Pretraživanje ${currentCategory.label.toLowerCase()} kategorije...`
-              : 'Učitavanje svih dostupnih oglasa...'
+              ? `PRETRAŽIVANJE ${currentCategory.label} KATEGORIJE...`
+              : 'UČITAVANJE SVIH DOSTUPNIH OGLASA...'
             }
           </p>
         </div>
