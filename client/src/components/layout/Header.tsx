@@ -10,6 +10,8 @@ export const Header = () => {
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [openMobileCategory, setOpenMobileCategory] = useState<string | null>(null);
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const activeCategory = searchParams.get('category');
 
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains('dark');
@@ -47,14 +49,14 @@ export const Header = () => {
           </Link>
 
           {/* 2. Middle Navigation (Desktop Only) - Radix Mega Menu */}
-          <NavigationMenu.Root className="hidden lg:flex flex-1 justify-center items-center min-w-0 px-2">
+          <NavigationMenu.Root className="relative hidden lg:flex flex-1 justify-center items-center min-w-0 px-2 z-50">
             <NavigationMenu.List className="flex items-center gap-1 xl:gap-2">
               {navigationMenu.map((category) => {
                 const Icon = category.icon;
-                const isActive = location.pathname.startsWith(`/${category.slug}`);
+                const isActive = activeCategory === category.slug;
                 
                 return (
-                  <NavigationMenu.Item key={category.slug} className="relative">
+                  <NavigationMenu.Item key={category.slug}>
                     <NavigationMenu.Trigger className={`group flex items-center gap-1.5 px-2 xl:px-3 py-2 text-[10px] xl:text-xs font-bold uppercase tracking-widest rounded-lg transition-all duration-300 ${
                       isActive 
                         ? 'text-primary bg-primary/10' 
@@ -65,33 +67,40 @@ export const Header = () => {
                       <ChevronDown className="h-3 w-3 transition-transform duration-300 group-data-[state=open]:rotate-180" />
                     </NavigationMenu.Trigger>
                     
-                    <NavigationMenu.Content className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl data-[motion=from-start]:animate-enterFromLeft data-[motion=from-end]:animate-enterFromRight data-[motion=to-start]:animate-exitToLeft data-[motion=to-end]:animate-exitToRight overflow-hidden">
-                      <div className="p-3 space-y-1">
-                        <Link
-                          to={`/${category.slug}`}
-                          className="block px-4 py-2.5 text-sm font-bold text-foreground hover:bg-accent/80 hover:text-primary rounded-lg transition-all duration-200"
-                        >
-                          Sve {category.name}
-                        </Link>
-                        <div className="h-px bg-border/40 my-2" />
+                    <NavigationMenu.Content className="w-[300px] sm:w-[400px] md:w-[500px] p-4 absolute left-0 top-0">
+                      <ul className="grid gap-2">
+                        <li>
+                          <NavigationMenu.Link asChild>
+                            <Link
+                              to={`/?category=${category.slug}`}
+                              className="block px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white hover:bg-accent/80 hover:text-primary rounded-lg transition-all duration-200"
+                            >
+                              Sve {category.name}
+                            </Link>
+                          </NavigationMenu.Link>
+                        </li>
+                        <li className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
                         {category.sub.map((subcat) => (
-                          <Link
-                            key={subcat}
-                            to={`/${category.slug}/${subcat.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-')}`}
-                            className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200"
-                          >
-                            {subcat}
-                          </Link>
+                          <li key={subcat}>
+                            <NavigationMenu.Link asChild>
+                              <Link
+                                to={`/?category=${category.slug}&subcategory=${subcat.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-')}`}
+                                className="block px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-accent/50 rounded-lg transition-all duration-200"
+                              >
+                                {subcat}
+                              </Link>
+                            </NavigationMenu.Link>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </NavigationMenu.Content>
                   </NavigationMenu.Item>
                 );
               })}
             </NavigationMenu.List>
             
-            <div className="absolute top-full left-0 flex justify-center w-full perspective-[2000px]">
-              <NavigationMenu.Viewport className="relative mt-2 h-[var(--radix-navigation-menu-viewport-height)] w-full origin-top-center overflow-hidden rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl shadow-2xl transition-all duration-300 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut" />
+            <div className="absolute left-0 top-full flex w-full justify-center perspective-[2000px]">
+              <NavigationMenu.Viewport className="relative mt-2 h-[var(--radix-navigation-menu-viewport-height)] w-auto origin-top-center overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 backdrop-blur-xl shadow-2xl transition-all duration-300 data-[state=open]:animate-scaleIn data-[state=closed]:animate-scaleOut" />
             </div>
           </NavigationMenu.Root>
 
@@ -142,7 +151,7 @@ export const Header = () => {
             {navigationMenu.map((category) => {
               const Icon = category.icon;
               const isOpen = openMobileCategory === category.slug;
-              const isActive = location.pathname.startsWith(`/${category.slug}`);
+              const isActive = activeCategory === category.slug;
               
               return (
                 <div key={category.slug} className="rounded-lg overflow-hidden">
@@ -162,7 +171,7 @@ export const Header = () => {
                   {isOpen && (
                     <div className="mt-1 ml-4 pl-8 pr-4 py-2 space-y-1 border-l-2 border-border/40 animate-slideDown">
                       <Link
-                        to={`/${category.slug}`}
+                        to={`/?category=${category.slug}`}
                         className="block px-3 py-2 text-sm font-semibold text-foreground hover:text-primary hover:bg-accent/50 rounded-lg transition-all duration-200"
                         onClick={() => setMobileMenuOpen(false)}
                       >
@@ -171,7 +180,7 @@ export const Header = () => {
                       {category.sub.map((subcat) => (
                         <Link
                           key={subcat}
-                          to={`/${category.slug}/${subcat.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-')}`}
+                          to={`/?category=${category.slug}&subcategory=${subcat.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-')}`}
                           className="block px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200"
                           onClick={() => setMobileMenuOpen(false)}
                         >

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { 
   Calendar, Gauge, Zap, SlidersHorizontal, ChevronDown, ChevronUp, 
   Search, Box, Clock, ArrowDown10, ArrowUp01, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { navigationCategories } from '../../config/navigation';
+import { navigationMenu } from '../../config/taxonomy';
 import { Listing } from '../../types';
 
 const ITEMS_PER_PAGE = 9;
@@ -228,7 +228,8 @@ const ListingCard = ({ car }: { car: Listing }) => {
 // --- MAIN FEED COMPONENT ---
 
 export const ListingFeed = () => {
-  const { categorySlug } = useParams();
+  const [searchParams] = useSearchParams();
+  const categorySlug = searchParams.get('category');
   
   const [cars, setCars] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -242,9 +243,9 @@ export const ListingFeed = () => {
     mileageMax: '', powerMin: ''
   });
 
-  const currentCategory = navigationCategories.find(c => c.slug === categorySlug);
-  const displayTitle = currentCategory ? currentCategory.label : 'SVI OGLASI';
-  const CategoryIcon = currentCategory ? currentCategory.icon : Box;
+  const currentCategory = navigationMenu.find(c => c.slug === categorySlug);
+  const displayTitle = currentCategory ? currentCategory.name : 'SVI OGLASI';
+  const CategoryIcon = currentCategory?.icon || Box;
 
   const fetchListings = useCallback(async (isLoadMore = false) => {
     try {
@@ -255,13 +256,12 @@ export const ListingFeed = () => {
         .select('*, categories!inner(slug), listing_images(id, url, is_primary, sort_order)', { count: 'exact' })
         .eq('status', 'active');
 
-      // Map Croatian SEO slug from URL to English DB slug
+      // Filter by category slug from query params
       if (categorySlug) {
-        const mappedCategory = navigationCategories.find(c => c.slug === categorySlug);
+        const mappedCategory = navigationMenu.find(c => c.slug === categorySlug);
         if (mappedCategory) {
-          query = query.eq('categories.slug', mappedCategory.dbSlug);
-        } else {
-          query = query.eq('categories.slug', categorySlug); // Fallback
+          // For now, use the slug directly - update this when DB schema is migrated
+          query = query.eq('categories.slug', categorySlug);
         }
       }
       if (filters.priceMin) query = query.gte('price', parseInt(filters.priceMin));
@@ -299,7 +299,7 @@ export const ListingFeed = () => {
 
   useEffect(() => {
     fetchListings();
-  }, [categorySlug, sortBy]);
+  }, [categorySlug, sortBy, fetchListings]);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
