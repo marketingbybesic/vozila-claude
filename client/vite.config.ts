@@ -29,13 +29,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-ui': ['lucide-react'],
-          'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-utils': ['clsx', 'date-fns'],
-        } as any,
         chunkFileNames: 'js/[name]-[hash].js',
         entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
