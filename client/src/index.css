@@ -18,7 +18,7 @@
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 210 100% 95%; /* Subtle blue tint on hover */
+    --accent: 210 100% 95%;
     --accent-foreground: 210 100% 45%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
@@ -28,7 +28,7 @@
 
   .dark {
     /* DARK MODE: Pitch Black with Ferrari Red Accents */
-    --background: 0 0% 0%; /* Pure #000000 */
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
     --card: 240 10% 6%;
     --card-foreground: 0 0% 98%;
@@ -41,7 +41,7 @@
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 3 90% 10%; /* Subtle red tint on hover */
+    --accent: 3 90% 10%;
     --accent-foreground: 3 90% 55%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
@@ -61,24 +61,20 @@
     text-rendering: optimizeLegibility;
   }
   
-  /* Aston Martin Classy/Sporty Headings: Upright, light, wide-tracked, rich slate */
   h1, h2, h3, h4, h5, h6 {
     @apply font-light uppercase tracking-[0.15em] text-slate-900 dark:text-slate-100;
   }
 
-  /* Buttons: Light font with tracking, no rounding (Aston Martin / Porsche mandate) */
-  button, a[class*="bg-"], .btn {
+  button, .btn {
     @apply font-light tracking-widest rounded-none;
   }
 
-  /* Inputs & selects follow the same sharp aesthetic */
   input, select, textarea {
     @apply rounded-none font-light tracking-widest;
   }
 }
 
 @layer utilities {
-  /* Porsche Sheen: subtle hover gradient from white tint to transparent */
   .sheen {
     background-image: linear-gradient(to top, rgba(255, 255, 255, 0.05), transparent);
   }
@@ -86,7 +82,6 @@
     background-image: linear-gradient(to top, rgba(255, 255, 255, 0.05), transparent);
   }
 
-  /* Backdrop-filter fallback: browsers without support see solid dark bg */
   @supports not (backdrop-filter: blur(1px)) {
     .backdrop-blur-xl {
       background-color: rgba(0, 0, 0, 0.85) !important;
@@ -99,7 +94,6 @@
     }
   }
 
-  /* Hide scrollbars cross-browser */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -110,13 +104,11 @@
 }
 
 @layer components {
-  /* Premium Radix Navigation Menu Styling */
   [data-radix-navigation-menu-viewport] {
     transform-origin: top center;
     transition: width, height, 300ms ease;
   }
   
-  /* Glassmorphism effect for mega menu dropdowns */
   .mega-menu-content {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px) saturate(180%);
