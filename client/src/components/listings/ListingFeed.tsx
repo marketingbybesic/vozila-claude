@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { getAnalytics } from '../../lib/analytics';
 import { 
   Calendar, Gauge, Zap, SlidersHorizontal, ChevronDown, ChevronUp, 
   Search, Box, Clock, ArrowDown10, ArrowUp01, Eye, ChevronLeft, ChevronRight
@@ -527,7 +528,22 @@ export const ListingFeed = () => {
                 </Accordion>
               )}
 
-              <button onClick={() => fetchListings(false)} className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase tracking-widest text-[11px] py-4 rounded-xl hover:scale-[1.02] transition-transform duration-300 shadow-xl shadow-slate-900/10 dark:shadow-white/10 mt-6">
+              <button 
+                onClick={() => {
+                  fetchListings(false);
+                  try {
+                    const analytics = getAnalytics();
+                    const searchTerms = Object.entries(filters)
+                      .filter(([, v]) => v)
+                      .map(([k, v]) => `${k}:${v}`)
+                      .join(' ');
+                    analytics.trackSearchPerformed(searchTerms || 'filter_applied', filters);
+                  } catch {
+                    // Analytics not initialized yet, silently fail
+                  }
+                }}
+                className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase tracking-widest text-[11px] py-4 rounded-xl hover:scale-[1.02] transition-transform duration-300 shadow-xl shadow-slate-900/10 dark:shadow-white/10 mt-6"
+              >
                 Primijeni Filtere
               </button>
             </div>

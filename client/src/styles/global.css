@@ -1,0 +1,328 @@
+/* Global CSS - High-Density Luxury Aesthetics */
+
+/* ============================================================================
+   TYPOGRAPHY - Light weight for elegance
+   ============================================================================ */
+
+:root {
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-black: 900;
+
+  /* Letter spacing for luxury */
+  --tracking-tight: 0.025em;
+  --tracking-normal: 0.05em;
+  --tracking-wide: 0.1em;
+  --tracking-widest: 0.2em;
+}
+
+/* Body text - Light weight */
+body,
+p,
+span,
+div {
+  font-weight: var(--font-weight-light);
+}
+
+/* Headings - Keep bold */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--font-weight-black);
+  letter-spacing: var(--tracking-widest);
+}
+
+/* Links - Light weight */
+a {
+  font-weight: var(--font-weight-light);
+}
+
+/* ============================================================================
+   BORDERS - Subtle, refined
+   ============================================================================ */
+
+/* Default border color - very subtle */
+input,
+textarea,
+select,
+button,
+.border {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Hover state - slightly more visible */
+input:hover,
+textarea:hover,
+select:hover,
+button:hover,
+.border:hover {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Focus state - more prominent */
+input:focus,
+textarea:focus,
+select:focus,
+button:focus,
+.border:focus {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ============================================================================
+   SPACING - High-density layout
+   ============================================================================ */
+
+/* Reduce padding on compact elements */
+.px-4 {
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+}
+
+.py-3 {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+/* ============================================================================
+   ICONS - Consistent sizing
+   ============================================================================ */
+
+/* Standard icon size - 18px */
+svg[class*="w-5"],
+svg[class*="h-5"] {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Small icon size - 16px */
+svg[class*="w-4"],
+svg[class*="h-4"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Extra small icon size - 14px */
+svg[class*="w-3"],
+svg[class*="h-3"] {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ============================================================================
+   BUTTONS - Luxury styling
+   ============================================================================ */
+
+button,
+[role="button"] {
+  font-weight: var(--font-weight-black);
+  letter-spacing: var(--tracking-widest);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Primary button */
+button[class*="bg-white"] {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ffffff;
+}
+
+button[class*="bg-white"]:hover {
+  background-color: #f5f5f5;
+  border-color: #f5f5f5;
+}
+
+/* Secondary button */
+button[class*="bg-black"][class*="border-white"] {
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+button[class*="bg-black"][class*="border-white"]:hover {
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+/* ============================================================================
+   INPUTS - Refined styling
+   ============================================================================ */
+
+input,
+textarea,
+select {
+  background-color: #000000;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: var(--font-weight-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+  outline: none;
+}
+
+/* ============================================================================
+   CARDS & CONTAINERS - Subtle elevation
+   ============================================================================ */
+
+.border {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.border-white\/20 {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ============================================================================
+   TEXT - Consistent sizing and weight
+   ============================================================================ */
+
+.text-xs {
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-light);
+  letter-spacing: var(--tracking-widest);
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-light);
+}
+
+.text-base {
+  font-size: 1rem;
+  font-weight: var(--font-weight-light);
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-light);
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-light);
+}
+
+/* ============================================================================
+   SCROLLBAR - Refined
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================================================
+   ANIMATIONS - Smooth and refined
+   ============================================================================ */
+
+* {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   FOCUS STATES - Accessibility
+   ============================================================================ */
+
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   UTILITY CLASSES - High-density helpers
+   ============================================================================ */
+
+/* Subtle dividers */
+.divider-subtle {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Refined text */
+.text-light {
+  font-weight: var(--font-weight-light);
+}
+
+.text-normal {
+  font-weight: var(--font-weight-normal);
+}
+
+.text-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.text-black {
+  font-weight: var(--font-weight-black);
+}
+
+/* Luxury spacing */
+.gap-tight {
+  gap: 0.5rem;
+}
+
+.gap-normal {
+  gap: 1rem;
+}
+
+.gap-loose {
+  gap: 1.5rem;
+}
+
+/* ============================================================================
+   DARK MODE - Already in place, ensure consistency
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
+/* ============================================================================
+   PRINT STYLES - Professional output
+   ============================================================================ */
+
+@media print {
+  body {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  .no-print {
+    display: none;
+  }
+}

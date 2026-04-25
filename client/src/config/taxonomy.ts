@@ -20,22 +20,16 @@ export const navigationMenu: NavigationMenuItem[] = [
     ]
   },
   { 
-    slug: 'motocikli-atv', name: 'Motocikli i ATV', icon: Bike,
+    slug: 'motocikli', name: 'Motocikli', icon: Bike,
     sub: [
       { name: 'Motocikli', slug: 'motocikli', icon: Bike },
       { name: 'Skuteri i Mopedi', slug: 'skuteri', icon: Zap },
       { name: 'Četverocikli (ATV)', slug: 'atv', icon: Box },
-      { name: 'Moto Oldtimeri', slug: 'oldtimeri-moto', icon: History },
-      { name: 'Najam', slug: 'najam-moto', icon: Key }
-    ]
-  },
-  { 
-    slug: 'e-mobilnost-bicikli', name: 'Bicikli i E-Mobilnost', icon: Zap,
-    sub: [
       { name: 'Bicikli (MTB, Cestovni)', slug: 'bicikli', icon: Bike },
       { name: 'E-Bicikli', slug: 'e-bicikli', icon: Zap },
       { name: 'Električni romobili', slug: 'e-romobili', icon: Zap },
-      { name: 'Najam', slug: 'najam-bicikala', icon: Key }
+      { name: 'Moto Oldtimeri', slug: 'oldtimeri-moto', icon: History },
+      { name: 'Najam', slug: 'najam-moto', icon: Key }
     ]
   },
   { 
@@ -50,6 +44,16 @@ export const navigationMenu: NavigationMenuItem[] = [
     ]
   },
   { 
+    slug: 'strojevi', name: 'Strojevi', icon: Tractor,
+    sub: [
+      { name: 'Građevinski strojevi', slug: 'gradevinski-strojevi', icon: Truck },
+      { name: 'Poljoprivredni strojevi', slug: 'poljoprivredni-strojevi', icon: Tractor },
+      { name: 'Industrijski strojevi', slug: 'industrijski-strojevi', icon: Settings2 },
+      { name: 'Alati i oprema', slug: 'alati-oprema', icon: Wrench },
+      { name: 'Najam strojeva', slug: 'najam-strojeva', icon: Key }
+    ]
+  },
+  { 
     slug: 'slobodno-vrijeme', name: 'Slobodno vrijeme', icon: Tent,
     sub: [
       { name: 'Kamperi', slug: 'kamperi', icon: Tent },
@@ -59,7 +63,7 @@ export const navigationMenu: NavigationMenuItem[] = [
     ]
   },
   { 
-    slug: 'dijelovi-usluge', name: 'Dijelovi i Usluge', icon: Wrench,
+    slug: 'dijelovi-oprema', name: 'Dijelovi i oprema', icon: Wrench,
     sub: [
       { name: 'Auto dijelovi', slug: 'auto-dijelovi', icon: Settings2 },
       { name: 'Gume i felge', slug: 'gume-felge', icon: Box },

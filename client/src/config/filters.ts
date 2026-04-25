@@ -14,6 +14,10 @@ export interface FilterDefinition {
 export const globalFilters: FilterDefinition[] = [
   { id: 'price', label: 'Cijena', type: 'range', unit: '€' },
   { id: 'year', label: 'Godište', type: 'range' },
+  { id: 'listing_type', label: 'Tip oglasa', type: 'radio', options: [
+    { label: 'Oglasi za prodaju', value: 'prodaja' },
+    { label: 'Oglasi za najam', value: 'najam' }
+  ]},
 ];
 
 // CATEGORY SPECIFIC FILTERS (JSONB Attributes)
@@ -61,6 +65,20 @@ export const categoryFilters: Record<string, FilterDefinition[]> = {
   'dijelovi-usluge': [
     { id: 'condition', label: 'Stanje', type: 'radio', options: [
       { label: 'Novo', value: 'Novo' }, { label: 'Rabljeno', value: 'Rabljeno' }
+    ]}
+  ],
+  'strojevi': [
+    { id: 'operatingHours', label: 'Radni sati', type: 'range', unit: 'h' },
+    { id: 'loadCapacity', label: 'Nosivost', type: 'range', unit: 'kg' },
+    { id: 'driveType', label: 'Vrsta pogona', type: 'radio', options: [
+      { label: 'Gusjeničar', value: 'Gusjeničar' },
+      { label: 'Kotač', value: 'Kotač' }
+    ]},
+    { id: 'power', label: 'Snaga motora', type: 'range', unit: 'kW' },
+    { id: 'condition', label: 'Stanje', type: 'radio', options: [
+      { label: 'Novo', value: 'Novo' },
+      { label: 'Rabljeno', value: 'Rabljeno' },
+      { label: 'Restaurirano', value: 'Restaurirano' }
     ]}
   ]
 };

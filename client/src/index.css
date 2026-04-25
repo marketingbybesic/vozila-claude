@@ -61,9 +61,14 @@
     text-rendering: optimizeLegibility;
   }
   
-  /* Aston Martin Classy/Sporty Headings: Upright, bold, wide-tracked, rich slate */
+  /* Aston Martin Classy/Sporty Headings: Upright, light, wide-tracked, rich slate */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold uppercase tracking-widest text-slate-900 dark:text-slate-100;
+    @apply font-light uppercase tracking-[0.15em] text-slate-900 dark:text-slate-100;
+  }
+
+  /* Buttons: Light font with tracking */
+  button, a[class*="bg-"] {
+    @apply font-light tracking-[0.15em];
   }
 }
 

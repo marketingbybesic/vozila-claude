@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { TrendingUp, Sparkles, ChevronRight } from 'lucide-react';
 import { Listing } from '../types';
 import { Hero } from '../components/home/Hero';
+import { SuperSearch } from '../components/home/SuperSearch';
 
 export const Home = () => {
   const [latestListings, setLatestListings] = useState<Listing[]>([]);
@@ -45,6 +46,9 @@ export const Home = () => {
     <div className="min-h-screen bg-background">
       {/* Hero Component */}
       <Hero />
+
+      {/* Super Search Component */}
+      <SuperSearch />
 
       {/* Section 1: Najnovije u garaži */}
       <section className="pt-8 pb-16 px-4 max-w-7xl mx-auto">
