@@ -164,15 +164,13 @@ export const Header = () => {
                         const SubIcon = subcat.icon;
                         return (
                           <li key={subcat.slug}>
-                            <NavigationMenu.Link asChild>
-                              <Link to={`/?category=${category.slug}&subcategory=${subcat.slug}`} className="flex items-center justify-between px-3 py-2 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 group">
-                                <div className="flex items-center gap-2">
-                                  {SubIcon && <SubIcon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.5} />}
-                                  <span className="uppercase tracking-widest">{subcat.name}</span>
-                                </div>
-                                <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" strokeWidth={1.5} />
-                              </Link>
-                            </NavigationMenu.Link>
+                            <Link to={`/?category=${category.slug}&subcategory=${subcat.slug}`} className="flex items-center justify-between px-3 py-2 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 group">
+                              <div className="flex items-center gap-2">
+                                {SubIcon && <SubIcon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" strokeWidth={1.5} />}
+                                <span className="uppercase tracking-widest">{subcat.name}</span>
+                              </div>
+                              <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" strokeWidth={1.5} />
+                            </Link>
                           </li>
                         );
                       })}
@@ -219,29 +217,24 @@ export const Header = () => {
                   const isActive = activeCategory === category.slug;
                   return (
                     <div key={category.slug}>
-                      {category.sub.length > 0 ? (
-                        <button
-                          onClick={() => setMobileDrillLevel(category.slug)}
-                          className={`w-full flex items-center justify-between px-4 py-4 border-b border-white/10 transition-all duration-200 ${isActive ? 'bg-white/5 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {Icon && <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />}
-                            <span className="font-light uppercase tracking-widest text-sm">{category.name}</span>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-white/30" strokeWidth={1.5} />
-                        </button>
-                      ) : (
+                      <div className={`flex items-center justify-between px-4 py-4 border-b border-white/10 transition-all duration-200 ${isActive ? 'bg-white/5 text-white' : 'text-white/50'}`}>
                         <Link
                           to={`/?category=${category.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className={`w-full flex items-center justify-between px-4 py-4 border-b border-white/10 transition-all duration-200 ${isActive ? 'bg-white/5 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}
+                          className="flex items-center gap-3 flex-1 hover:text-white transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            {Icon && <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />}
-                            <span className="font-light uppercase tracking-widest text-sm">{category.name}</span>
-                          </div>
+                          {Icon && <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />}
+                          <span className="font-light uppercase tracking-widest text-sm">{category.name}</span>
                         </Link>
-                      )}
+                        {category.sub.length > 0 && (
+                          <button
+                            onClick={() => setMobileDrillLevel(category.slug)}
+                            className="p-2 hover:text-white transition-colors"
+                          >
+                            <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

@@ -525,6 +525,68 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
         </div>
       )}
 
+      {/* Dynamic Extra Fields by Category */}
+      {(formData.category_slug === 'motocikli' || formData.category_slug === 'gospodarska-vozila' || formData.category_slug === 'strojevi') && (
+        <div className="border-t border-neutral-800 pt-8 grid grid-cols-2 gap-8">
+          {formData.category_slug === 'motocikli' && (
+            <>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                  Kubikaža (cm³)
+                </label>
+                <input
+                  type="number"
+                  value={formData.attributes?.engine_displacement || ''}
+                  onChange={(e) => handleAttributeChange('engine_displacement', e.target.value)}
+                  placeholder="npr. 750"
+                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                  Snaga (kW)
+                </label>
+                <input
+                  type="number"
+                  value={formData.attributes?.power_kw || ''}
+                  onChange={(e) => handleAttributeChange('power_kw', e.target.value)}
+                  placeholder="npr. 55"
+                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                />
+              </div>
+            </>
+          )}
+          {(formData.category_slug === 'gospodarska-vozila' || formData.category_slug === 'strojevi') && (
+            <>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                  Radni sati
+                </label>
+                <input
+                  type="number"
+                  value={formData.attributes?.working_hours || ''}
+                  onChange={(e) => handleAttributeChange('working_hours', e.target.value)}
+                  placeholder="npr. 1250"
+                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                  Nosivost (kg)
+                </label>
+                <input
+                  type="number"
+                  value={formData.attributes?.capacity || ''}
+                  onChange={(e) => handleAttributeChange('capacity', e.target.value)}
+                  placeholder="npr. 3500"
+                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Dodatna Oprema — Comma-to-Tag */}
       <div className="border-t border-neutral-800 pt-8">
         <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">

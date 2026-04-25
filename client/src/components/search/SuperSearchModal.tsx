@@ -48,6 +48,18 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
     setSearchQuery('');
   };
 
+  const uniqueCategories = useMemo(() => {
+    const seen = new Map<string, typeof navigationMenu[0]>();
+    navigationMenu.forEach((cat) => {
+      if (!seen.has(cat.slug)) seen.set(cat.slug, cat);
+    });
+    return Array.from(seen.values());
+  }, []);
+
+  const selectedCategoryObj = useMemo(() => {
+    return uniqueCategories.find((c) => c.slug === selectedCategory);
+  }, [uniqueCategories, selectedCategory]);
+
   const allFilters = useMemo(() => {
     const catFilters = categoryFilters[selectedCategory] || [];
     return [...globalFilters, ...catFilters];
@@ -152,13 +164,13 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                   Kategorija
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {navigationMenu.map((category) => (
+                  {uniqueCategories.map((category) => (
                     <button
                       key={category.slug}
                       type="button"
                       onClick={() => {
                         setSelectedCategory(category.slug);
-                        setAdvancedFilters({});
+                        setAdvancedFilters(prev => ({ ...prev, subcategory: '' }));
                       }}
                       className={`px-4 py-2 text-[10px] font-light uppercase tracking-widest border transition-all duration-200 ${
                         selectedCategory === category.slug
@@ -171,6 +183,42 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                   ))}
                 </div>
               </div>
+
+              {/* Subcategory Selector */}
+              {selectedCategoryObj && selectedCategoryObj.sub.length > 0 && (
+                <div className="px-6 py-4 border-b border-white/10">
+                  <label className="block text-[10px] font-light uppercase tracking-widest text-white/40 mb-3">
+                    Podkategorija
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFilterChange('subcategory', '')}
+                      className={`px-4 py-2 text-[10px] font-light uppercase tracking-widest border transition-all duration-200 ${
+                        !advancedFilters.subcategory
+                          ? 'bg-white text-black border-white'
+                          : 'bg-transparent text-white/60 border-white/10 hover:border-white/30 hover:text-white'
+                      }`}
+                    >
+                      Sve
+                    </button>
+                    {selectedCategoryObj.sub.map((subcat) => (
+                      <button
+                        key={subcat.slug}
+                        type="button"
+                        onClick={() => handleFilterChange('subcategory', subcat.slug)}
+                        className={`px-4 py-2 text-[10px] font-light uppercase tracking-widest border transition-all duration-200 ${
+                          advancedFilters.subcategory === subcat.slug
+                            ? 'bg-white text-black border-white'
+                            : 'bg-transparent text-white/60 border-white/10 hover:border-white/30 hover:text-white'
+                        }`}
+                      >
+                        {subcat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Filter Groups */}
               <div className="px-6 py-4 space-y-6">

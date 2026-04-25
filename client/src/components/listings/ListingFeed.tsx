@@ -118,7 +118,7 @@ const StateDisplay = ({ icon: Icon, title, subtitle, isSpinning = false }: any) 
 
 // --- PREMIUM LISTING CARD COMPONENT ---
 
-const ListingCard = ({ car }: { car: Listing }) => {
+export const ListingCard = ({ car }: { car: Listing }) => {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   

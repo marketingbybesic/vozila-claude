@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { TrendingUp, ChevronRight } from 'lucide-react';
+import { TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
 import { Listing } from '../types';
 import { Hero } from '../components/home/Hero';
 import { CategoryGrid } from '../components/home/CategoryGrid';
 import { NoviOglasiCarousel } from '../components/home/NoviOglasiCarousel';
+import { ListingCard as FeedListingCard } from '../components/listings/ListingFeed';
 
 export const Home = () => {
   const [trendingListings, setTrendingListings] = useState<Listing[]>([]);
+  const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +25,16 @@ export const Home = () => {
           .limit(8);
 
         setTrendingListings(trending || []);
+
+        // Fetch featured listings (or fallback to random active)
+        const { data: featured } = await supabase
+          .from('listings')
+          .select('*, listing_images(id, url, is_primary, sort_order)')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        setFeaturedListings(featured || []);
       } catch (error) {
         console.error('Error fetching home data:', error);
       } finally {
@@ -40,6 +52,46 @@ export const Home = () => {
 
       {/* Category Grid */}
       <CategoryGrid />
+
+      {/* IZDVOJENI OGLASI - Featured Ads */}
+      <section className="py-16 px-4 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary" strokeWidth={1.5} />
+            <div>
+              <h2 className="text-[10px] font-light uppercase tracking-widest text-muted-foreground mb-1">
+                Sponzorirano
+              </h2>
+              <p className="text-xl font-light uppercase tracking-widest text-foreground">
+                IZDVOJENI OGLASI
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/?featured=true"
+            className="text-xs font-light text-primary hover:text-primary/80 transition-colors duration-200 uppercase tracking-widest flex items-center gap-2"
+          >
+            Vidi sve
+            <ChevronRight className="w-4 h-4" strokeWidth={1.5} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-72 bg-white/5 border border-white/10 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {featuredListings.map((listing) => (
+              <div key={listing.id} className="border border-primary/30 overflow-hidden">
+                <FeedListingCard car={listing} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Novi Oglasi Showroom - Autoscroll Carousel */}
       <NoviOglasiCarousel />
@@ -81,7 +133,7 @@ export const Home = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {trendingListings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <FeedListingCard key={listing.id} car={listing} />
             ))}
           </div>
         )}
@@ -104,44 +156,5 @@ export const Home = () => {
         </div>
       </section>
     </div>
-  );
-};
-
-// Compact Listing Card for Home Page - Sharp Aesthetic
-const ListingCard = ({ listing }: { listing: Listing }) => {
-  const images = listing.listing_images || [];
-  const sortedImages = [...images].sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0));
-  const displayImg = sortedImages[0]?.url || '/placeholder-car.jpg';
-
-  return (
-    <Link
-      to={`/listing/${listing.id}`}
-      className="group block bg-black border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-300"
-    >
-      {/* Image */}
-      <div className="relative aspect-[4/3] bg-black overflow-hidden">
-        <img
-          src={displayImg}
-          alt={listing.title}
-          className="absolute inset-0 w-full h-full object-cover blur-xl opacity-20 scale-110"
-        />
-        <img
-          src={displayImg}
-          alt={listing.title}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="text-[10px] font-light uppercase tracking-[0.2em] text-foreground truncate group-hover:text-primary transition-colors duration-300">
-          {listing.title}
-        </h3>
-        <p className="mt-2 text-sm font-light text-primary">
-          {listing.price === 0 ? 'Na upit' : `${listing.price.toLocaleString()} €`}
-        </p>
-      </div>
-    </Link>
   );
 };
