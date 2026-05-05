@@ -31,6 +31,7 @@ const DealerIndex         = lazy(() => import('./pages/DealerIndex').then(m => (
 const About               = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
 const Compare             = lazy(() => import('./pages/Compare').then(m => ({ default: m.Compare })));
 const Messages            = lazy(() => import('./pages/Messages').then(m => ({ default: m.Messages })));
+const MakeLanding         = lazy(() => import('./pages/MakeLanding').then(m => ({ default: m.MakeLanding })));
 
 const RouteFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -76,6 +77,8 @@ function App() {
                   <Route path="/usporedba" element={<Compare />} />
                   <Route path="/poruke" element={<Messages />} />
                   <Route path="/poruke/:id" element={<Messages />} />
+                  <Route path="/marka/:makeSlug" element={<MakeLanding />} />
+                  <Route path="/marka/:makeSlug/:modelSlug" element={<MakeLanding />} />
                   {/* /pretraga — general search with nuqs URL state */}
                   <Route path="/pretraga" element={<ListingFeed />} />
                   <Route path="/:categorySlug" element={<ListingFeed />} />

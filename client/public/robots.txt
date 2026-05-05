@@ -1,10 +1,17 @@
 User-agent: *
 Allow: /
+
+# Auth-required and ops surfaces
 Disallow: /admin
 Disallow: /dashboard
 Disallow: /postavke
+Disallow: /favoriti
+Disallow: /poruke
 Disallow: /predaj-oglas
 Disallow: /create-listing
 Disallow: /mobile-upload
+
+# Internal API
+Disallow: /api/
 
 Sitemap: https://vozila.hr/sitemap.xml

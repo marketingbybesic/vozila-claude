@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, Trash2, ArrowLeft, Shield, User, Bell, BellRing, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
+import { AlertTriangle, Trash2, ArrowLeft, Shield, User, Bell, BellRing, CreditCard, ExternalLink, Loader2, Download } from 'lucide-react';
 import { deleteAccount } from '../lib/auth';
 import { getMySubscription, openCustomerPortal, tierLabel, type ProfileSubscription } from '../lib/subscription';
 import { VerifiedDealerBadge } from '../components/listings/VerifiedDealerBadge';
+import { supabase } from '../lib/supabase';
 
 export const Settings = () => {
   const [params] = useSearchParams();
@@ -39,6 +40,39 @@ export const Settings = () => {
       setPortalError(error ?? 'Greška.');
     } finally {
       setPortalBusy(false);
+    }
+  };
+
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    setExportError(null);
+    setExportBusy(true);
+    try {
+      const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+      if (!fnUrl) { setExportError('Nije konfigurirano (VITE_SUPABASE_FUNCTIONS_URL).'); return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { setExportError('Niste prijavljeni.'); return; }
+      const res = await fetch(`${fnUrl}/gdpr-export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { setExportError(`(${res.status}) Greška.`); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vozila-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Greška.');
+    } finally {
+      setExportBusy(false);
     }
   };
 
@@ -184,6 +218,26 @@ export const Settings = () => {
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-5 h-5 text-white/40" strokeWidth={1.5} />
             <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Privatnost i sigurnost</h2>
+          </div>
+
+          {/* GDPR — data export */}
+          <div className="border-t border-white/10 pt-4 mt-4 mb-6">
+            <h3 className="text-[10px] font-light uppercase tracking-[0.2em] text-white mb-3 flex items-center gap-2">
+              <Download className="w-4 h-4" strokeWidth={1.5} />
+              Preuzmi moje podatke (GDPR)
+            </h3>
+            <p className="text-sm font-light text-white/40 mb-4 leading-relaxed">
+              Preuzmite JSON datoteku sa svim Vašim podacima na Vozila.hr — oglasi, poruke, recenzije, leadovi, rezervacije, VIN izvještaji, spremljene pretrage.
+            </p>
+            <button
+              onClick={handleExport}
+              disabled={exportBusy}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 text-white border border-white/10 hover:bg-white/10 font-light uppercase tracking-[0.15em] text-[10px] transition-all disabled:opacity-50"
+            >
+              {exportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <Download className="w-3.5 h-3.5" strokeWidth={1.5} />}
+              Preuzmi podatke
+            </button>
+            {exportError && <p className="text-[10px] font-light text-red-400 mt-2">{exportError}</p>}
           </div>
 
           <div className="border-t border-white/10 pt-4 mt-4">
