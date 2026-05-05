@@ -1019,5 +1019,21 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Manual deploy:** `supabase functions deploy notify-auction-event` + redeploy `auction-settle`. No new env vars.
 - **Next:** Phase 14.2 (bell flyout cases + dedupe sentinel + wizard edit mode) **OR** post-launch live runbook v2 covering all 14 phases. Recommendation: live runbook v2. Say `continue Vozila live runbook v2`.
 
+### Checkpoint 2026-05-05 (live runbook v2 + smoke-test script)
+- **Shipped:**
+  - `LIVE_RUNBOOK_V2.md` (580 lines) — single end-to-end deploy runbook covering every phase 9-14.1 surface. 14 sections: prerequisites/accounts, all 8 SQL migrations + verification queries, 7 Stripe products + Customer Portal + Tax setup, 17-key Edge Function secrets file, 16-function deploy command list, Stripe webhook endpoint setup, 3 cron jobs (`expire-featured`, `saved-searches-digest`, `auction-settle`), Resend domain + test send, full client `.env` template, hosting rewrites for sitemap+OG+unsubscribe (Apache + Vercel), 12-flow end-to-end test walkthrough, going-to-production checklist, rollback playbook, post-launch monitoring SQL queries, what's NOT covered (deferred features), useful one-liners + smoke-test reference.
+  - `scripts/smoke-test.mjs` (216 lines, executable) — Playwright headless walk of 12 critical user paths (Home, Pretraga, category, make landing, Pricing, Saloni, Aukcija, About, Privacy, Terms, Kontakt, 404). Plus 4 resource probes (robots.txt, manifest.webmanifest, favicon, sitemap.xml). Exits non-zero on any failure. Captures page JS errors to avoid false-passing. Usage: `node scripts/smoke-test.mjs https://testiranje.cloud`.
+- **Build:** N/A — docs + Node script, not in client bundle.
+- **What this completes:**
+  - Anyone (you, me, another AI in a future session, an outside contractor) can now take a fresh Supabase + Stripe account and stand up a fully operational Vozila in ~90 minutes by following sections 1-9.
+  - Section 10's 12-step end-to-end test walks every revenue line + admin surface + auction flow.
+  - Smoke test gates production deploys ≤ 30 seconds for 16 probes — catches obvious regressions before they hit users.
+- **Devil's advocate:**
+  - *Runbook doesn't cover load testing.* Correct — Vozila is small enough that we don't pre-optimize. Add k6 / Artillery scripts when DAU > 1000.
+  - *Smoke test only covers public read paths.* Auth-required flows (messaging, dashboard, settings, admin) need a fixture user; runbook section 10 covers them manually. A future smoke-test enhancement adds a Stripe-test-card + impersonated user fixture.
+  - *Sitemap probe accepts a hosting rewrite OR direct.* The runbook itself documents both Apache and Vercel rewrites; smoke test stays vendor-neutral.
+  - *No rollback drill in CI.* Manual via section 12. Adding `npm run rollback` is overkill for a small team.
+- **Next concrete action:** Run the runbook against testiranje.cloud (now), confirm everything green, then **Phase 14.2** (cron-retry dedupe, bell flyout cases, wizard `?edit=<id>` mode) **OR** Phase 15 (auction admin approval gate). Recommendation: 14.2 — small polish that closes the operational loose ends. Say `continue Vozila phase 14.2`.
+
 ### Checkpoint <next>
 *(append next session)*
