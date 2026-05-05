@@ -111,7 +111,25 @@ export async function sendMessage(conversationId: string, body: string): Promise
     .select('*')
     .single();
   if (error) throw error;
+  // Fire-and-forget notify the recipient. Failure is non-fatal — the message
+  // is still saved + delivered via realtime; only the email is best-effort.
+  notifyRecipientOfMessage((data as Message).id).catch(() => {});
   return data as Message;
+}
+
+// Calls the Edge Function notify-new-message to email the other participant
+// and drop a notification row. Missing env -> no-op.
+async function notifyRecipientOfMessage(messageId: string): Promise<void> {
+  const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+  if (!fnUrl) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+  await fetch(`${fnUrl}/notify-new-message`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ message_id: messageId }),
+  });
 }
 
 export async function listMyConversations(): Promise<Conversation[]> {

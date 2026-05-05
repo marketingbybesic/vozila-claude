@@ -699,5 +699,36 @@ Append after each session. Format: date, what shipped, build status, next concre
   - *Phone reveal on detail not synced with conversation flag?* — Detail-page reveal is local state per session (component). Once the buyer sends a message via `ensureConversation`, the `buyer_revealed_phone` column flips for permanent reveal across devices via `revealPhone()` (will wire in 10.2 when the inbox surfaces the listing's phone in the thread header).
 - **Next concrete action:** Phase 10.2 — `send-email` Edge Function + Resend templates + `saved-searches-digest` daily cron + `unsubscribe` Edge Function. Say "continue Vozila phase 10.2".
 
+### Checkpoint 2026-05-05 (phase 10.2 — Resend email + digest cron + unsubscribe)
+- **Shipped this session:**
+  - `supabase/functions/_shared/email.ts` — Resend HTTP client, HMAC-signed unsubscribe URL maker (`makeUnsubUrl`/`verifyUnsubToken`, base64+sha256 HMAC), `sendEmail()` with full `List-Unsubscribe` + `List-Unsubscribe-Post: One-Click` headers (RFC 8058), Croatian-locale templates `tplNewMessage` + `tplSavedSearchDigest` with safe HTML escaping. Skips send if user is in `email_unsubscribes` for the matching category or `'all'`.
+  - `supabase/functions/send-email/index.ts` — generic Resend wrapper, gated by `SUPABASE_SERVICE_ROLE_KEY` Bearer auth (only callable by other Edge Functions or DB triggers via pg_net). Honours unsubscribe table.
+  - `supabase/functions/notify-new-message/index.ts` — accepts both service-role and user-JWT auth. Validates the caller is a participant of the conversation when called with user JWT (closes the spam-via-message_id vector). Inserts a `notifications` row regardless, then emails the recipient (skipped if recipient unsubscribed from `'all'`).
+  - `supabase/functions/saved-searches-digest/index.ts` — cron entrypoint. For every `saved_searches.email_alert=true`: applies `params` to a server-side replay of the listing query (`category_slug`, price/year/mileage ranges, JSONB make/model/fuel/transmission), diffs vs `last_seen_ids`, sends digest if there are net-new matches (cap 8 cards), writes the new id snapshot + `last_digest_sent_at`, drops a `notifications` row. Returns `{sent, skipped, errors, total}`.
+  - `supabase/functions/unsubscribe/index.ts` — public endpoint, HMAC-verified. Idempotent upsert to `email_unsubscribes`. Renders a small Croatian HTML confirmation page on GET; returns 200 OK on POST (RFC 8058 one-click).
+  - `client/src/lib/savedSearchesDb.ts` (new) — DB-backed companion to localStorage `savedSearches.ts`. `paramsFromUrl()` parses search URL → structured params matching the Edge Function's reader. `upsertSavedSearchDb` / `setEmailAlertDb` / `listMyDbSavedSearches` / `deleteSavedSearchDb`. Idempotent on `(user_id, url)`.
+  - `client/src/lib/messaging.ts` — `sendMessage` now fires-and-forgets `notify-new-message` Edge Function call after every message insert. Realtime delivery still happens via Supabase Realtime regardless; email is best-effort.
+  - `supabase/functions/README.md` — extended with phase 10 functions table, Resend env block (`RESEND_API_KEY`, `RESEND_FROM`, `PUBLIC_SITE_URL`, `EMAIL_HMAC_SECRET`), deploy commands for all four new functions, digest cron schedule (`0 8 * * *` Europe/Zagreb).
+- **Build:** ✅ green, 2.40s, 189.80 kB initial gzip (+0.02 vs 10.1 — `savedSearchesDb.ts` tree-shaken because no UI imports it yet).
+- **Bugs / gaps still open after 10.2 (deferred to 10.3):**
+  - SavedSearches UI doesn't yet call `setEmailAlertDb` when toggling alerts — current toggle still localStorage only. Needs a small edit to `components/search/SavedSearches.tsx`.
+  - No notifications-feed UI in Header beyond the message bell — saved-search hits land in `notifications` table but aren't surfaced. A bell-flyout listing them is a 10.3 task.
+  - Wizard `?edit=<id>` mode still NOT implemented (carried from 10.1).
+  - SPF/DKIM/DMARC on `vozila.hr` must be set before live emails — runbook update needed.
+  - Browser push (web-push + VAPID) deferred to phase 12.
+- **Devil's-advocate this round:**
+  - *EMAIL_HMAC_SECRET rotation invalidates pending unsubscribe links.* Yes, by design. Document in 10.4 ops doc that rotation is rare; ideally only after a leak.
+  - *Resend rate limit (3000/mo free).* Saved-search digest is per-user-per-day max one email; even at 1k DAU that's 30k/mo. Need Pro tier ($20/mo) by 100 DAU. Tracked in cost model.
+  - *RFC 8058 one-click POST fires from Gmail/Apple Mail unsubscribe button.* Endpoint accepts both GET and POST; POST returns 200 silently per spec. Verified.
+  - *notify-new-message could be called with a stale message_id by an ex-participant.* Mitigation: the function re-reads the conversation and validates `caller_id IN (buyer_id, seller_id)` for non-service-role auth. Past participants can technically still trigger an email of a message they sent themselves, which is no-op (sender = recipient case is filtered: recipientId is computed as the OTHER side; if caller is sender, that's fine).
+  - *Saved-search digest could spam buyers when sellers re-list 50 cars at once.* Cap of 8 cards in email + 50 row server-side query. Future enhancement: rate-limit to one digest per search per 24h via `last_digest_sent_at` (already populated; just need a `WHERE last_digest_sent_at < NOW() - interval '20 hours'` filter — adding in 10.3).
+  - *Anonymous/legacy localStorage saved-searches won't get emails.* Correct — that's the design. Toggling email alert requires sign-in, which prompts a UI gate in 10.3.
+- **New env required for live (phase 10):**
+  - `RESEND_API_KEY` (Resend dashboard → API keys; verify domain `vozila.hr` first or use `onboarding@resend.dev` for testing)
+  - `RESEND_FROM='Vozila <noreply@vozila.hr>'` (after domain verification)
+  - `PUBLIC_SITE_URL=https://testiranje.cloud` (or `https://vozila.hr` once live)
+  - `EMAIL_HMAC_SECRET=$(openssl rand -hex 32)` — keep stable.
+- **Next concrete action:** Phase 10.3 — wire SavedSearches toggle to `setEmailAlertDb`, add notifications flyout in the bell, add `last_digest_sent_at` 20-hour debounce in the digest cron. Say "continue Vozila phase 10.3".
+
 ### Checkpoint <next>
 *(append next session)*
