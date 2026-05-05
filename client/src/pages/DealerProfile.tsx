@@ -5,6 +5,7 @@ import { ShieldCheck, MapPin, Phone, Mail, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ListingCard } from '../components/listings/ListingFeed';
 import { VerifiedDealerBadge } from '../components/listings/VerifiedDealerBadge';
+import { DealerReviews } from '../components/listings/DealerReviews';
 import type { SubTierId, SubStatus } from '../lib/subscription';
 import type { Listing } from '../types';
 
@@ -214,6 +215,11 @@ export const DealerProfile = () => {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Reviews — buyer ratings of this dealer */}
+      <section className="max-w-[1480px] mx-auto px-6 sm:px-10 lg:px-14 py-12 lg:py-16 border-t border-border">
+        <DealerReviews dealerId={dealer.id} />
       </section>
     </div>
   );

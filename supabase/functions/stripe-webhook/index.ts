@@ -116,6 +116,22 @@ Deno.serve(async (req) => {
               .update({ stripe_customer_id: session.customer })
               .eq("id", userId);
           }
+        } else if (meta.kind === "vin_report") {
+          // VIN report paid — flip to 'paid' so the report-generator cron
+          // (or admin) picks it up and emails the buyer the PDF link.
+          if (meta.report_id) {
+            await supabaseAdmin
+              .from("vin_reports")
+              .update({ status: "paid", paid_eur: 9.99 })
+              .eq("id", meta.report_id);
+          }
+        } else if (meta.kind === "inspection") {
+          if (meta.booking_id) {
+            await supabaseAdmin
+              .from("inspection_bookings")
+              .update({ status: "paid", paid_eur: 100, stripe_session_id: session.id })
+              .eq("id", meta.booking_id);
+          }
         }
         break;
       }

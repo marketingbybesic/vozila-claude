@@ -755,5 +755,51 @@ Append after each session. Format: date, what shipped, build status, next concre
   - Recommendation: (b). Phase 10 surface is now functionally complete; the bell consolidation is polish.
   - Say `continue Vozila phase 11` for (b), or `continue Vozila phase 10.4` for (a).
 
+### Checkpoint 2026-05-05 (phase 11 — lead-gen + VIN report + AI copywriter + reviews + inspections)
+- **Shipped this session:**
+  - `server/db/migrations/004_leads.sql` — idempotent migration adding:
+    - `leads(listing, user, partner_type, payload JSONB, status, partner_id, payout_eur, ip_hash, user_agent)` for financing/insurance/transport.
+    - `reviews(dealer, buyer, listing, rating 1-5, body, verified_purchase, dealer_response, response_at, status)` with `UNIQUE(dealer_id, buyer_id, listing_id)`.
+    - `inspection_bookings(user, listing, address, preferred_date, preferred_time_window, status, inspector_id, report_url, paid_eur, stripe_session_id, scheduled_at, completed_at)`.
+    - `vin_reports(user, vin, listing, status, paid_eur, stripe_session_id, report_url, vpic_data JSONB, cross_references JSONB, generated_at)`.
+    - `dealer_rating_summary` view aggregating `reviews` for fast DealerProfile renders.
+    - RLS on all 4 tables — buyer self-select for own leads/reports/bookings, dealer-respond for reviews, admin all.
+  - `client/src/lib/leads.ts` — `submitLead({partner_type, listing_id, payload})` with name+phone guard, profile auto-fill on form open, anonymous-allowed insert.
+  - `client/src/components/listings/LeadCaptureModal.tsx` — reusable Radix dialog, 3 partner variants with conditional fields (financing: down/term/income/loan; insurance: birth_year/driver_years/postcode; transport: city_from/to/preferred_date), GDPR-style copy footer.
+  - `client/src/components/listings/VinReportButton.tsx` — calls `vin-report-checkout` Edge Function with VIN, redirects to Stripe Checkout. Auth-gated, VIN-format-validated, 503-friendly when env missing.
+  - `client/src/components/listings/InspectionBookingButton.tsx` — Radix dialog form (address/date/time-window/notes), inserts `inspection_bookings` row with status='pending'. €100 stub — admin manually fulfils first 10 to validate demand before paid Checkout integration.
+  - `client/src/lib/reviews.ts` — `canBuyerReview(dealerId)` enforces 7-day-old conversation eligibility + already-reviewed dedupe; `submitReview`, `listDealerReviews`, `getDealerRatingSummary`, `respondToReview`.
+  - `client/src/components/listings/DealerReviews.tsx` — full surface: aggregated 1-5 distribution bars, write-review form (gated by eligibility), per-review card with rating + body + verified-contact pill + dealer response thread. "Odgovori na recenziju" CTA visible only to the dealer themselves.
+  - `client/src/pages/DealerProfile.tsx` — `<DealerReviews dealerId={dealer.id} />` mounted in a new section under listings grid.
+  - `client/src/components/listings/LoanCalculator.tsx` — added `listingId` prop + "Get pre-approved" `LeadCaptureModal partnerType="financing"` CTA at the bottom with PBZ/Erste/Zaba blurb. Pre-fills financing form with current sliders' values.
+  - `client/src/components/listings/ListingDetail.tsx` — new inline `TrustRail` 4-tile rail (VinReportButton, InspectionBookingButton, insurance LeadCapture, transport LeadCapture). LoanCalculator passed listing.id for lead attribution.
+  - `client/src/components/listings/AiCopywriterButton.tsx` — swapped from `/api/copywriter` stub to real Supabase Edge Function `ai-listing-copy` with bearer token, 503/429-aware error states.
+  - `supabase/functions/ai-listing-copy/index.ts` — Anthropic Claude Haiku wrapper, Croatian system prompt in Dino's direct-response voice (forensic-premium, no emojis, no slogans, 110-180 words, ends with concrete CTA), 30/hour rate-limit per user via `notifications.type='ai_copy_call'` sentinel rows, 503 when `ANTHROPIC_API_KEY` missing. Uses `claude-haiku-4-5-20251001` (overridable via `ANTHROPIC_MODEL` env).
+  - `supabase/functions/vin-report-checkout/index.ts` — pre-creates `vin_reports` row with `pending` status, then Stripe Checkout in payment mode, 9.99 EUR. Stores `stripe_session_id` so webhook can match.
+  - `supabase/functions/stripe-webhook/index.ts` — extended `checkout.session.completed` to handle `kind=vin_report` (flips report to `paid` with `paid_eur=9.99`) and `kind=inspection` (flips booking to `paid` with `paid_eur=100`).
+- **Build:** ✅ green, 2.15s. **Major bundle restructure** — Rolldown now splits the Supabase SDK into its own 196.76 kB / 50.74 kB gzip long-lived chunk, dropping the main `index-*.js` from 644.45 → 447.27 kB (gzip 192.03 → **140.98 kB**, −51 kB). Combined initial-shell gzip 191.72 kB ≈ same as before, but Supabase chunk caches across deploys → much better repeat-visit perf. DealerProfile 6.37→15.85 (DealerReviews). ListingDetail 96.45→113.37 (TrustRail with 4 paid/lead-gen products).
+- **Bugs / gaps still open after phase 11 (deferred to phase 12 or later):**
+  - VIN report PDF generation cron NOT yet built — paid reports sit in DB at `status='paid'` waiting for an admin or future `generate-vin-reports` Edge Function to fulfil. Acceptable for v1: admin manually generates, emails, marks `delivered`.
+  - Inspection booking is currently free-to-submit (no Stripe step) — the runbook says paid €100, but I left it as a captured-intent flow until you confirm the inspector workflow. Adding `inspection-checkout` Edge Function is a 1-hour task once you say go.
+  - No notification rows produced when leads/reviews/bookings land — admin has to refresh the queue. Adding to the `notify-*` family in phase 13.
+  - AI copywriter rate-limit uses `notifications` table as a sentinel — works but pollutes the bell feed with `ai_copy_call` rows. Hide via flyout filter or move to a dedicated `function_call_log` table in phase 13.
+  - DealerProfile reviews query joins `profiles!reviews_buyer_id_fkey` — assumes Supabase auto-named that FK. If it didn't, swap to `buyer:profiles(...)` (single-FK ambiguous syntax).
+- **Devil's-advocate this round:**
+  - *Anonymous leads possible — spam vector.* Yes. RLS allows anon insert. Mitigations: `user_agent` + `ip_hash` (server-side, not yet captured — phase 13 adds an Edge Function lead intake that hashes the IP via `request.headers.get('x-forwarded-for')`). For now, admin manually filters obvious junk.
+  - *VIN report buyers might pay for a VIN we can't decode well.* `vinDecoder.ts` already documents 80% EU success rate. Mitigation: Edge Function returns Stripe URL only after VIN-format validation; the actual report can be "limited" with a clear note. Refund flow via Stripe Dashboard.
+  - *7-day eligibility for reviews is loose.* It's a heuristic — real "verified purchase" requires a sale signal we don't have yet. The `verified_purchase=true` flag is set unconditionally for now; in phase 13 we tie it to either a confirmed inspection or a "mark sold" + buyer link.
+  - *AI copywriter prompt could leak system prompt or hallucinate specs.* System prompt explicitly says "Never invent specs" + "Never write a marketing slogan". Output is plain text, no markdown injection vector. Tokens capped at 500 ≈ 200 words max — prevents runaway cost.
+  - *Bundle restructure is a one-time win.* Yes — Rolldown now sees `@supabase/supabase-js` as a stable dep and code-splits it. Repeat visitors will only re-download the small `index-*.js` on deploys; the 50.74 kB Supabase chunk stays cached.
+- **New env required for live (phase 11):**
+  - `ANTHROPIC_API_KEY` (sk-ant-...)
+  - `ANTHROPIC_MODEL=claude-haiku-4-5-20251001` (optional, defaults set)
+  - `STRIPE_PRICE_VIN_REPORT=price_...` (one-time 9.99 EUR product in Stripe Dashboard)
+  - Webhook events to add: nothing new — `checkout.session.completed` already covers VIN + inspection; both are routed by `metadata.kind`.
+- **Next concrete action options:**
+  - **(a)** Phase 12 — SEO surface (dynamic sitemap.xml + OG image generator + slug-canonical search URLs + Mapbox map view + PWA + Sentry + GDPR data export). High organic-growth impact.
+  - **(b)** Phase 13 — Admin console refactor (KPIs, listings/users tables, moderation queue, payments dashboard, leads pipeline, RBAC). High operability impact.
+  - Recommendation: (a) — phase 12 unlocks free organic traffic, which compounds; admin console can wait until volume warrants it.
+  - Say `continue Vozila phase 12` or `continue Vozila phase 13`.
+
 ### Checkpoint <next>
 *(append next session)*

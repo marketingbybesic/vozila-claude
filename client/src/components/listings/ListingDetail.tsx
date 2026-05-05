@@ -23,6 +23,9 @@ import { VerifiedDealerBadge } from './VerifiedDealerBadge';
 import { ReportListingButton } from './ReportListingButton';
 import { ensureConversation, NotAuthedError } from '../../lib/messaging';
 import { useNavigate } from 'react-router-dom';
+import { LeadCaptureModal } from './LeadCaptureModal';
+import { VinReportButton } from './VinReportButton';
+import { InspectionBookingButton } from './InspectionBookingButton';
 
 // --- MILESTONE 4: HISTORY TIMELINE ---
 
@@ -212,6 +215,24 @@ const SimilarVehicles = ({ listing }: { listing: Listing }) => {
     </section>
   );
 };
+
+// Trust rail — paid + lead-gen products in one strip on the VDP.
+// VIN report (paid 9.99€), Inspection (paid 100€ — stub), insurance + transport
+// lead capture (free for buyer; paid by partner per qualified lead).
+const TrustRail = ({ listingId, vin, location }: { listingId: string; vin?: string | null; location?: string }) => (
+  <div className="border border-border bg-muted/20 p-5 lg:p-6">
+    <p className="text-[10px] font-light uppercase tracking-[0.3em] text-foreground mb-1">Trust & sigurnost</p>
+    <p className="text-xs font-light text-muted-foreground leading-relaxed mb-5">
+      Provjerite vozilo prije kupnje — neutralan izvještaj, terenska inspekcija ili usluge naših partnera.
+    </p>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <VinReportButton listingId={listingId} vin={vin} />
+      <InspectionBookingButton listingId={listingId} defaultAddress={location} />
+      <LeadCaptureModal partnerType="insurance" listingId={listingId} />
+      <LeadCaptureModal partnerType="transport" listingId={listingId} />
+    </div>
+  </div>
+);
 
 export const ListingDetail = () => {
   const { id } = useParams();
@@ -637,8 +658,11 @@ export const ListingDetail = () => {
             {/* Price intel — Where this price sits vs comparable listings */}
             <PriceIntel listing={listing} />
 
-            {/* Loan calculator — interactive, free buyer tool */}
-            <LoanCalculator price={listing.price} currency={listing.currency || 'EUR'} />
+            {/* Loan calculator — interactive, free buyer tool + pre-approval CTA */}
+            <LoanCalculator price={listing.price} currency={listing.currency || 'EUR'} listingId={listing.id} />
+
+            {/* Trust rail — paid + lead-gen products in one strip */}
+            <TrustRail listingId={listing.id} vin={(attributes as any)?.vin ?? null} location={listing.location ?? undefined} />
 
             {/* Match Score breakdown — what raised the score, and what would push to 100 */}
             <MatchScoreCard listing={listing} />

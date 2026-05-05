@@ -1,15 +1,18 @@
 import { useState, useMemo } from 'react';
 import { Calculator, Banknote } from 'lucide-react';
+import { LeadCaptureModal } from './LeadCaptureModal';
 
 interface Props {
   price: number;
   currency?: string;
+  // Optional listing context so the captured lead can be attributed.
+  listingId?: string;
 }
 
 // Pure-JS amortization calculator. HR auto loan reference rates as of
 // April 2026: 5.5–7.5% APR with 10–25% down. Drives 'kreditni partner'
 // lead generation later — for now a value-add buyer tool.
-export const LoanCalculator = ({ price, currency = 'EUR' }: Props) => {
+export const LoanCalculator = ({ price, currency = 'EUR', listingId }: Props) => {
   const [downPct, setDownPct] = useState(15);
   const [months, setMonths] = useState(60);
   const [rateApr, setRateApr] = useState(6.5);
@@ -97,6 +100,22 @@ export const LoanCalculator = ({ price, currency = 'EUR' }: Props) => {
         <Banknote className="w-3 h-3 mt-0.5 flex-shrink-0" strokeWidth={1.5} aria-hidden="true" />
         Indikativni izračun. Stvarna ponuda banke ovisi o kreditnoj sposobnosti i osiguranju.
       </p>
+
+      {/* Pre-approval CTA — financing lead capture */}
+      <div className="mt-5 pt-5 border-t border-border">
+        <LeadCaptureModal
+          partnerType="financing"
+          listingId={listingId}
+          defaults={{
+            desired_loan_eur: Math.max(0, Math.round(calc.principal)),
+            down_payment_eur: Math.round(calc.down),
+            loan_term_months: months,
+          }}
+        />
+        <p className="mt-2 text-[10px] font-light text-muted-foreground/70 leading-relaxed text-center">
+          PBZ · Erste · Zaba — bez obveze, ponuda u 24h.
+        </p>
+      </div>
     </div>
   );
 };
