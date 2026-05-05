@@ -37,13 +37,20 @@ export const DealerProfile = () => {
         const email = dealerSlug?.includes('@') ? dealerSlug : `${dealerSlug}@vozila.hr`;
         const { data: u } = await supabase
           .from('users').select('*').eq('email', email).maybeSingle();
-        setDealer(u as DealerData | null);
+        const dealerRow = u as DealerData | null;
+        setDealer(dealerRow);
 
-        // Active listings — when listings.user_id is added, swap to filter by user_id
+        if (!dealerRow) {
+          setListings([]);
+          return;
+        }
+
+        // Filter to this dealer's listings only.
         const { data: l } = await supabase
           .from('listings')
           .select('*, categories(slug, name), listing_images(id, url, is_primary, sort_order)')
           .eq('status', 'active')
+          .eq('user_id', dealerRow.id)
           .order('created_at', { ascending: false })
           .limit(48);
         setListings((l || []) as any);

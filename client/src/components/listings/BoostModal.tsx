@@ -21,18 +21,33 @@ export const BoostModal = ({ listingId, listingTitle, trigger }: Props) => {
   const onSelect = async (tier: BoostTier) => {
     setBusy(tier.id);
     try {
-      // Real path — server endpoint creates a Checkout Session and returns URL
-      if (tier.stripe_price_id) {
-        const res = await fetch('/api/boost/create-checkout', {
+      // Real path — Supabase Edge Function creates Checkout Session.
+      // Requires VITE_SUPABASE_FUNCTIONS_URL + STRIPE_PRICE_BOOST_* env on server.
+      const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+      if (fnUrl) {
+        const { supabase } = await import('../../lib/supabase');
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) {
+          alert('Prijavite se za kupnju Boost-a.');
+          setBusy(null);
+          return;
+        }
+        const res = await fetch(`${fnUrl}/create-boost-checkout`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ listingId, tier: tier.id, priceId: tier.stripe_price_id }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ listingId, tier: tier.id }),
         });
         if (res.ok) {
           const { url } = await res.json();
-          window.location.href = url; // hand off to Stripe
+          window.location.href = url; // hand off to Stripe Checkout
           return;
         }
+        const txt = await res.text().catch(() => '');
+        console.warn('[boost] checkout endpoint error', res.status, txt);
       }
       // Fallback (demo): record intent locally + close
       recordBoostIntent({ listingId, tier: tier.id, createdAt: Date.now() });

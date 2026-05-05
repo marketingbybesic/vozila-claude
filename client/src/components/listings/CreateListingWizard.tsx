@@ -117,6 +117,7 @@ export const CreateListingWizard = () => {
       const { data: listing, error } = await supabase
         .from('listings')
         .insert({
+          user_id: user.id,
           category_slug: formData.category_slug,
           title: formData.title,
           price: formData.price,

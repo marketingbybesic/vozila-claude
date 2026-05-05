@@ -568,5 +568,33 @@ Append after each session. Format: date, what shipped, build status, next concre
   - Stripe live keys vs test mode for first build (recommend test until phase 9 fully verified).
 - **Next concrete action:** Start phase 9.1 (schema fix migration `002_fix_listings_drift.sql`). User says "continue Vozila phase 9" or "start phase 9.1".
 
+### Checkpoint 2026-05-05 (phase 9.1 + 9.2 partial)
+- **Decision:** Backend = **A) Supabase Edge Functions** (per user instruction).
+- **Shipped this session:**
+  - `server/db/migrations/002_fix_listings_drift.sql` — adds `listings.user_id` FK to `auth.users`, `category_slug`, `main_image`, `images[]`, `damage_images[]`, `is_featured`, `featured_tier`, `featured_until`. Creates `profiles` table with subscription state. Creates `stripe_events` dedupe table. Adds RLS policies. Adds auto-create-profile trigger on `auth.users` insert. **Idempotent** — safe to re-run.
+  - Bug A fixed: `CreateListingWizard.tsx` insert now includes `user_id: user.id`.
+  - Bug B fixed: `DealerProfile.tsx` now filters `.eq('user_id', dealerRow.id)` — no more "all listings" leak.
+  - Bug D fixed: `BoostModal.tsx` now calls `${VITE_SUPABASE_FUNCTIONS_URL}/create-boost-checkout` with the user's JWT, falls back to local intent only when env missing.
+  - `supabase/functions/_shared/{cors,stripe,supabase}.ts` — shared helpers.
+  - `supabase/functions/create-boost-checkout/index.ts` — verifies ownership, creates Stripe Checkout (one-shot), tier→priceId via env, metadata for webhook.
+  - `supabase/functions/stripe-webhook/index.ts` — verifies Stripe signature, dedupes by event ID, on `checkout.session.completed` for `kind=boost` flips `listings.is_featured = true`, `featured_tier`, `featured_until = NOW + N days`.
+  - `supabase/functions/expire-featured/index.ts` — daily cron, clears expired featured flags.
+  - `supabase/functions/README.md` — full deploy runbook (CLI install, secrets, Stripe Dashboard setup, webhook URL, cron schedule, test commands).
+- **Build:** ✅ green, 2.46s, 187.56 kB initial gzip (unchanged from baseline).
+- **Not yet done in phase 9:**
+  - 9.3 — Stripe **Subscriptions** (Bronze/Silver/Gold) Edge Function + webhook handlers (`customer.subscription.*`).
+  - 9.3 — Customer Portal Edge Function.
+  - 9.3 — Verified-dealer badge logic on ListingCard / DealerProfile / ListingDetail.
+  - 9.4 — End-to-end live test with Stripe test card `4242 4242 4242 4242`.
+  - Backfill seed listings with valid `user_id` after migration runs against live DB.
+- **Manual deploy steps user must run before live test (one-time):**
+  1. Run migration `002_fix_listings_drift.sql` against the live Supabase DB.
+  2. Stripe Dashboard → create 3 products + 3 one-time Prices (4.99 / 14.99 / 49.00 EUR).
+  3. `supabase secrets set` with all keys per `supabase/functions/README.md`.
+  4. `supabase functions deploy create-boost-checkout`, `stripe-webhook --no-verify-jwt`, `expire-featured --no-verify-jwt`.
+  5. Stripe Dashboard → Webhooks → add endpoint `https://<ref>.supabase.co/functions/v1/stripe-webhook`.
+  6. Set `VITE_SUPABASE_FUNCTIONS_URL` in `client/.env` and redeploy.
+- **Next concrete action:** Phase 9.3 — write `create-subscription-checkout`, `customer-portal`, extend `stripe-webhook` for `customer.subscription.created/updated/deleted`, add `subscription_tier` reads to UI for verified-dealer badge. Say "continue Vozila phase 9.3".
+
 ### Checkpoint <next>
 *(append next session)*
