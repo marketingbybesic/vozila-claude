@@ -1001,5 +1001,23 @@ Append after each session. Format: date, what shipped, build status, next concre
   5. (Optional) Insert a test auction: `INSERT INTO auctions (listing_id, seller_id, end_at, starting_bid_eur, reserve_eur) VALUES (...);` to verify the bid panel.
 - **Next concrete action:** Phase 14.1 — wire "Promote to auction" toggle in CreateListingWizard, "You're outbid" + "You won" email templates via existing send-email, surface `/inspector` in Header dropdown for `inspector` role. Or jump to **post-launch polish**: live test runbook v2 covering all 14 phases, end-to-end manual smoke test script (`scripts/smoke-test.mjs`).
 
+### Checkpoint 2026-05-05 (phase 14.1 — auction wizard toggle + auction emails + inspector header link)
+- **Shipped:**
+  - Wizard: `auctionEnabled` toggle in Step 3 (duration 1-30, starting bid, optional reserve). Auction row INSERTed after listing publishes; failure non-fatal.
+  - `_shared/email-auctions.ts`: Croatian `tplOutbid`, `tplWon`, `tplSellerSettled` templates with HTML escape + buyer-premium math.
+  - `notify-auction-event` Edge Function: routes `outbid`/`won`/`settled` to recipients; user JWT or service-role auth.
+  - `auction-settle` cron extended to dispatch `settled`/`won` notifications for every row settled in the last 6 min.
+  - `lib/auctions.ts placeBid`: fire-and-forget outbid email after successful RPC.
+  - `Header.tsx`: loads `profiles.role`, shows always-visible "Aukcija" + role-conditional "Inspector queue" in user dropdown.
+- **Build:** ✅ green, 2.12s. index 449.91 → 451.04 kB (gzip 141.70 → **141.92 kB**, +0.22). CreateListingWizard 37.62 → 41.68 kB (+0.94 gzip — auction toggle UI). Supabase chunk unchanged.
+- **Open after 14.1 (deferred to 14.2):**
+  - Cron retry can re-fire emails — needs `notify-auction-event` to dedupe via existing notifications-row sentinel.
+  - Outbid notifier called from client doesn't enforce caller-is-participant — rate-limit needed.
+  - Bell flyout's `notificationLink`/`notificationTitle` doesn't yet case on `auction_outbid`/`auction_won`.
+  - Wizard `?edit=<id>` mode still pending (carried since 9.4).
+  - Auction approval gate (BaT-style admin curation) deferred to phase 15.
+- **Manual deploy:** `supabase functions deploy notify-auction-event` + redeploy `auction-settle`. No new env vars.
+- **Next:** Phase 14.2 (bell flyout cases + dedupe sentinel + wizard edit mode) **OR** post-launch live runbook v2 covering all 14 phases. Recommendation: live runbook v2. Say `continue Vozila live runbook v2`.
+
 ### Checkpoint <next>
 *(append next session)*
