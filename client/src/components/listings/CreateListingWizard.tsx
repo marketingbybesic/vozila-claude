@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { uploadImages } from '../../lib/storage';
 import {
@@ -46,10 +46,15 @@ interface FormData {
 
 export const CreateListingWizard = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const editId = params.get('edit');                  // /predaj-oglas?edit=<uuid>
+  const isEditMode = !!editId;
   const [currentStep, setCurrentStep] = useState<WizardStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [hydrating, setHydrating] = useState<boolean>(isEditMode);
+  const [hydrateError, setHydrateError] = useState<string | null>(null);
   const [limitState, setLimitState] = useState<ListingLimitState | null>(null);
   const [formData, setFormData] = useState<FormData>({
     category_slug: '',
@@ -101,6 +106,49 @@ export const CreateListingWizard = () => {
     };
   }, []);
 
+  // Edit mode — hydrate formData from the existing listing once we have auth.
+  // Ownership check is server-side via RLS (only owner sees the row), and we
+  // assert here too in case admin RLS lets a non-owner peek.
+  useEffect(() => {
+    if (!isEditMode || !authUser) return;
+    let alive = true;
+    (async () => {
+      setHydrateError(null);
+      try {
+        const { data, error } = await supabase
+          .from('listings')
+          .select('id, user_id, category_slug, title, price, location, description, contact_phone, contact_email, attributes, listing_type')
+          .eq('id', editId)
+          .maybeSingle();
+        if (!alive) return;
+        if (error) throw new Error(error.message);
+        if (!data) throw new Error('Oglas nije pronađen.');
+        if (data.user_id && authUser?.id && data.user_id !== authUser.id) {
+          throw new Error('Ovaj oglas nije vaš — ne možete ga uređivati.');
+        }
+        setFormData((prev) => ({
+          ...prev,
+          category_slug:  data.category_slug ?? prev.category_slug,
+          title:          data.title ?? '',
+          price:          Number(data.price ?? 0),
+          listing_type:   ((data.listing_type as 'prodaja' | 'najam') ?? 'prodaja'),
+          location:       data.location ?? '',
+          description:    data.description ?? '',
+          contact_phone:  data.contact_phone ?? '',
+          contact_email:  data.contact_email ?? '',
+          attributes:     (data.attributes as Record<string, any>) ?? {},
+          // Photos + auction toggle stay user-driven on edit (we don't re-upload
+          // existing photos through the wizard; they remain attached server-side).
+        }));
+      } catch (e) {
+        if (alive) setHydrateError(e instanceof Error ? e.message : 'Greška pri učitavanju.');
+      } finally {
+        if (alive) setHydrating(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [isEditMode, editId, authUser]);
+
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep((prev) => (prev + 1) as WizardStep);
@@ -133,39 +181,63 @@ export const CreateListingWizard = () => {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error('Not authenticated');
 
-      // Re-check listing limit at submit time so a stale state from page-load
-      // can't slip past. Server-side RLS isn't aware of tier limits, so the
-      // guard lives here.
-      const fresh = await getMyListingLimitState();
-      if (fresh && fresh.exceeded) {
-        setLimitState(fresh);
-        setIsSubmitting(false);
-        alert(
-          `Dosegli ste ${fresh.limit} aktivnih oglasa za plan ${tierLabelHr(fresh.tier)}. Nadogradite paket za više oglasa.`
-        );
-        return;
+      // Listing-limit guard only applies to fresh creates; editing your own
+      // existing listing doesn't add to the count.
+      if (!isEditMode) {
+        const fresh = await getMyListingLimitState();
+        if (fresh && fresh.exceeded) {
+          setLimitState(fresh);
+          setIsSubmitting(false);
+          alert(
+            `Dosegli ste ${fresh.limit} aktivnih oglasa za plan ${tierLabelHr(fresh.tier)}. Nadogradite paket za više oglasa.`
+          );
+          return;
+        }
       }
 
-      // Create listing
-      const { data: listing, error } = await supabase
-        .from('listings')
-        .insert({
-          user_id: user.id,
-          category_slug: formData.category_slug,
-          title: formData.title,
-          price: formData.price,
-          location: formData.location,
-          description: formData.description,
-          contact_phone: formData.contact_phone,
-          contact_email: formData.contact_email,
-          attributes: formData.attributes,
-          status: 'draft',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!listing) throw new Error('Failed to create listing');
+      // Create OR update listing.
+      let listing: any;
+      if (isEditMode && editId) {
+        const { data, error } = await supabase
+          .from('listings')
+          .update({
+            category_slug: formData.category_slug,
+            title: formData.title,
+            price: formData.price,
+            location: formData.location,
+            description: formData.description,
+            contact_phone: formData.contact_phone,
+            contact_email: formData.contact_email,
+            attributes: formData.attributes,
+          })
+          .eq('id', editId)
+          .eq('user_id', user.id)             // belt + RLS suspenders
+          .select()
+          .single();
+        if (error) throw error;
+        if (!data) throw new Error('Update failed.');
+        listing = data;
+      } else {
+        const { data, error } = await supabase
+          .from('listings')
+          .insert({
+            user_id: user.id,
+            category_slug: formData.category_slug,
+            title: formData.title,
+            price: formData.price,
+            location: formData.location,
+            description: formData.description,
+            contact_phone: formData.contact_phone,
+            contact_email: formData.contact_email,
+            attributes: formData.attributes,
+            status: 'draft',
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        if (!data) throw new Error('Failed to create listing');
+        listing = data;
+      }
 
       // Upload images with progress tracking
       let mainImageUrl = '';
@@ -212,22 +284,30 @@ export const CreateListingWizard = () => {
         );
       }
 
-      // Update listing with image URLs
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({
-          main_image: mainImageUrl,
-          images: galleryUrls,
-          damage_images: damageUrls,
-          status: 'published',
-        })
-        .eq('id', listing.id);
+      // Update listing with image URLs.
+      // In edit mode, only overwrite image fields when the user actually
+      // selected new files this session — we don't want to wipe existing
+      // photos on a no-op resave. Status flip to 'published' only happens
+      // on first publish; edits leave whatever status the listing had.
+      const update: Record<string, unknown> = {};
+      if (mainImageUrl)              update.main_image    = mainImageUrl;
+      if (galleryUrls.length > 0)    update.images        = galleryUrls;
+      if (damageUrls.length > 0)     update.damage_images = damageUrls;
+      if (!isEditMode)               update.status        = 'published';
 
-      if (updateError) throw updateError;
+      if (Object.keys(update).length > 0) {
+        const { error: updateError } = await supabase
+          .from('listings')
+          .update(update)
+          .eq('id', listing.id);
+        if (updateError) throw updateError;
+      }
 
       // Optional: opt this listing into the BaT-style auction track.
       // RLS: auctions_seller_insert requires auth.uid() = seller_id, satisfied here.
-      if (formData.auctionEnabled) {
+      // Edit mode: skip auction enrolment to avoid duplicate inserts on resave;
+      // the auction can be created once and managed separately.
+      if (formData.auctionEnabled && !isEditMode) {
         const days = Math.max(1, Math.min(30, formData.auctionDays || 7));
         const endAt = new Date(Date.now() + days * 86_400_000).toISOString();
         const { error: aucErr } = await supabase.from('auctions').insert({
@@ -257,10 +337,29 @@ export const CreateListingWizard = () => {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || hydrating) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-foreground border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (hydrateError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-8">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="w-16 h-16 bg-muted flex items-center justify-center mx-auto">
+            <AlertCircle className="w-8 h-8 text-foreground" strokeWidth={1.5} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-light text-foreground tracking-widest mb-2">Greška pri učitavanju</h1>
+            <p className="text-sm font-light text-muted-foreground">{hydrateError}</p>
+          </div>
+          <Link to="/dashboard" className="inline-flex items-center justify-center px-8 py-4 bg-primary text-primary-foreground rounded-none font-light uppercase tracking-widest text-xs hover:bg-primary/90 transition-all">
+            Natrag na dashboard
+          </Link>
+        </div>
       </div>
     );
   }

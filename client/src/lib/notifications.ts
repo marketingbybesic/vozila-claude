@@ -113,6 +113,16 @@ export function notificationLink(n: NotificationRow): string | null {
     case 'subscription_started':
     case 'subscription_canceled':
       return '/postavke';
+    case 'auction_outbid':
+    case 'auction_won':
+    case 'auction_seller_sold':
+    case 'auction_seller_unsold': {
+      const aid = n.payload?.auction_id;
+      return aid ? `/aukcija/${aid}` : '/aukcija';
+    }
+    case 'ai_copy_call':
+      // Internal sentinel — not user-visible navigation.
+      return null;
     default:
       return null;
   }
@@ -127,11 +137,32 @@ export function notificationTitle(n: NotificationRow): string {
       const label = n.payload?.label ?? 'spremljena pretraga';
       return `${c} ${c === 1 ? 'novi rezultat' : 'novih rezultata'} — "${label}"`;
     }
-    case 'boost_purchased':     return 'Boost aktiviran';
+    case 'boost_purchased':       return 'Boost aktiviran';
     case 'subscription_started':  return 'Pretplata aktivna';
     case 'subscription_canceled': return 'Pretplata otkazana';
-    case 'listing_expiring':    return 'Oglas ističe uskoro';
-    case 'listing_sold':        return 'Oglas označen kao prodan';
-    default:                    return n.type;
+    case 'listing_expiring':      return 'Oglas ističe uskoro';
+    case 'listing_sold':          return 'Oglas označen kao prodan';
+    case 'auction_outbid': {
+      const high = n.payload?.new_high;
+      return high
+        ? `Niste više najbolji ponuđač (nova ponuda ${Number(high).toLocaleString('hr-HR')} €)`
+        : 'Niste više najbolji ponuđač';
+    }
+    case 'auction_won': {
+      const fp = n.payload?.final_price;
+      return fp
+        ? `Pobijedili ste aukciju (${Number(fp).toLocaleString('hr-HR')} €)`
+        : 'Pobijedili ste aukciju';
+    }
+    case 'auction_seller_sold': {
+      const fp = n.payload?.final_price;
+      return fp
+        ? `Aukcija prodana za ${Number(fp).toLocaleString('hr-HR')} €`
+        : 'Aukcija prodana';
+    }
+    case 'auction_seller_unsold':
+      return 'Aukcija završena bez prodaje';
+    default:
+      return n.type;
   }
 }

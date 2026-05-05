@@ -225,6 +225,10 @@ function iconFor(type: string): typeof Bell {
     case 'subscription_canceled': return CreditCard;
     case 'listing_expiring':
     case 'listing_sold':          return AlertCircle;
+    case 'auction_outbid':
+    case 'auction_won':
+    case 'auction_seller_sold':
+    case 'auction_seller_unsold': return Sparkles;
     default:                      return Bell;
   }
 }
