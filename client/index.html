@@ -1,14 +1,24 @@
 <!doctype html>
-<html lang="hr" class="dark">
+<html lang="hr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vozilahrfavicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Vozila.hr" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      // Pre-React theme bootstrap. Reads stored preference, falls back to light
+      // (the new default per phase 13.1). Kept inline so there's no FOUC.
+      try {
+        var stored = localStorage.getItem('vozila_theme');
+        var useDark = stored === 'dark';
+        if (useDark) document.documentElement.classList.add('dark');
+      } catch (e) { /* private mode / no localStorage */ }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,900;1,800;1,900&display=swap" rel="stylesheet">

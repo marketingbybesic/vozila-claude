@@ -171,7 +171,7 @@ export const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-card border border-neutral-800 rounded-lg p-6">
+              <div key={i} className="bg-card border border-border rounded-none p-6">
                 <Skeleton className="h-8 w-24 mb-2" />
                 <Skeleton className="h-10 w-16" />
               </div>
@@ -192,13 +192,13 @@ export const Dashboard = () => {
             <h1 className="text-3xl font-black uppercase tracking-widest text-foreground">
               Moji Oglasi
             </h1>
-            <p className="text-sm text-neutral-400 mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               Upravljanje i analitika
             </p>
           </div>
           <Link 
             to="/predaj-oglas"
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all duration-300"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-foreground rounded-lg font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all duration-300"
           >
             <Plus className="w-4 h-4" />
             Novi Oglas
@@ -225,19 +225,19 @@ export const Dashboard = () => {
 
         {/* Empty State */}
         {listings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 bg-card border border-neutral-800 rounded-lg">
+          <div className="flex flex-col items-center justify-center py-24 bg-card border border-border rounded-none">
             <div className="w-24 h-24 bg-neutral-800 rounded-full flex items-center justify-center mb-6">
-              <Plus className="w-12 h-12 text-neutral-400" />
+              <Plus className="w-12 h-12 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-black text-foreground mb-2">
               Nema oglasa
             </h2>
-            <p className="text-neutral-400 mb-8 text-center">
+            <p className="text-muted-foreground mb-8 text-center">
               Predajte svoj prvi oglas i počnite prodavati
             </p>
             <Link 
               to="/predaj-oglas"
-              className="flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-lg font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all duration-300"
+              className="flex items-center gap-2 px-8 py-4 bg-primary text-foreground rounded-lg font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all duration-300"
             >
               <Plus className="w-5 h-5" />
               Predaj prvi oglas
@@ -245,37 +245,37 @@ export const Dashboard = () => {
           </div>
         ) : (
           /* Listings Table */
-          <div className="bg-card border border-neutral-800 rounded-lg overflow-hidden">
+          <div className="bg-card border border-border rounded-none overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-neutral-800">
-                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                  <tr className="border-b border-border">
+                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Vozilo
                     </th>
-                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Cijena
                     </th>
-                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Pregledi
                     </th>
-                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Match Score
                     </th>
-                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Status
                     </th>
-                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                    <th className="text-left px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Promocija
                     </th>
-                    <th className="text-right px-6 py-4 text-xs font-black uppercase tracking-widest text-neutral-400">
+                    <th className="text-right px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">
                       Akcije
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {listings.map((listing) => (
-                    <tr key={listing.id} className="border-b border-neutral-800 hover:bg-neutral-800/50 transition-colors">
+                    <tr key={listing.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="px-6 py-4">
                         <Link 
                           to={`/listing/${listing.id}`}
@@ -291,7 +291,7 @@ export const Dashboard = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-neutral-400" />
+                          <Eye className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm font-bold text-foreground">
                             {listing.views_count || 0}
                           </span>

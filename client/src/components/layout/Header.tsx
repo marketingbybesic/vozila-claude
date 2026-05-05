@@ -42,8 +42,10 @@ export const Header = () => {
   }, []);
 
   const toggleTheme = () => {
-    document.documentElement.classList.toggle('dark');
-    setIsDark(!isDark);
+    const next = !isDark;
+    document.documentElement.classList.toggle('dark', next);
+    try { localStorage.setItem('vozila_theme', next ? 'dark' : 'light'); } catch {}
+    setIsDark(next);
   };
 
   return (

@@ -93,17 +93,17 @@ export const Settings = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <Link to="/" className="inline-flex items-center gap-2 text-[10px] font-light uppercase tracking-[0.15em] text-white/40 hover:text-white transition-colors mb-8">
+      <Link to="/" className="inline-flex items-center gap-2 text-[10px] font-light uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors mb-8">
         <ArrowLeft className="w-4 h-4" strokeWidth={1.5} /> Natrag
       </Link>
 
-      <h1 className="text-xl font-light uppercase tracking-[0.2em] text-white mb-8">Postavke</h1>
+      <h1 className="text-xl font-light uppercase tracking-[0.2em] text-foregroundmb-8">Postavke</h1>
 
       <div className="flex flex-col gap-6">
         {/* Subscription Card */}
-        <div className="border border-white/10 bg-white/5 backdrop-blur-md p-6">
+        <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
-            <CreditCard className="w-5 h-5 text-white/40" strokeWidth={1.5} />
+            <CreditCard className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Pretplata</h2>
             {sub?.subscription_tier && (
               <span className="ml-auto"><VerifiedDealerBadge tier={sub.subscription_tier} size="md" /></span>
@@ -118,18 +118,18 @@ export const Settings = () => {
 
           {sub?.subscription_tier && sub.subscription_status === 'active' ? (
             <div className="space-y-3">
-              <p className="text-sm font-light text-white/70">
+              <p className="text-sm font-light text-foreground/70">
                 Aktivni plan: <span className="text-white">{tierLabel(sub.subscription_tier)}</span>
               </p>
               {sub.subscription_renews_at && (
-                <p className="text-xs font-light text-white/40">
+                <p className="text-xs font-light text-muted-foreground">
                   Sljedeća naplata: {new Date(sub.subscription_renews_at).toLocaleDateString('hr-HR')}
                 </p>
               )}
               <button
                 onClick={handlePortal}
                 disabled={portalBusy}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 text-white font-light uppercase tracking-[0.15em] text-[10px] border border-white/10 hover:bg-white/10 transition-all duration-300 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-muted/30 text-foregroundfont-light uppercase tracking-[0.15em] text-[10px] border border-border hover:bg-muted/50 transition-all duration-300 disabled:opacity-50"
               >
                 {portalBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />}
                 Upravljaj pretplatom
@@ -154,7 +154,7 @@ export const Settings = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm font-light text-white/40 leading-relaxed">
+              <p className="text-sm font-light text-muted-foreground leading-relaxed">
                 Nemate aktivnu pretplatu. Pretplate Bronze / Silver / Gold otključavaju verificiranu značku, više oglasa i Boost kredite.
               </p>
               <Link
@@ -168,44 +168,44 @@ export const Settings = () => {
         </div>
 
         {/* Profile Card */}
-        <div className="border border-white/10 bg-white/5 backdrop-blur-md p-6">
+        <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
-            <User className="w-5 h-5 text-white/40" strokeWidth={1.5} />
+            <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Profil</h2>
           </div>
-          <p className="text-sm font-light text-white/40 leading-relaxed">
+          <p className="text-sm font-light text-muted-foreground leading-relaxed">
             Upravljanje profilom dolazi uskoro. Trenutno možete zatražiti brisanje svih Vaših podataka u skladu s GDPR-om.
           </p>
         </div>
 
         {/* Notification Settings Card */}
-        <div className="border border-white/10 bg-white/5 backdrop-blur-md p-6">
+        <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Bell className="w-5 h-5 text-white/40" strokeWidth={1.5} />
+            <Bell className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Obavijesti</h2>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-t border-white/10">
+            <div className="flex items-center justify-between py-3 border-t border-border">
               <div className="flex items-center gap-2">
-                <BellRing className="w-4 h-4 text-white/40" strokeWidth={1.5} />
-                <span className="text-sm font-light text-white/60">Email obavijesti o novim oglasima</span>
+                <BellRing className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                <span className="text-sm font-light text-muted-foreground">Email obavijesti o novim oglasima</span>
               </div>
               <button
                 onClick={() => setEmailNotifications((v) => !v)}
-                className={`relative w-11 h-6 rounded-full transition-all duration-300 border border-white/10 ${emailNotifications ? 'bg-primary' : 'bg-white/5'}`}
+                className={`relative w-11 h-6 rounded-full transition-all duration-300 border border-border ${emailNotifications ? 'bg-primary' : 'bg-muted/30'}`}
               >
                 <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform duration-300 ${emailNotifications ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
             </div>
-            <div className="flex items-center justify-between py-3 border-t border-white/10">
+            <div className="flex items-center justify-between py-3 border-t border-border">
               <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-white/40" strokeWidth={1.5} />
-                <span className="text-sm font-light text-white/60">In-app obavijesti o promjeni cijene</span>
+                <Bell className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                <span className="text-sm font-light text-muted-foreground">In-app obavijesti o promjeni cijene</span>
               </div>
               <button
                 onClick={() => setPriceAlerts((v) => !v)}
-                className={`relative w-11 h-6 rounded-full transition-all duration-300 border border-white/10 ${priceAlerts ? 'bg-primary' : 'bg-white/5'}`}
+                className={`relative w-11 h-6 rounded-full transition-all duration-300 border border-border ${priceAlerts ? 'bg-primary' : 'bg-muted/30'}`}
               >
                 <span className={`absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full transition-transform duration-300 ${priceAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
@@ -214,25 +214,25 @@ export const Settings = () => {
         </div>
 
         {/* Privacy & GDPR Card */}
-        <div className="border border-white/10 bg-white/5 backdrop-blur-md p-6">
+        <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Shield className="w-5 h-5 text-white/40" strokeWidth={1.5} />
+            <Shield className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
             <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Privatnost i sigurnost</h2>
           </div>
 
           {/* GDPR — data export */}
-          <div className="border-t border-white/10 pt-4 mt-4 mb-6">
-            <h3 className="text-[10px] font-light uppercase tracking-[0.2em] text-white mb-3 flex items-center gap-2">
+          <div className="border-t border-border pt-4 mt-4 mb-6">
+            <h3 className="text-[10px] font-light uppercase tracking-[0.2em] text-foregroundmb-3 flex items-center gap-2">
               <Download className="w-4 h-4" strokeWidth={1.5} />
               Preuzmi moje podatke (GDPR)
             </h3>
-            <p className="text-sm font-light text-white/40 mb-4 leading-relaxed">
+            <p className="text-sm font-light text-muted-foreground mb-4 leading-relaxed">
               Preuzmite JSON datoteku sa svim Vašim podacima na Vozila.hr — oglasi, poruke, recenzije, leadovi, rezervacije, VIN izvještaji, spremljene pretrage.
             </p>
             <button
               onClick={handleExport}
               disabled={exportBusy}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 text-white border border-white/10 hover:bg-white/10 font-light uppercase tracking-[0.15em] text-[10px] transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-muted/30 text-foregroundborder border-border hover:bg-muted/50 font-light uppercase tracking-[0.15em] text-[10px] transition-all disabled:opacity-50"
             >
               {exportBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <Download className="w-3.5 h-3.5" strokeWidth={1.5} />}
               Preuzmi podatke
@@ -240,14 +240,14 @@ export const Settings = () => {
             {exportError && <p className="text-[10px] font-light text-red-400 mt-2">{exportError}</p>}
           </div>
 
-          <div className="border-t border-white/10 pt-4 mt-4">
+          <div className="border-t border-border pt-4 mt-4">
             <h3 className="text-[10px] font-light uppercase tracking-[0.2em] text-red-400 mb-3 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" strokeWidth={1.5} />
               Brisanje računa (GDPR — pravo na zaborav)
             </h3>
-            <p className="text-sm font-light text-white/40 mb-6 leading-relaxed">
+            <p className="text-sm font-light text-muted-foreground mb-6 leading-relaxed">
               Brisanjem računa uklanjamo sve Vaše oglase, slike, analitiku i osobne podatke. Ova radnja je
-              <span className="text-white/60"> nepovratna</span>.
+              <span className="text-muted-foreground"> nepovratna</span>.
             </p>
 
             {!confirmOpen ? (
@@ -266,14 +266,14 @@ export const Settings = () => {
                   </p>
                 ) : (
                   <>
-                    <p className="text-sm font-light text-white/60 mb-4">
+                    <p className="text-sm font-light text-muted-foreground mb-4">
                       Za potvrdu, upišite <span className="text-white font-light">"obrisi"</span> u polje ispod:
                     </p>
                     <input
                       type="text"
                       value={confirmText}
                       onChange={(e) => setConfirmText(e.target.value)}
-                      className="w-full bg-transparent border border-white/10 px-4 py-3 text-sm font-light text-white placeholder-white/20 focus:border-red-500/30 focus:outline-none mb-4"
+                      className="w-full bg-transparent border border-border px-4 py-3 text-sm font-light text-foregroundplaceholder-white/20 focus:border-red-500/30 focus:outline-none mb-4"
                       placeholder="obrisi"
                     />
                     <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ export const Settings = () => {
                       </button>
                       <button
                         onClick={() => { setConfirmOpen(false); setConfirmText(''); }}
-                        className="px-5 py-2.5 text-white/40 font-light uppercase tracking-[0.15em] text-[10px] border border-white/10 hover:bg-white/5 hover:text-white transition-all duration-300"
+                        className="px-5 py-2.5 text-muted-foreground font-light uppercase tracking-[0.15em] text-[10px] border border-border hover:bg-muted/30 hover:text-foreground transition-all duration-300"
                       >
                         Odustani
                       </button>

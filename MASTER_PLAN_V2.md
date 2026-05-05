@@ -909,5 +909,49 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(c)** Polish — collapse the two header bells (carried from 10.4), implement wizard `?edit=<id>` mode (carried from 9.4), add slug-canonical search URLs (carried from 12).
   - Recommendation: (a) — phase 13 surfaces are useless without the data flowing through them. Wire `search_log` first, then ship `AdminPayments`. Say `continue Vozila phase 13.1`.
 
+### Checkpoint 2026-05-05 (phase 13.1 — search-log wiring + payments + cron heartbeat + theme switch)
+- **Shipped this session:**
+  - `client/src/components/listings/ListingFeed.tsx` — fire-and-forget `INSERT INTO search_log` after every meaningful first-page fetch (skips empty default URL + load-more pages). Captures user_id, category_slug, params (only set values), URL, result_count. Failure is swallowed so a logging error never breaks the feed.
+  - `server/db/migrations/007_admin_extras.sql` (idempotent):
+    - `cron_runs(job_name, status, started_at, finished_at, duration_ms, result, error)` — heartbeat per cron invocation, admin-select RLS.
+    - `stripe_events` admin-select RLS added (table existed since phase 9.1).
+    - `payments_summary` view returning 10 financial KPIs in one round-trip (events 30d, checkouts, new/canceled subs, failed invoices, featured live, active/past_due subs, paid VIN reports, paid inspections).
+  - `supabase/functions/_shared/cron.ts` (new) — `withCron(jobName, fn)` helper that inserts a `running` row at start, then updates with success/failure + duration + result on completion. Best-effort heartbeat — heartbeat failure never throws past the wrapped fn.
+  - `supabase/functions/expire-featured/index.ts` — wrapped in `withCron("expire-featured", …)`.
+  - `supabase/functions/saved-searches-digest/index.ts` — wrapped in `withCron("saved-searches-digest", …)`.
+  - `client/src/lib/admin.ts` — added `getPaymentsSummary`, `listStripeEvents` with type filter, `listCronRuns` (last 60), `getCronJobStatuses` (last-run summary per job; surfaces known jobs even before any rows exist).
+  - `client/src/components/admin/AdminPayments.tsx` (new lazy section) — 10-card KPI grid + filtered Stripe events feed (6 event types). Per-row formatting for amount + currency + metadata.kind/tier when present. Empty state when webhook hasn't fired yet.
+  - `client/src/components/admin/AdminCron.tsx` (new lazy section) — per-job status cards (success/failed/running/never), tone-coded; runs table with last 40 invocations including duration + result/error. Croatian relative-time formatter ("prije 5 min").
+  - `client/src/components/admin/AdminDashboard.tsx` — added `payments` (gate: payments) and `cron` (gate: any) sections to the sidebar.
+  - **Theme switch — light-mode default + persistence:**
+    - `client/index.html` — removed `class="dark"` from `<html>`, added inline pre-React bootstrap script reading `localStorage.vozila_theme` (no FOUC). Updated `<meta name="theme-color">` to dual light/dark via media queries.
+    - `client/src/components/layout/Header.tsx` + `MobileBottomNav.tsx` — `toggleTheme` now writes `localStorage.vozila_theme` so the choice persists across visits.
+    - `client/src/pages/Settings.tsx` — replaced 9 categories of hardcoded dark-mode classes (`text-white/X`, `border-white/10`, `bg-white/5`, `hover:bg-white/10`, etc.) with semantic tokens (`text-foreground`, `text-muted-foreground`, `border-border`, `bg-card`, `bg-muted/30`, `hover:bg-muted/50`).
+    - `client/src/pages/Dashboard.tsx` — same treatment for the listings dashboard table chrome.
+- **Build:** ✅ green, 2.23s. **Bundle (vs phase 13)**:
+  - `index-*.js`: 448.15 → **448.83 kB** (gzip 141.30 → **141.57 kB**, +0.27)
+  - `AdminDashboard`: 95.31 → 95.92 kB (2 new sidebar entries)
+  - New lazy chunks: `AdminPayments` 4.99/**1.81 kB gzip**, `AdminCron` 5.40/**1.72 kB gzip**
+  - `admin-*.js` shared lib: 6.07 → 7.18 kB (1.80 → **2.12 kB gzip**, payments + cron helpers)
+  - `Settings` 11.14 → 12.48 kB (token swap), `Dashboard` 15.91 → 15.95 (token swap)
+  - `supabase-*.js` 50.74 kB gzip — unchanged ✓
+- **Theme work — what's done vs. what's NOT done (honest):**
+  - ✅ Light mode is now the **default** for new visitors. User's choice persists across sessions.
+  - ✅ Theme bootstrap inline in `<html>` so there's no flash of wrong theme.
+  - ✅ `<meta name="theme-color">` correct for both modes (iOS/Android browser chrome adapts).
+  - ✅ Settings + Dashboard page chromes refactored to semantic tokens — these were the worst light-mode-broken pages.
+  - ❌ Other 40 files still have hardcoded dark classes (`text-white`, `bg-black`, `bg-neutral-*`, `border-neutral-*`, `text-neutral-*`). They look fine in dark mode but degrade in light. Highest-priority remaining: Profile, Compare, Favorites, NotificationsFlyout, AdminDashboard chrome, all 9 admin sub-sections, ListingDetail's seller block (still uses `bg-card border-neutral-800 text-white`), CreateListingWizard.
+  - ❌ Hero / CategoryGrid / NoviOglasiCarousel use mostly tokens already, but worth verifying.
+- **Devil's advocate this round:**
+  - *search_log INSERTs add latency to every search.* Fire-and-forget pattern — the feed's `setLoading(false)` already ran before the insert; user never waits.
+  - *INSERTs from anonymous users are RLS-allowed.* Yes by design — the policy is `WITH CHECK (true)`. Could be spammed, but each row is tiny and the table is admin-only-read; old rows trimmed in 13.x cron.
+  - *cron_runs grows unbounded.* True. Trim cron at 90 days deferred to 13.x.
+  - *Theme bootstrap can't read localStorage in private mode.* Falls back to light (the new default), which is fine.
+  - *Theme work is partial — admin pages still dark-only.* That's intentional — admin is internal, not user-facing. Public surfaces prioritized.
+- **Next concrete action options:**
+  - **(a)** Continue theme cleanup — Profile, Compare, Favorites, NotificationsFlyout, ListingDetail seller block, CreateListingWizard, then admin chrome. ~1-2 turns to cover all user-facing pages.
+  - **(b)** Phase 14 — inspections fulfilment workflow (inspector role + queue + report upload + Vozila Inspected badge) + auctions stub.
+  - Recommendation: (a) — finish the theme so light mode is fully production-quality before adding more features. Say `continue Vozila theme cleanup`.
+
 ### Checkpoint <next>
 *(append next session)*

@@ -661,6 +661,38 @@ export const ListingFeed = () => {
 
       if (count !== null) setTotalCount(count);
       setHasMore(count !== null && to < count - 1);
+
+      // Log first-page searches to fuel the admin Search Insights surface.
+      // Skip load-more pages and the initial empty default URL to keep noise low.
+      if (!isLoadMore) {
+        const isMeaningfulSearch =
+          !!categorySlug ||
+          !!queryState.make || !!queryState.model || !!queryState.fuel || !!queryState.transmission ||
+          (queryState.price_min ?? 0) > 0 || (queryState.price_max ?? 0) > 0 ||
+          (queryState.year_min ?? 0) > 0 || (queryState.year_max ?? 0) > 0 ||
+          !!queryState.lat;
+        if (isMeaningfulSearch) {
+          // Fire-and-forget; failure must never break the feed.
+          (async () => {
+            try {
+              const { data: { user } } = await supabase.auth.getUser();
+              const params: Record<string, unknown> = {};
+              for (const [k, v] of Object.entries(queryState)) {
+                if (v === undefined || v === null || v === '' || v === 0) continue;
+                params[k] = v;
+              }
+              if (categorySlug) params.category = categorySlug;
+              await supabase.from('search_log').insert({
+                user_id: user?.id ?? null,
+                category_slug: categorySlug ?? null,
+                params,
+                url: window.location.pathname + window.location.search,
+                result_count: count ?? 0,
+              });
+            } catch { /* swallow */ }
+          })();
+        }
+      }
     } catch (err) {
       console.error('Supabase Error:', err);
     } finally {

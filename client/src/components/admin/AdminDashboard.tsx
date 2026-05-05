@@ -4,7 +4,8 @@ import { supabase } from '../../lib/supabase';
 import { runSeed } from '../../lib/runSeed';
 import {
   LayoutDashboard, Users, Car, ShieldCheck, DatabaseZap, CheckCircle,
-  Flag, ArrowUpRight, Search, ScrollText, Power, Loader2, BarChart3
+  Flag, ArrowUpRight, Search, ScrollText, Power, Loader2, BarChart3,
+  CreditCard, Activity
 } from 'lucide-react';
 import { getMyAdminRole, type AdminRole, canModerate, canViewPayments, canWrite } from '../../lib/admin';
 
@@ -14,14 +15,16 @@ const AdminListings      = lazy(() => import('./AdminListings').then(m => ({ def
 const AdminUsers         = lazy(() => import('./AdminUsers').then(m => ({ default: m.AdminUsers })));
 const AdminModeration    = lazy(() => import('./AdminModeration').then(m => ({ default: m.AdminModeration })));
 const AdminLeads         = lazy(() => import('./AdminLeads').then(m => ({ default: m.AdminLeads })));
+const AdminPayments      = lazy(() => import('./AdminPayments').then(m => ({ default: m.AdminPayments })));
+const AdminCron          = lazy(() => import('./AdminCron').then(m => ({ default: m.AdminCron })));
 const AdminSearchInsights = lazy(() => import('./AdminSearchInsights').then(m => ({ default: m.AdminSearchInsights })));
 const AdminAuditLog      = lazy(() => import('./AdminAuditLog').then(m => ({ default: m.AdminAuditLog })));
 const AdminKillSwitch    = lazy(() => import('./AdminKillSwitch').then(m => ({ default: m.AdminKillSwitch })));
 const AdManager          = lazy(() => import('./AdManager').then(m => ({ default: m.AdManager })));
 
 type SectionId =
-  | 'overview' | 'listings' | 'users' | 'moderation' | 'leads'
-  | 'search' | 'ads' | 'audit' | 'killswitch' | 'seed';
+  | 'overview' | 'listings' | 'users' | 'moderation' | 'leads' | 'payments'
+  | 'search' | 'ads' | 'cron' | 'audit' | 'killswitch' | 'seed';
 
 interface SectionDef {
   id: SectionId;
@@ -37,8 +40,10 @@ const SECTIONS: SectionDef[] = [
   { id: 'users',      label: 'Korisnici',         icon: Users,           gate: 'write' },
   { id: 'moderation', label: 'Moderacija',        icon: Flag,            gate: 'moderate' },
   { id: 'leads',      label: 'Leadovi',           icon: ArrowUpRight,    gate: 'any' },
+  { id: 'payments',   label: 'Plaćanja',          icon: CreditCard,      gate: 'payments' },
   { id: 'search',     label: 'Pretrage',          icon: Search,          gate: 'any' },
   { id: 'ads',        label: 'Reklame',           icon: BarChart3,       gate: 'write' },
+  { id: 'cron',       label: 'Cron',              icon: Activity,        gate: 'any' },
   { id: 'audit',      label: 'Audit log',         icon: ScrollText,      gate: 'any' },
   { id: 'killswitch', label: 'Kill-switch',       icon: Power,           gate: 'write' },
   { id: 'seed',       label: 'Seed',              icon: DatabaseZap,     gate: 'write' },
@@ -159,8 +164,10 @@ export const AdminDashboard = () => {
               {active === 'users'      && <AdminUsers />}
               {active === 'moderation' && <AdminModeration />}
               {active === 'leads'      && <AdminLeads />}
+              {active === 'payments'   && <AdminPayments />}
               {active === 'search'     && <AdminSearchInsights />}
               {active === 'ads'        && <AdManager />}
+              {active === 'cron'       && <AdminCron />}
               {active === 'audit'      && <AdminAuditLog />}
               {active === 'killswitch' && <AdminKillSwitch />}
               {active === 'seed'       && <SeedSection />}

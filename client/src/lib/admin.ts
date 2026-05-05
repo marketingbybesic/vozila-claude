@@ -343,6 +343,114 @@ export async function adminSetLeadStatus(id: string, status: 'new' | 'contacted'
 // Search insights.
 // ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+// Payments — stripe_events feed + payments_summary view.
+// ----------------------------------------------------------------------------
+
+export interface PaymentsSummary {
+  events_30d: number;
+  checkouts_30d: number;
+  new_subs_30d: number;
+  canceled_subs_30d: number;
+  failed_invoices_30d: number;
+  featured_active: number;
+  subs_active: number;
+  subs_past_due: number;
+  vin_reports_paid: number;
+  inspections_paid: number;
+}
+
+export async function getPaymentsSummary(): Promise<PaymentsSummary | null> {
+  const { data, error } = await supabase.from('payments_summary').select('*').maybeSingle();
+  if (error) {
+    console.warn('[admin] payments summary failed', error.message);
+    return null;
+  }
+  return (data ?? null) as PaymentsSummary | null;
+}
+
+export interface StripeEventRow {
+  id: string;
+  type: string;
+  payload: Record<string, any>;
+  processed_at: string;
+}
+
+export async function listStripeEvents(filterType?: string, limit = 100): Promise<StripeEventRow[]> {
+  let q = supabase.from('stripe_events').select('id, type, payload, processed_at').order('processed_at', { ascending: false }).limit(limit);
+  if (filterType && filterType !== 'all') q = q.eq('type', filterType);
+  const { data } = await q;
+  return (data ?? []) as StripeEventRow[];
+}
+
+// ----------------------------------------------------------------------------
+// Cron — heartbeat rows from cron_runs table.
+// ----------------------------------------------------------------------------
+
+export interface CronRunRow {
+  id: number;
+  job_name: string;
+  status: 'running' | 'success' | 'failed';
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+}
+
+export async function listCronRuns(limit = 60): Promise<CronRunRow[]> {
+  const { data } = await supabase
+    .from('cron_runs')
+    .select('*')
+    .order('started_at', { ascending: false })
+    .limit(limit);
+  return (data ?? []) as CronRunRow[];
+}
+
+// Last-run summary per job.
+export interface CronJobStatus {
+  job_name: string;
+  last_status: 'running' | 'success' | 'failed' | 'never';
+  last_started_at: string | null;
+  last_finished_at: string | null;
+  last_duration_ms: number | null;
+  last_error: string | null;
+  last_result: Record<string, unknown> | null;
+}
+
+export async function getCronJobStatuses(): Promise<CronJobStatus[]> {
+  // Pull recent rows then bucket per job. Cheap for ≤200 rows.
+  const rows = await listCronRuns(200);
+  const byJob = new Map<string, CronJobStatus>();
+  for (const r of rows) {
+    if (byJob.has(r.job_name)) continue;
+    byJob.set(r.job_name, {
+      job_name: r.job_name,
+      last_status: r.status,
+      last_started_at: r.started_at,
+      last_finished_at: r.finished_at,
+      last_duration_ms: r.duration_ms,
+      last_error: r.error,
+      last_result: r.result,
+    });
+  }
+  // Always show known jobs even if no rows yet.
+  for (const known of ['saved-searches-digest', 'expire-featured']) {
+    if (!byJob.has(known)) {
+      byJob.set(known, {
+        job_name: known,
+        last_status: 'never',
+        last_started_at: null,
+        last_finished_at: null,
+        last_duration_ms: null,
+        last_error: null,
+        last_result: null,
+      });
+    }
+  }
+  return [...byJob.values()].sort((a, b) => a.job_name.localeCompare(b.job_name));
+}
+
 export async function getTopSearchQueries(limit = 25): Promise<{ url: string; count: number; zero_pct: number }[]> {
   // Coarse aggregation — takes one round-trip and is good enough for v1.
   const { data } = await supabase

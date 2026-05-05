@@ -7,6 +7,7 @@
 import { sendEmail, EMAIL_PUBLIC_SITE_URL, type EmailCategory } from "../_shared/email.ts";
 import { tplSavedSearchDigest } from "../_shared/email.ts";
 import { supabaseAdmin } from "../_shared/supabase.ts";
+import { withCron } from "../_shared/cron.ts";
 
 interface SavedSearch {
   id: string;
@@ -55,6 +56,8 @@ function applyParams(query: any, p: Record<string, any>): any {
 const DEBOUNCE_MS = 20 * 60 * 60 * 1000;
 
 Deno.serve(async () => {
+ try {
+  const summary = await withCron("saved-searches-digest", async () => {
   // Fetch enabled saved searches that are either un-digested or past debounce.
   const cutoff = new Date(Date.now() - DEBOUNCE_MS).toISOString();
   const { data: searches, error } = await supabaseAdmin
@@ -63,7 +66,7 @@ Deno.serve(async () => {
     .eq("email_alert", true)
     .or(`last_digest_sent_at.is.null,last_digest_sent_at.lt.${cutoff}`);
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    throw new Error(error.message);
   }
 
   let sent = 0;
@@ -151,8 +154,15 @@ Deno.serve(async () => {
     }
   }
 
-  return new Response(
-    JSON.stringify({ sent, skipped, errors, total: searches?.length ?? 0 }),
-    { status: 200, headers: { "Content-Type": "application/json" } },
-  );
+  return { sent, skipped, errors, total: searches?.length ?? 0 };
+  });
+
+  return new Response(JSON.stringify(summary), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+ } catch (e) {
+  const msg = e instanceof Error ? e.message : "error";
+  return new Response(JSON.stringify({ error: msg }), { status: 500 });
+ }
 });
