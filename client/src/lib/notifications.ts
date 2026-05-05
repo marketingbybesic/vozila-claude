@@ -116,7 +116,9 @@ export function notificationLink(n: NotificationRow): string | null {
     case 'auction_outbid':
     case 'auction_won':
     case 'auction_seller_sold':
-    case 'auction_seller_unsold': {
+    case 'auction_seller_unsold':
+    case 'auction_approved':
+    case 'auction_rejected': {
       const aid = n.payload?.auction_id;
       return aid ? `/aukcija/${aid}` : '/aukcija';
     }
@@ -162,6 +164,10 @@ export function notificationTitle(n: NotificationRow): string {
     }
     case 'auction_seller_unsold':
       return 'Aukcija završena bez prodaje';
+    case 'auction_approved':
+      return 'Aukcija odobrena';
+    case 'auction_rejected':
+      return 'Aukcija nije odobrena';
     default:
       return n.type;
   }

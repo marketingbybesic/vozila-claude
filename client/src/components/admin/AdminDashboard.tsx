@@ -5,7 +5,7 @@ import { runSeed } from '../../lib/runSeed';
 import {
   LayoutDashboard, Users, Car, ShieldCheck, DatabaseZap, CheckCircle,
   Flag, ArrowUpRight, Search, ScrollText, Power, Loader2, BarChart3,
-  CreditCard, Activity
+  CreditCard, Activity, Gavel
 } from 'lucide-react';
 import { getMyAdminRole, type AdminRole, canModerate, canViewPayments, canWrite } from '../../lib/admin';
 
@@ -15,6 +15,7 @@ const AdminListings      = lazy(() => import('./AdminListings').then(m => ({ def
 const AdminUsers         = lazy(() => import('./AdminUsers').then(m => ({ default: m.AdminUsers })));
 const AdminModeration    = lazy(() => import('./AdminModeration').then(m => ({ default: m.AdminModeration })));
 const AdminLeads         = lazy(() => import('./AdminLeads').then(m => ({ default: m.AdminLeads })));
+const AdminAuctions      = lazy(() => import('./AdminAuctions').then(m => ({ default: m.AdminAuctions })));
 const AdminPayments      = lazy(() => import('./AdminPayments').then(m => ({ default: m.AdminPayments })));
 const AdminCron          = lazy(() => import('./AdminCron').then(m => ({ default: m.AdminCron })));
 const AdminSearchInsights = lazy(() => import('./AdminSearchInsights').then(m => ({ default: m.AdminSearchInsights })));
@@ -23,7 +24,7 @@ const AdminKillSwitch    = lazy(() => import('./AdminKillSwitch').then(m => ({ d
 const AdManager          = lazy(() => import('./AdManager').then(m => ({ default: m.AdManager })));
 
 type SectionId =
-  | 'overview' | 'listings' | 'users' | 'moderation' | 'leads' | 'payments'
+  | 'overview' | 'listings' | 'users' | 'moderation' | 'auctions' | 'leads' | 'payments'
   | 'search' | 'ads' | 'cron' | 'audit' | 'killswitch' | 'seed';
 
 interface SectionDef {
@@ -39,6 +40,7 @@ const SECTIONS: SectionDef[] = [
   { id: 'listings',   label: 'Oglasi',            icon: Car,             gate: 'moderate' },
   { id: 'users',      label: 'Korisnici',         icon: Users,           gate: 'write' },
   { id: 'moderation', label: 'Moderacija',        icon: Flag,            gate: 'moderate' },
+  { id: 'auctions',   label: 'Aukcije',           icon: Gavel,           gate: 'moderate' },
   { id: 'leads',      label: 'Leadovi',           icon: ArrowUpRight,    gate: 'any' },
   { id: 'payments',   label: 'Plaćanja',          icon: CreditCard,      gate: 'payments' },
   { id: 'search',     label: 'Pretrage',          icon: Search,          gate: 'any' },
@@ -163,6 +165,7 @@ export const AdminDashboard = () => {
               {active === 'listings'   && <AdminListings />}
               {active === 'users'      && <AdminUsers />}
               {active === 'moderation' && <AdminModeration />}
+              {active === 'auctions'   && <AdminAuctions />}
               {active === 'leads'      && <AdminLeads />}
               {active === 'payments'   && <AdminPayments />}
               {active === 'search'     && <AdminSearchInsights />}

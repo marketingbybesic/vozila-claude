@@ -15,6 +15,8 @@ export type AuctionStatus =
   | 'reserve_not_met'
   | 'canceled';
 
+export type AuctionApprovalStatus = 'pending' | 'approved' | 'rejected';
+
 export interface AuctionRow {
   id: string;
   listing_id: string;
@@ -29,6 +31,10 @@ export interface AuctionRow {
   buyer_premium_pct: number;
   min_bid_increment_eur: number;
   status: AuctionStatus;
+  approval_status: AuctionApprovalStatus;
+  approval_notes: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
   winner_id: string | null;
   settled_at: string | null;
   created_at: string;
@@ -62,6 +68,7 @@ export async function listLiveAuctions(limit = 30): Promise<AuctionRow[]> {
       listing:listings(id, title, price, main_image, location, attributes)
     `)
     .eq('status', 'live')
+    .eq('approval_status', 'approved')
     .order('end_at', { ascending: true })
     .limit(limit);
   return (data ?? []) as AuctionRow[];
@@ -75,6 +82,7 @@ export async function listEndedAuctions(limit = 20): Promise<AuctionRow[]> {
       listing:listings(id, title, price, main_image, location, attributes)
     `)
     .in('status', ['sold', 'reserve_not_met'])
+    .eq('approval_status', 'approved')
     .order('settled_at', { ascending: false })
     .limit(limit);
   return (data ?? []) as AuctionRow[];
@@ -177,5 +185,13 @@ export function statusLabel(s: AuctionStatus): string {
     case 'sold':            return 'Prodano';
     case 'reserve_not_met': return 'Rezerva nije dostignuta';
     case 'canceled':        return 'Otkazano';
+  }
+}
+
+export function approvalLabel(s: AuctionApprovalStatus): string {
+  switch (s) {
+    case 'pending':  return 'Čeka odobrenje';
+    case 'approved': return 'Odobreno';
+    case 'rejected': return 'Odbijeno';
   }
 }

@@ -7,11 +7,11 @@
 // inserted row in DB), not in this fn.
 
 import { sendEmail } from "../_shared/email.ts";
-import { tplOutbid, tplWon, tplSellerSettled } from "../_shared/email-auctions.ts";
+import { tplOutbid, tplWon, tplSellerSettled, tplAuctionApproved, tplAuctionRejected } from "../_shared/email-auctions.ts";
 import { supabaseAdmin } from "../_shared/supabase.ts";
 
 interface Body {
-  kind: "outbid" | "won" | "settled";
+  kind: "outbid" | "won" | "settled" | "approved" | "rejected";
   auction_id: string;
 }
 
@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
   const { data: auction } = await supabaseAdmin
     .from("auctions")
-    .select("id, listing_id, seller_id, current_bid_eur, current_bidder, winner_id, status, buyer_premium_pct, end_at, reserve_eur, settled_at")
+    .select("id, listing_id, seller_id, current_bid_eur, current_bidder, winner_id, status, buyer_premium_pct, end_at, reserve_eur, settled_at, approval_status, approval_notes")
     .eq("id", body.auction_id)
     .maybeSingle();
   if (!auction) return new Response("Auction not found", { status: 404 });
@@ -128,6 +128,35 @@ Deno.serve(async (req) => {
             buyerPremiumPct: Number(auction.buyer_premium_pct ?? 5),
             auctionId: auction.id,
           });
+          await sendEmail({ to: prof.email, subject: tpl.subject, html: tpl.html, text: tpl.text, category: "all", userId: prof.id });
+          sentTo.push(prof.email);
+        }
+      }
+    }
+
+    if (body.kind === "approved" || body.kind === "rejected") {
+      const prof = await profile(auction.seller_id);
+      if (prof?.email) {
+        const t = body.kind === "approved" ? "auction_approved" : "auction_rejected";
+        if (await wasRecentlyNotified(auction.seller_id, t)) {
+          skipped.push(`${body.kind}:dedupe`);
+        } else {
+          await dropNotification(auction.seller_id, t, {
+            auction_id: auction.id, listing_id: auction.listing_id, notes: auction.approval_notes,
+          });
+          const tpl = body.kind === "approved"
+            ? tplAuctionApproved({
+                recipientName: prof.company_name,
+                listingTitle,
+                auctionId: auction.id,
+                notes: auction.approval_notes,
+              })
+            : tplAuctionRejected({
+                recipientName: prof.company_name,
+                listingTitle,
+                auctionId: auction.id,
+                notes: auction.approval_notes,
+              });
           await sendEmail({ to: prof.email, subject: tpl.subject, html: tpl.html, text: tpl.text, category: "all", userId: prof.id });
           sentTo.push(prof.email);
         }

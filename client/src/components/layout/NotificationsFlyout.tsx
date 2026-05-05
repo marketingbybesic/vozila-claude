@@ -228,7 +228,9 @@ function iconFor(type: string): typeof Bell {
     case 'auction_outbid':
     case 'auction_won':
     case 'auction_seller_sold':
-    case 'auction_seller_unsold': return Sparkles;
+    case 'auction_seller_unsold':
+    case 'auction_approved':
+    case 'auction_rejected':      return Sparkles;
     default:                      return Bell;
   }
 }

@@ -92,6 +92,61 @@ export function tplWon(args: {
   return { subject, html, text };
 }
 
+export function tplAuctionApproved(args: {
+  recipientName: string | null;
+  listingTitle: string;
+  auctionId: string;
+  notes: string | null;
+}): { subject: string; html: string; text: string } {
+  const url = `${EMAIL_PUBLIC_SITE_URL}/aukcija/${args.auctionId}`;
+  const subject = `Aukcija odobrena — ${args.listingTitle} | Vozila.hr`;
+  const text = [
+    `Pozdrav${args.recipientName ? ` ${args.recipientName}` : ""},`,
+    ``,
+    `Vaša aukcija "${args.listingTitle}" je odobrena i objavljena na Vozila.hr.`,
+    args.notes ? `\nBilješka administratora: ${args.notes}\n` : ``,
+    `Pratite licitiranje: ${url}`,
+  ].join("\n");
+  const html = `
+    <div style="font:300 14px/1.7 system-ui,sans-serif;color:#222;max-width:560px;margin:0 auto;padding:24px">
+      <p>Pozdrav${args.recipientName ? ` ${escapeHtml(args.recipientName)}` : ""},</p>
+      <p>Vaša aukcija je <b>odobrena</b> i sada je javno objavljena:</p>
+      <p style="margin:16px 0;padding:14px 16px;border:1px solid #ddd">
+        <b>${escapeHtml(args.listingTitle)}</b>
+      </p>
+      ${args.notes ? `<p style="margin:16px 0;padding:12px 14px;border-left:3px solid #d22;color:#555">${escapeHtml(args.notes)}</p>` : ""}
+      <p style="margin-top:28px"><a href="${url}" style="display:inline-block;padding:12px 22px;background:#000;color:#fff;text-decoration:none;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;font-size:11px">Otvori aukciju</a></p>
+    </div>`;
+  return { subject, html, text };
+}
+
+export function tplAuctionRejected(args: {
+  recipientName: string | null;
+  listingTitle: string;
+  auctionId: string;
+  notes: string | null;
+}): { subject: string; html: string; text: string } {
+  const subject = `Aukcija nije odobrena — ${args.listingTitle} | Vozila.hr`;
+  const text = [
+    `Pozdrav${args.recipientName ? ` ${args.recipientName}` : ""},`,
+    ``,
+    `Vaša aukcija "${args.listingTitle}" nije odobrena za javnu objavu.`,
+    args.notes ? `\nRazlog: ${args.notes}\n` : ``,
+    `Možete urediti oglas i poslati novu aukciju.`,
+  ].join("\n");
+  const html = `
+    <div style="font:300 14px/1.7 system-ui,sans-serif;color:#222;max-width:560px;margin:0 auto;padding:24px">
+      <p>Pozdrav${args.recipientName ? ` ${escapeHtml(args.recipientName)}` : ""},</p>
+      <p>Vaša aukcija <b>nije odobrena</b> za javnu objavu:</p>
+      <p style="margin:16px 0;padding:14px 16px;border:1px solid #ddd">
+        <b>${escapeHtml(args.listingTitle)}</b>
+      </p>
+      ${args.notes ? `<p style="margin:16px 0;padding:12px 14px;border-left:3px solid #d22;color:#555"><b>Razlog:</b><br/>${escapeHtml(args.notes)}</p>` : ""}
+      <p>Možete urediti oglas i poslati novu aukciju.</p>
+    </div>`;
+  return { subject, html, text };
+}
+
 export function tplSellerSettled(args: {
   recipientName: string | null;
   listingTitle: string;

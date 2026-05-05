@@ -340,6 +340,96 @@ export async function adminSetLeadStatus(id: string, status: 'new' | 'contacted'
 }
 
 // ----------------------------------------------------------------------------
+// Auction approval queue.
+// ----------------------------------------------------------------------------
+
+export interface AdminAuctionRow {
+  id: string;
+  listing_id: string;
+  seller_id: string;
+  starting_bid_eur: number;
+  reserve_eur: number | null;
+  start_at: string;
+  end_at: string;
+  status: string;
+  approval_status: 'pending' | 'approved' | 'rejected';
+  approval_notes: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
+  created_at: string;
+  listing?: { id: string; title: string; main_image: string | null; price: number; location: string | null } | null;
+  seller?: { id: string; email: string | null; company_name: string | null } | null;
+}
+
+export async function listAdminAuctions(filter: 'pending' | 'approved' | 'rejected' | 'all' = 'pending'): Promise<AdminAuctionRow[]> {
+  let q = supabase
+    .from('auctions')
+    .select(`
+      id, listing_id, seller_id, starting_bid_eur, reserve_eur, start_at, end_at,
+      status, approval_status, approval_notes, approved_at, approved_by, created_at,
+      listing:listings(id, title, main_image, price, location),
+      seller:profiles!auctions_seller_id_fkey(id, email, company_name)
+    `)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (filter !== 'all') q = q.eq('approval_status', filter);
+  const { data, error } = await q;
+  if (error) {
+    console.warn('[admin] auctions query failed', error.message);
+    return [];
+  }
+  return (data ?? []) as any;
+}
+
+export async function adminApproveAuction(id: string, notes?: string): Promise<{ ok: boolean; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('auctions')
+    .update({
+      approval_status: 'approved',
+      approval_notes: notes?.trim() || null,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+  if (error) return { ok: false, error: error.message };
+  await audit('auction.approve', { entity_type: 'auction', entity_id: id, payload: { notes: notes ?? null } });
+  // Fire-and-forget seller-approved notification email.
+  notifyAuctionDecision(id, 'approved').catch(() => {});
+  return { ok: true };
+}
+
+export async function adminRejectAuction(id: string, notes?: string): Promise<{ ok: boolean; error?: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from('auctions')
+    .update({
+      approval_status: 'rejected',
+      approval_notes: notes?.trim() || null,
+      approved_by: user?.id ?? null,
+      approved_at: new Date().toISOString(),
+    })
+    .eq('id', id);
+  if (error) return { ok: false, error: error.message };
+  await audit('auction.reject', { entity_type: 'auction', entity_id: id, payload: { notes: notes ?? null } });
+  notifyAuctionDecision(id, 'rejected').catch(() => {});
+  return { ok: true };
+}
+
+async function notifyAuctionDecision(auctionId: string, kind: 'approved' | 'rejected'): Promise<void> {
+  const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+  if (!fnUrl) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+  await fetch(`${fnUrl}/notify-auction-event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ kind, auction_id: auctionId }),
+  });
+}
+
+// ----------------------------------------------------------------------------
 // Search insights.
 // ----------------------------------------------------------------------------
 

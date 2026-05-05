@@ -1081,7 +1081,11 @@ const Step3 = ({ formData, setFormData, handleFileChange, onBack }: any) => {
               Pokreni 7-dnevnu aukciju
             </h3>
             <p className="text-xs font-light text-muted-foreground leading-relaxed">
-              Transparentno licitiranje s anti-snipe zaštitom. Vaše vozilo se pojavljuje na <code className="font-mono text-[10px]">/aukcija</code> uz oglas. Buyer premium 5%. Aukciju kuriraju administratori.
+              Transparentno licitiranje s anti-snipe zaštitom. Vaše vozilo se pojavljuje na <code className="font-mono text-[10px]">/aukcija</code> uz oglas. Buyer premium 5%.
+            </p>
+            <p className="text-[10px] font-light uppercase tracking-[0.2em] text-amber-500 mt-2 inline-flex items-center gap-1.5">
+              <AlertCircle className="w-3 h-3" strokeWidth={1.5} />
+              Aukcija ide na pregled administratora prije objave (do 24h).
             </p>
           </div>
           <button
