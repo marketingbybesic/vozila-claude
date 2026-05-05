@@ -15,10 +15,13 @@ export type ListingStatus = 'draft' | 'active' | 'sold';
 export type ListingType = 'prodaja' | 'najam';
 export type UserType = 'private' | 'business';
 
+export type SubTier = 'bronze' | 'silver' | 'gold';
+export type SubStatus = 'active' | 'trialing' | 'past_due' | 'canceled';
+
 export interface Profile {
   id: string;
   email: string;
-  role: 'user' | 'dealer' | 'admin';
+  role: 'user' | 'dealer' | 'admin' | 'moderator' | 'inspector' | 'owner';
   user_type: UserType;
   whatsapp_number?: string;
   vat_id?: string;
@@ -28,6 +31,9 @@ export interface Profile {
   dealer_verified: boolean;
   is_verified?: boolean;
   tier?: 'free' | 'premium' | 'partner';
+  subscription_tier?: SubTier | null;
+  subscription_status?: SubStatus | null;
+  logo_url?: string | null;
   created_at: string;
   updated_at: string;
 }

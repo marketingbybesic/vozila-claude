@@ -17,6 +17,7 @@ import { matchScore } from '../../lib/matchScore';
 import { SavedSearchesBar, buildLabel } from '../search/SavedSearches';
 import { getLocationSilently } from '../../lib/locationDefaults';
 import { countNewSince, markSeen } from '../../lib/freshness';
+import { VerifiedDealerBadge } from './VerifiedDealerBadge';
 
 const ITEMS_PER_PAGE = 9;
 
@@ -195,7 +196,10 @@ export const ListingCard = ({ car }: { car: Listing }) => {
     setCurrentImgIdx((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
   };
 
-  const isVerified = car.owner?.is_verified || car.owner?.dealer_verified || car.owner?.tier === 'premium';
+  const ownerSub = car.owner?.subscription_tier;
+  const ownerSubActive = car.owner?.subscription_status === 'active' || car.owner?.subscription_status === 'trialing';
+  const isVerifiedDealer = !!ownerSub && ownerSubActive;
+  const isVerified = isVerifiedDealer || car.owner?.is_verified || car.owner?.dealer_verified || car.owner?.tier === 'premium';
 
   // Editorial card. No rounded corners, no shadow lift, no chrome around the photo.
   // Photograph is the product. Hover does two things: image scales 1.04, red index rule
@@ -274,12 +278,14 @@ export const ListingCard = ({ car }: { car: Listing }) => {
               Istaknuto
             </span>
           )}
-          {isVerified && (
+          {isVerifiedDealer ? (
+            <VerifiedDealerBadge tier={ownerSub} size="sm" />
+          ) : isVerified ? (
             <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-black/75 text-white text-[9px] font-light uppercase tracking-[0.25em]">
               <ShieldCheck className="w-3 h-3 text-primary" strokeWidth={1.5} aria-hidden="true" />
               Verificirani
             </span>
-          )}
+          ) : null}
         </div>
 
         {/* Match Score pill — top-right, always visible. Quality signal at-a-glance. */}
@@ -598,7 +604,10 @@ export const ListingFeed = () => {
       } else {
         query = supabase
           .from('listings')
-          .select('*, categories!inner(slug), listing_images(id, url, is_primary, sort_order)', { count: 'exact' });
+          .select(
+            '*, categories!inner(slug), listing_images(id, url, is_primary, sort_order), owner:profiles!listings_user_id_fkey(id, company_name, logo_url, subscription_tier, subscription_status, is_verified, dealer_verified)',
+            { count: 'exact' }
+          );
       }
 
       query = query.eq('status', 'active');

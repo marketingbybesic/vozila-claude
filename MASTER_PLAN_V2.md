@@ -627,5 +627,35 @@ Append after each session. Format: date, what shipped, build status, next concre
   - *Webhook order out of sequence?* — `checkout.session.completed` writes `stripe_customer_id`; `customer.subscription.created` writes tier+status. Both upsert by user_id, idempotent. If subscription event arrives first (rare), customer_id still gets written from its own `customer` field via `applySubscription`.
 - **Next concrete action:** Phase 9.4 — wire dealer badge into ListingCard + ListingDetail seller block (needs `owner` join in ListingFeed query); add listing-count guard to wizard so Bronze stops at 15 active. Then end-to-end live test with Stripe test card. Say "continue Vozila phase 9.4".
 
+### Checkpoint 2026-05-05 (phase 9.4 — badge in feed/detail + listing-limit guard + live runbook)
+- **Shipped this session:**
+  - `client/src/types/index.ts` — extended `Profile` with `subscription_tier`, `subscription_status`, `logo_url`. New `SubTier` + `SubStatus` exported types. Role enum widened to include `moderator`, `inspector`, `owner`.
+  - `client/src/components/listings/ListingFeed.tsx`:
+    - Query now joins profiles via `owner:profiles!listings_user_id_fkey(...)` pulling tier + status + dealer flags.
+    - `ListingCard` (the feed's exported one used everywhere) now derives `isVerifiedDealer` from active subscription state and renders `<VerifiedDealerBadge>` (tier-coloured: Bronze amber / Silver slate / Gold yellow). Falls back to old "Verificirani" pill for legacy `is_verified`/`dealer_verified` users.
+  - `client/src/components/listings/ListingDetail.tsx`:
+    - Same join in the detail fetch — owner profile pulled with subscription state.
+    - Seller block at line ~729 now shows `<VerifiedDealerBadge>` when subscription is active. Old hand-rolled "Verificirani" pill kept as fallback. "Premium partner" copy now correctly tied to `subscription_tier === 'gold'`.
+  - `client/src/lib/listingLimits.ts` (new) — `getMyListingLimitState()` reads profile + counts user's active listings, returns `{tier, used, limit, remaining, exceeded}`. Limits: free=3, bronze=15, silver=50, gold=∞ (Number.POSITIVE_INFINITY).
+  - `client/src/components/listings/CreateListingWizard.tsx`:
+    - Loads `ListingLimitState` on auth change.
+    - Inline banner (amber when ≥80% used, red when exceeded) above the progress bar with current usage + tier label + "Nadogradi paket" link to `/za-partnere`.
+    - Submit handler does a fresh re-check at click time — stale page state can't slip past. Alert + early return when exceeded.
+  - `PHASE_9_LIVE_TEST_RUNBOOK.md` (new, repo root) — 10-section end-to-end runbook covering: prerequisites, schema migration, Stripe products/prices, Edge Function secrets, function deploys, webhook wiring, pg_cron scheduling, client env, full test walkthrough (subscription + boost + past-due + cron + listing limit + badge surfaces), rollback plan, going-live checklist. Each step has explicit success criteria.
+- **Build:** ✅ green, 2.72s, 188.05 kB initial gzip (+0.44 vs phase 9.3 baseline). New `subscription-*.js` shared chunk extracted (1.20 kB). CreateListingWizard 39.36 → 41.76 kB. ListingDetail 90.56 → 90.90. DealerProfile 6.41 → 6.36 (tree-shake). All within budget.
+- **Devil's-advocate this round:**
+  - *FK name might differ in live DB.* Used `profiles!listings_user_id_fkey(...)` — if the live DB names the FK differently (Supabase auto-generates from constraint name), the join silently returns null. Mitigation: runbook section 1 verifies the FK exists; if not, the migration adds it. Alternative join syntax `owner:profiles(...)` would also work because Supabase resolves single-FK relationships by table name when unambiguous. Will fall back to that if the named-FK version errors at runtime.
+  - *Listing-limit count might double-count `published` legacy state.* Counted `['active','published','paused']` to be safe — both are visible to the public.
+  - *Free user gating could be too aggressive (3 listings).* Master plan KPI #1 is "time to first listing post <90s" — a hard 3-listing cap doesn't hurt that. If conversion data shows otherwise, raise to 5 in `LISTING_LIMITS`.
+  - *Race condition in submit guard.* Re-checking at submit time closes the obvious window, but two concurrent submits could each pass the check then both insert. Acceptable — webhook/admin queue would catch the rare overage. Real fix is a DB-side trigger; deferred to phase 13 admin work.
+- **Bugs / gaps still open after 9.4:**
+  - "Slično vozilo" KNN rail at the bottom of detail does not yet show tier badges — uses the same `ListingCard` from feed, so it'll inherit the badge once that data is fetched. The `SimilarVehicles` query needs the same join. **Phase 10 carries this.**
+  - Edge Function deploy + live test require user to do the manual steps in `PHASE_9_LIVE_TEST_RUNBOOK.md` — I cannot push to Supabase or Stripe from this environment.
+  - Boost credits accrual (10/40/150 EUR/mo per tier) still deferred to phase 11 — needs `boost_credits` table + monthly cron.
+- **Next concrete action options:**
+  - **(a)** User completes runbook → reports any failures → I fix.
+  - **(b)** Continue to phase 10 (messaging + email + anti-scam) without waiting for live test — deploys are independent.
+  - Recommendation: do (b) in parallel; runbook is yours to execute when you have a Supabase + Stripe session free. Say `continue Vozila phase 10` for (b).
+
 ### Checkpoint <next>
 *(append next session)*

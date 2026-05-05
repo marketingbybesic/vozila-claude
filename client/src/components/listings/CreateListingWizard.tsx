@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { uploadImages } from '../../lib/storage';
-import { 
+import {
   ChevronRight, ChevronLeft, Check, Upload, Trash2, Camera,
   Car, MapPin, Euro, FileText, AlertCircle,
   LogIn, UserPlus, X, Tag
@@ -14,6 +14,7 @@ import { VinQuickFill } from './VinQuickFill';
 import type { VinResult } from '../../lib/vinDecoder';
 import { AiCopywriterButton } from './AiCopywriterButton';
 import { PhotoQualityHints } from './PhotoQualityHints';
+import { getMyListingLimitState, tierLabelHr, type ListingLimitState } from '../../lib/listingLimits';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -43,6 +44,7 @@ export const CreateListingWizard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [limitState, setLimitState] = useState<ListingLimitState | null>(null);
   const [formData, setFormData] = useState<FormData>({
     category_slug: '',
     title: '',
@@ -69,11 +71,19 @@ export const CreateListingWizard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       setAuthUser(session?.user ?? null);
       setAuthLoading(false);
+      if (session?.user) {
+        getMyListingLimitState().then(setLimitState).catch(() => setLimitState(null));
+      }
     };
     checkAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthUser(session?.user ?? null);
+      if (session?.user) {
+        getMyListingLimitState().then(setLimitState).catch(() => setLimitState(null));
+      } else {
+        setLimitState(null);
+      }
     });
 
     return () => {
@@ -107,11 +117,24 @@ export const CreateListingWizard = () => {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Get current user
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error('Not authenticated');
+
+      // Re-check listing limit at submit time so a stale state from page-load
+      // can't slip past. Server-side RLS isn't aware of tier limits, so the
+      // guard lives here.
+      const fresh = await getMyListingLimitState();
+      if (fresh && fresh.exceeded) {
+        setLimitState(fresh);
+        setIsSubmitting(false);
+        alert(
+          `Dosegli ste ${fresh.limit} aktivnih oglasa za plan ${tierLabelHr(fresh.tier)}. Nadogradite paket za više oglasa.`
+        );
+        return;
+      }
 
       // Create listing
       const { data: listing, error } = await supabase
@@ -262,6 +285,32 @@ export const CreateListingWizard = () => {
   return (
     <div className="min-h-screen bg-background py-8 px-8">
       <div className="max-w-4xl mx-auto">
+        {/* Listing limit banner — visible when 80%+ used or exceeded */}
+        {limitState && Number.isFinite(limitState.limit) && limitState.used / limitState.limit >= 0.8 && (
+          <div className={`mb-8 border px-5 py-4 flex items-center justify-between gap-4 flex-wrap ${
+            limitState.exceeded
+              ? 'border-red-500/40 bg-red-500/5'
+              : 'border-amber-500/40 bg-amber-500/5'
+          }`}>
+            <div className="flex items-center gap-3 min-w-0">
+              <AlertCircle className={`w-4 h-4 flex-shrink-0 ${limitState.exceeded ? 'text-red-400' : 'text-amber-400'}`} strokeWidth={1.5} />
+              <p className="text-xs font-light text-white/80 leading-relaxed">
+                {limitState.exceeded ? (
+                  <>Dosegli ste limit od <span className="text-white">{limitState.limit}</span> aktivnih oglasa za plan <span className="text-white">{tierLabelHr(limitState.tier)}</span>. Nadogradite paket da nastavite predavati oglase.</>
+                ) : (
+                  <><span className="text-white">{limitState.used}</span> / {limitState.limit} aktivnih oglasa iskorišteno na planu <span className="text-white">{tierLabelHr(limitState.tier)}</span>. {limitState.remaining === 1 ? 'Još 1 slot ostao.' : `Još ${limitState.remaining} slota ostalo.`}</>
+                )}
+              </p>
+            </div>
+            <Link
+              to="/za-partnere"
+              className="text-[10px] font-light uppercase tracking-[0.2em] px-4 py-2 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              Nadogradi paket
+            </Link>
+          </div>
+        )}
+
         {/* Progress Bar */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-4">

@@ -19,6 +19,7 @@ import 'yet-another-react-lightbox/styles.css';
 import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import { onImgError, PLACEHOLDER_CAR } from '../../lib/imageFallback';
 import { pushRecent } from '../../lib/recentlyViewed';
+import { VerifiedDealerBadge } from './VerifiedDealerBadge';
 
 // --- MILESTONE 4: HISTORY TIMELINE ---
 
@@ -224,7 +225,7 @@ export const ListingDetail = () => {
       try {
         const { data, error } = await supabase
           .from('listings')
-          .select('*, categories(name, slug), listing_images(id, url, is_primary, sort_order)')
+          .select('*, categories(name, slug), listing_images(id, url, is_primary, sort_order), owner:profiles!listings_user_id_fkey(id, company_name, logo_url, subscription_tier, subscription_status, is_verified, dealer_verified)')
           .eq('id', id)
           .single();
 
@@ -734,22 +735,30 @@ export const ListingDetail = () => {
                     Prodavač
                   </h3>
                 </div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center flex-wrap gap-2 mb-2">
                   <p className="text-sm text-white/80 font-light">
                     {listing.owner?.company_name || 'Privatni prodavač'}
                   </p>
-                  {(listing.owner?.is_verified || listing.owner?.dealer_verified || listing.owner?.tier === 'premium') && (
-                    <div className="flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/10">
-                      <ShieldCheck className="w-3 h-3 text-primary" strokeWidth={2} />
-                      <span className="text-[9px] font-light uppercase tracking-widest text-white/60">
-                        Verificirani
-                      </span>
-                    </div>
-                  )}
+                  {(() => {
+                    const subTier = listing.owner?.subscription_tier;
+                    const subActive = listing.owner?.subscription_status === 'active' || listing.owner?.subscription_status === 'trialing';
+                    if (subTier && subActive) return <VerifiedDealerBadge tier={subTier} size="sm" />;
+                    if (listing.owner?.is_verified || listing.owner?.dealer_verified || listing.owner?.tier === 'premium') {
+                      return (
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/10">
+                          <ShieldCheck className="w-3 h-3 text-primary" strokeWidth={2} />
+                          <span className="text-[9px] font-light uppercase tracking-widest text-white/60">
+                            Verificirani
+                          </span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
-                {listing.owner?.tier === 'premium' && (
+                {listing.owner?.subscription_tier === 'gold' && (
                   <p className="text-[10px] font-light uppercase tracking-widest text-primary/60">
-                    Premium partner
+                    Gold partner
                   </p>
                 )}
               </div>
