@@ -122,6 +122,10 @@ export function notificationLink(n: NotificationRow): string | null {
       const aid = n.payload?.auction_id;
       return aid ? `/aukcija/${aid}` : '/aukcija';
     }
+    case 'vin_report_ready': {
+      const url = n.payload?.report_url;
+      return typeof url === 'string' && url ? url : '/postavke';
+    }
     case 'ai_copy_call':
       // Internal sentinel — not user-visible navigation.
       return null;
@@ -168,6 +172,10 @@ export function notificationTitle(n: NotificationRow): string {
       return 'Aukcija odobrena';
     case 'auction_rejected':
       return 'Aukcija nije odobrena';
+    case 'vin_report_ready': {
+      const vin = n.payload?.vin;
+      return vin ? `VIN izvještaj spreman — ${vin}` : 'VIN izvještaj spreman';
+    }
     default:
       return n.type;
   }
