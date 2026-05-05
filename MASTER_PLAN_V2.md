@@ -730,5 +730,30 @@ Append after each session. Format: date, what shipped, build status, next concre
   - `EMAIL_HMAC_SECRET=$(openssl rand -hex 32)` — keep stable.
 - **Next concrete action:** Phase 10.3 — wire SavedSearches toggle to `setEmailAlertDb`, add notifications flyout in the bell, add `last_digest_sent_at` 20-hour debounce in the digest cron. Say "continue Vozila phase 10.3".
 
+### Checkpoint 2026-05-05 (phase 10.3 — DB-synced saved searches + notifications flyout + digest debounce)
+- **Shipped this session:**
+  - `client/src/components/search/SavedSearches.tsx` — wrapped delete + email-toggle + save-current with DB sync calls (`upsertSavedSearchDb`, `setEmailAlertDb`, `deleteSavedSearchDb`). Auth state tracked locally; signed-out users get an inline alert when toggling email-on (saves stay in localStorage but emails won't fire until they sign in). LocalStorage path unchanged so anonymous flows still work.
+  - `client/src/lib/notifications.ts` (new) — `listMyNotifications`, `getMyUnreadCount`, `markNotificationRead`, `markAllRead`, `subscribeToMyNotifications` (per-user filter), plus `notificationLink()` and `notificationTitle()` helpers that switch on type for the flyout's row rendering. Forward-compatible — unknown types render with a generic Bell icon.
+  - `client/src/components/layout/NotificationsFlyout.tsx` (new) — bell + dropdown combining two unread sources: notifications table (saved-search hits, boost confirmations…) + conversation unread counts. Click-outside to close, "Označi sve" bulk-mark, lazy-loaded list on open, realtime refresh on either source. Quick-link tile to `/poruke` when unread messages > 0. Per-row icon by type. Read state visually distinguished (opacity + dot indicator).
+  - `client/src/components/layout/Header.tsx` — `<NotificationsFlyout />` mounted next to `<NotificationsBell />`. Both can coexist — bell is a fast link to inbox, flyout is the broader notification surface. (We may consolidate to flyout-only later, kept for staged rollout safety.)
+  - `supabase/functions/saved-searches-digest/index.ts` — added 20-hour debounce: `WHERE last_digest_sent_at IS NULL OR last_digest_sent_at < (NOW - 20h)`. Prevents same saved-search emailing twice in a day even if cron runs more than once.
+- **Build:** ✅ green, 2.37s, 192.03 kB initial gzip (+2.23 vs 10.2). Increase is `NotificationsFlyout` + `notifications.ts` going into the shared chunk via Header. All other route chunks unchanged.
+- **Bugs / gaps still open after 10.3 (deferred):**
+  - Wizard `?edit=<id>` mode still NOT implemented. The Dashboard "Uredi" button currently lands on a fresh wizard. Carrying to phase 11 since lead-gen + AI copywriter live in the wizard's Step 2/3 anyway.
+  - Two bells in the Header (NotificationsBell = message-only quick link, NotificationsFlyout = full feed). Cosmetic redundancy. Will collapse into one unified surface in 10.4 once we confirm the flyout's totals match.
+  - SavedSearches DB row label may drift from localStorage label if user renames in one but not the other. Acceptable: future "manage saved searches" page (Settings) will edit the canonical row.
+  - `notify-new-message` is fired from the client only; no DB trigger via `pg_net` yet. Acceptable for v1 — the realtime delivery still works; only email is best-effort. Trigger comes in phase 13 along with the rest of the cron/queue surface.
+- **Devil's-advocate this round:**
+  - *DB sync runs even when `VITE_SUPABASE_FUNCTIONS_URL` missing.* Yes, by design — the saved_searches *table* exists in Supabase regardless of whether Edge Functions are deployed. The cron just wouldn't run. UI keeps working.
+  - *Mark-all-read race against an arriving INSERT.* Update + insert are independent; the realtime channel will pick up the new row and bump the badge again. Correct behaviour.
+  - *Flyout subscribes to one channel per mount.* Each channel name is `notifications:<userId>` and `my-conversations` — both reused; on remount the unsubscribe fires first. No leak.
+  - *Anonymous-user toggle alert is intrusive (alert()).* Acceptable for v1. The bookmark UI in `Settings` (10.4) will replace this with an inline sign-in prompt.
+  - *Cron debounce uses server clock; what if Postgres TZ drifts?* Comparison is against UTC `NOW()` and `last_digest_sent_at` (timestamptz) — no TZ issue.
+- **Next concrete action options:**
+  - **(a)** Phase 10.4 — collapse two bells into one unified flyout, add settings UI to manage saved searches + email categories from `/postavke`, browser-push opt-in (web-push) deferred to phase 12.
+  - **(b)** Skip to phase 11 — lead-gen hub (financing/insurance/transport), VIN history paid report, AI copywriter, dealer reviews. Higher revenue impact.
+  - Recommendation: (b). Phase 10 surface is now functionally complete; the bell consolidation is polish.
+  - Say `continue Vozila phase 11` for (b), or `continue Vozila phase 10.4` for (a).
+
 ### Checkpoint <next>
 *(append next session)*

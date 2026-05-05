@@ -50,12 +50,18 @@ function applyParams(query: any, p: Record<string, any>): any {
   return query;
 }
 
+// 20-hour debounce — never email the same saved search twice within ~a day.
+// Uses last_digest_sent_at column populated at the bottom of this loop.
+const DEBOUNCE_MS = 20 * 60 * 60 * 1000;
+
 Deno.serve(async () => {
-  // Fetch all enabled saved searches.
+  // Fetch enabled saved searches that are either un-digested or past debounce.
+  const cutoff = new Date(Date.now() - DEBOUNCE_MS).toISOString();
   const { data: searches, error } = await supabaseAdmin
     .from("saved_searches")
-    .select("id, user_id, label, url, params, last_seen_ids")
-    .eq("email_alert", true);
+    .select("id, user_id, label, url, params, last_seen_ids, last_digest_sent_at")
+    .eq("email_alert", true)
+    .or(`last_digest_sent_at.is.null,last_digest_sent_at.lt.${cutoff}`);
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }

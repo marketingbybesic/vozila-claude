@@ -3,8 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Bookmark, BookmarkCheck, Bell, BellOff, X } from 'lucide-react';
 import {
   hashSearch, saveSearch, deleteSearch, listSaved, newMatches, markVisited,
-  toggleEmailAlert, type SavedSearch,
+  toggleEmailAlert, getSearch, type SavedSearch,
 } from '../../lib/savedSearches';
+import {
+  upsertSavedSearchDb, setEmailAlertDb, deleteSavedSearchDb,
+} from '../../lib/savedSearchesDb';
+import { supabase } from '../../lib/supabase';
 
 interface Props {
   // Current feed URL ('/pretraga?make=BMW&...') and result IDs
@@ -22,6 +26,7 @@ interface Props {
 //     X deletes
 export const SavedSearchesBar = ({ currentUrl, currentIds, label, categorySlug }: Props) => {
   const [items, setItems] = useState<SavedSearch[]>([]);
+  const [authed, setAuthed] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +34,17 @@ export const SavedSearchesBar = ({ currentUrl, currentIds, label, categorySlug }
     refresh();
     window.addEventListener('vozila:saved-searches-updated', refresh);
     return () => window.removeEventListener('vozila:saved-searches-updated', refresh);
+  }, []);
+
+  // Auth state — used to decide whether to mirror toggles to the DB so the
+  // daily digest cron can find them.
+  useEffect(() => {
+    let alive = true;
+    supabase.auth.getUser().then(({ data: { user } }) => { if (alive) setAuthed(!!user); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session?.user);
+    });
+    return () => { alive = false; listener?.subscription.unsubscribe(); };
   }, []);
 
   const currentId = hashSearch(currentUrl);
@@ -42,6 +58,41 @@ export const SavedSearchesBar = ({ currentUrl, currentIds, label, categorySlug }
 
   const onSave = () => {
     saveSearch(currentUrl, label, currentIds, categorySlug);
+    // Mirror to DB for signed-in users so cron can replay.
+    if (authed) {
+      upsertSavedSearchDb({ url: currentUrl, label, categorySlug, currentIds }).catch(() => {});
+    }
+  };
+
+  const onDelete = (id: string) => {
+    const s = getSearch(id);
+    deleteSearch(id);
+    if (authed && s?.url) deleteSavedSearchDb(s.url).catch(() => {});
+  };
+
+  const onToggleAlert = (id: string) => {
+    const s = getSearch(id);
+    toggleEmailAlert(id);
+    // After local toggle, the new flag is the OPPOSITE of what was loaded.
+    // For DB sync we need the new state — re-read.
+    const next = listSaved().find((x) => x.id === id);
+    if (authed && next?.url) {
+      setEmailAlertDb(next.url, !!next.emailAlert).catch(() => {});
+      // Also make sure the row exists with up-to-date label.
+      if (next.emailAlert) {
+        upsertSavedSearchDb({
+          url: next.url,
+          label: next.label,
+          categorySlug: next.categorySlug,
+          emailAlert: true,
+          currentIds: next.knownIds,
+        }).catch(() => {});
+      }
+    } else if (!authed && next?.emailAlert) {
+      // Anonymous user toggled email-on — guide them to sign in. We keep the
+      // local toggle on but warn that emails won't actually arrive.
+      alert('Za primanje emailova prijavite se na svoj račun. Spremljena pretraga ostaje, ali email obavijesti šaljemo samo prijavljenim korisnicima.');
+    }
   };
 
   if (items.length === 0 && !label) return null;
@@ -52,7 +103,7 @@ export const SavedSearchesBar = ({ currentUrl, currentIds, label, categorySlug }
         {/* Save current search button — only shown if URL has filters */}
         {label && (
           <button
-            onClick={isSaved ? () => deleteSearch(currentId) : onSave}
+            onClick={isSaved ? () => onDelete(currentId) : onSave}
             className={`inline-flex items-center gap-2 px-3 py-2 text-[10px] font-light uppercase tracking-[0.25em] border transition-colors ${
               isSaved
                 ? 'border-primary text-primary bg-primary/10'
@@ -86,14 +137,14 @@ export const SavedSearchesBar = ({ currentUrl, currentIds, label, categorySlug }
                     )}
                   </Link>
                   <button
-                    onClick={(e) => { e.preventDefault(); toggleEmailAlert(s.id); }}
+                    onClick={(e) => { e.preventDefault(); onToggleAlert(s.id); }}
                     title={s.emailAlert ? 'Isključi email obavijesti' : 'Uključi email obavijesti'}
                     className={`p-0.5 transition-colors ${s.emailAlert ? 'text-primary' : 'opacity-50 hover:opacity-100'}`}
                   >
                     {s.emailAlert ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
                   </button>
                   <button
-                    onClick={(e) => { e.preventDefault(); deleteSearch(s.id); }}
+                    onClick={(e) => { e.preventDefault(); onDelete(s.id); }}
                     title="Obriši"
                     className="p-0.5 opacity-50 hover:opacity-100 hover:text-foreground"
                   >

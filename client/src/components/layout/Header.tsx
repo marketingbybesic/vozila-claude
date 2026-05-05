@@ -6,6 +6,7 @@ import { navigationMenu } from '../../config/taxonomy';
 import { supabase } from '../../lib/supabase';
 import { SuperSearchModal } from '../search/SuperSearchModal';
 import { NotificationsBell } from './NotificationsBell';
+import { NotificationsFlyout } from './NotificationsFlyout';
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -80,6 +81,7 @@ export const Header = () => {
             )}
           </Link>
           <NotificationsBell />
+          <NotificationsFlyout />
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
