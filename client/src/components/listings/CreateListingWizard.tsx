@@ -237,42 +237,42 @@ export const CreateListingWizard = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-8">
         <div className="max-w-md w-full text-center space-y-8">
-          <div className="w-16 h-16 bg-neutral-800 rounded-none flex items-center justify-center mx-auto">
-            <LogIn className="w-8 h-8 text-white" strokeWidth={1.5} />
+          <div className="w-16 h-16 bg-muted rounded-none flex items-center justify-center mx-auto">
+            <LogIn className="w-8 h-8 text-foreground" strokeWidth={1.5} />
           </div>
           <div>
-            <h1 className="text-2xl font-light text-white tracking-widest mb-4">
+            <h1 className="text-2xl font-light text-foreground tracking-widest mb-4">
               Prijava Potrebna
             </h1>
-            <p className="text-sm font-light text-neutral-400 leading-relaxed">
+            <p className="text-sm font-light text-muted-foreground leading-relaxed">
               Za predaju oglasa morate biti prijavljeni
             </p>
           </div>
           <div className="space-y-3">
             <Link
               to="/profil"
-              className="inline-flex items-center justify-center gap-2 w-full px-8 py-4 bg-white text-black rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
+              className="inline-flex items-center justify-center gap-2 w-full px-8 py-4 bg-white text-black rounded-none font-light uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all"
             >
               <LogIn className="w-4 h-4" strokeWidth={1.5} />
               Prijava
             </Link>
             <Link
               to="/profil"
-              className="inline-flex items-center justify-center gap-2 w-full px-8 py-4 bg-neutral-800 text-white rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-700 transition-all"
+              className="inline-flex items-center justify-center gap-2 w-full px-8 py-4 bg-muted text-foreground rounded-none font-light uppercase tracking-widest text-xs hover:bg-muted/70 transition-all"
             >
               <UserPlus className="w-4 h-4" strokeWidth={1.5} />
               Registracija
             </Link>
           </div>
-          <div className="pt-4 border-t border-neutral-800">
-            <p className="text-[10px] font-light uppercase tracking-widest text-neutral-500 mb-3">
+          <div className="pt-4 border-t border-border">
+            <p className="text-[10px] font-light uppercase tracking-widest text-muted-foreground/70 mb-3">
               Brza prijava
             </p>
             <div className="flex items-center justify-center gap-3">
-              <button className="w-10 h-10 bg-neutral-800 rounded-none flex items-center justify-center hover:bg-neutral-700 transition-all opacity-50 cursor-not-allowed" title="Google prijava - uskoro">
+              <button className="w-10 h-10 bg-muted rounded-none flex items-center justify-center hover:bg-muted/70 transition-all opacity-50 cursor-not-allowed" title="Google prijava - uskoro">
                 <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               </button>
-              <button className="w-10 h-10 bg-neutral-800 rounded-none flex items-center justify-center hover:bg-neutral-700 transition-all opacity-50 cursor-not-allowed" title="Apple prijava - uskoro">
+              <button className="w-10 h-10 bg-muted rounded-none flex items-center justify-center hover:bg-muted/70 transition-all opacity-50 cursor-not-allowed" title="Apple prijava - uskoro">
                 <svg className="w-4 h-4" viewBox="0 0 24 24"><path fill="#fff" d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
               </button>
             </div>
@@ -294,17 +294,17 @@ export const CreateListingWizard = () => {
           }`}>
             <div className="flex items-center gap-3 min-w-0">
               <AlertCircle className={`w-4 h-4 flex-shrink-0 ${limitState.exceeded ? 'text-red-400' : 'text-amber-400'}`} strokeWidth={1.5} />
-              <p className="text-xs font-light text-white/80 leading-relaxed">
+              <p className="text-xs font-light text-foreground/80 leading-relaxed">
                 {limitState.exceeded ? (
-                  <>Dosegli ste limit od <span className="text-white">{limitState.limit}</span> aktivnih oglasa za plan <span className="text-white">{tierLabelHr(limitState.tier)}</span>. Nadogradite paket da nastavite predavati oglase.</>
+                  <>Dosegli ste limit od <span className="text-foreground">{limitState.limit}</span> aktivnih oglasa za plan <span className="text-foreground">{tierLabelHr(limitState.tier)}</span>. Nadogradite paket da nastavite predavati oglase.</>
                 ) : (
-                  <><span className="text-white">{limitState.used}</span> / {limitState.limit} aktivnih oglasa iskorišteno na planu <span className="text-white">{tierLabelHr(limitState.tier)}</span>. {limitState.remaining === 1 ? 'Još 1 slot ostao.' : `Još ${limitState.remaining} slota ostalo.`}</>
+                  <><span className="text-foreground">{limitState.used}</span> / {limitState.limit} aktivnih oglasa iskorišteno na planu <span className="text-foreground">{tierLabelHr(limitState.tier)}</span>. {limitState.remaining === 1 ? 'Još 1 slot ostao.' : `Još ${limitState.remaining} slota ostalo.`}</>
                 )}
               </p>
             </div>
             <Link
               to="/za-partnere"
-              className="text-[10px] font-light uppercase tracking-[0.2em] px-4 py-2 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors flex-shrink-0"
+              className="text-[10px] font-light uppercase tracking-[0.2em] px-4 py-2 bg-muted/30 border border-border text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
             >
               Nadogradi paket
             </Link>
@@ -319,19 +319,19 @@ export const CreateListingWizard = () => {
                 <div className={`w-10 h-10 rounded-none border-2 flex items-center justify-center font-black text-sm transition-all ${
                   currentStep >= step 
                     ? 'border-white bg-white text-black' 
-                    : 'border-neutral-800 text-neutral-600'
+                    : 'border-border text-muted-foreground/60'
                 }`}>
                   {currentStep > step ? <Check className="w-5 h-5" strokeWidth={3} /> : step}
                 </div>
                 {step < 3 && (
                   <div className={`flex-1 h-0.5 mx-4 ${
-                    currentStep > step ? 'bg-white' : 'bg-neutral-800'
+                    currentStep > step ? 'bg-white' : 'bg-muted'
                   }`} />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-xs font-black uppercase tracking-widest text-neutral-400">
+          <div className="flex justify-between text-xs font-black uppercase tracking-widest text-muted-foreground">
             <span>Osnovno</span>
             <span>Atributi</span>
             <span>Slike</span>
@@ -358,7 +358,7 @@ export const CreateListingWizard = () => {
           <button
             onClick={handleBack}
             disabled={currentStep === 1}
-            className="inline-flex items-center gap-2 px-8 py-4 bg-neutral-800 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-700 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-muted text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted/70 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-5 h-5" strokeWidth={2} />
             Natrag
@@ -367,7 +367,7 @@ export const CreateListingWizard = () => {
           {currentStep < 3 ? (
             <button
               onClick={handleNext}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all"
             >
               Dalje
               <ChevronRight className="w-5 h-5" strokeWidth={2} />
@@ -430,7 +430,7 @@ const Step1 = ({ formData, setFormData }: any) => {
           <select
             value={formData.category_slug}
             onChange={(e) => setFormData((prev: any) => ({ ...prev, category_slug: e.target.value }))}
-            className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-black text-sm focus:outline-none focus:border-white transition-all"
+            className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-black text-sm focus:outline-none focus:border-primary transition-all"
           >
             <option value="">Odaberite kategoriju</option>
             {navigationMenu.map((cat) => (
@@ -441,7 +441,7 @@ const Step1 = ({ formData, setFormData }: any) => {
 
         {/* Title */}
         <div className="mb-8">
-          <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+          <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
             <FileText className="w-4 h-4 inline mr-2" />
             Naslov
           </label>
@@ -450,13 +450,13 @@ const Step1 = ({ formData, setFormData }: any) => {
             value={formData.title}
             onChange={(e) => setFormData((prev: any) => ({ ...prev, title: e.target.value }))}
             placeholder="npr. BMW 320d M Sport"
-            className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+            className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
           />
         </div>
 
         {/* Price */}
         <div className="mb-8">
-          <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+          <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
             <Euro className="w-4 h-4 inline mr-2" />
             Cijena (€)
           </label>
@@ -465,13 +465,13 @@ const Step1 = ({ formData, setFormData }: any) => {
             value={formData.price}
             onChange={(e) => setFormData((prev: any) => ({ ...prev, price: Number(e.target.value) }))}
             placeholder="0 za 'Na upit'"
-            className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+            className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
           />
         </div>
 
         {/* Location */}
         <div className="mb-8">
-          <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+          <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
             <MapPin className="w-4 h-4 inline mr-2" />
             Lokacija
           </label>
@@ -480,7 +480,7 @@ const Step1 = ({ formData, setFormData }: any) => {
             value={formData.location}
             onChange={(e) => setFormData((prev: any) => ({ ...prev, location: e.target.value }))}
             placeholder="npr. Zagreb, Hrvatska"
-            className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+            className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
           />
         </div>
 
@@ -508,7 +508,7 @@ const Step1 = ({ formData, setFormData }: any) => {
         {/* Contact Info */}
         <div className="grid grid-cols-2 gap-8">
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+            <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
               Telefon
             </label>
             <input
@@ -516,11 +516,11 @@ const Step1 = ({ formData, setFormData }: any) => {
               value={formData.contact_phone}
               onChange={(e) => setFormData((prev: any) => ({ ...prev, contact_phone: e.target.value }))}
               placeholder="+385 99 123 4567"
-              className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+              className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
             />
           </div>
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+            <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
               Email
             </label>
             <input
@@ -528,7 +528,7 @@ const Step1 = ({ formData, setFormData }: any) => {
               value={formData.contact_email}
               onChange={(e) => setFormData((prev: any) => ({ ...prev, contact_email: e.target.value }))}
               placeholder="email@example.com"
-              className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+              className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
             />
           </div>
         </div>
@@ -566,22 +566,22 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs font-light uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-light uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
           Natrag
         </button>
       </div>
 
-      <h2 className="text-2xl font-black text-white mb-8">Specifikacije</h2>
+      <h2 className="text-2xl font-black text-foreground mb-8">Specifikacije</h2>
 
       {filters.length === 0 ? (
-        <p className="text-neutral-400">Odaberite kategoriju u prvom koraku.</p>
+        <p className="text-muted-foreground">Odaberite kategoriju u prvom koraku.</p>
       ) : (
         <div className="grid grid-cols-2 gap-8">
           {filters.map((filter: any) => (
             <div key={filter.id}>
-              <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+              <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
                 {filter.label}
               </label>
 
@@ -589,7 +589,7 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
                 <select
                   value={formData.attributes[filter.id] || ''}
                   onChange={(e) => handleAttributeChange(filter.id, e.target.value)}
-                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                  className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
                 >
                   <option value="">Odaberite</option>
                   {filter.options?.map((opt: any) => (
@@ -604,7 +604,7 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
                   value={formData.attributes[filter.id] || ''}
                   onChange={(e) => handleAttributeChange(filter.id, e.target.value)}
                   placeholder={filter.unit}
-                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                  className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
                 />
               )}
             </div>
@@ -614,11 +614,11 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
 
       {/* Dynamic Extra Fields by Category */}
       {(formData.category_slug === 'motocikli' || formData.category_slug === 'gospodarska-vozila' || formData.category_slug === 'strojevi') && (
-        <div className="border-t border-neutral-800 pt-8 grid grid-cols-2 gap-8">
+        <div className="border-t border-border pt-8 grid grid-cols-2 gap-8">
           {formData.category_slug === 'motocikli' && (
             <>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
                   Kubikaža (cm³)
                 </label>
                 <input
@@ -626,11 +626,11 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
                   value={formData.attributes?.engine_displacement || ''}
                   onChange={(e) => handleAttributeChange('engine_displacement', e.target.value)}
                   placeholder="npr. 750"
-                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                  className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
                   Snaga (kW)
                 </label>
                 <input
@@ -638,7 +638,7 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
                   value={formData.attributes?.power_kw || ''}
                   onChange={(e) => handleAttributeChange('power_kw', e.target.value)}
                   placeholder="npr. 55"
-                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                  className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
                 />
               </div>
             </>
@@ -646,7 +646,7 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
           {(formData.category_slug === 'gospodarska-vozila' || formData.category_slug === 'strojevi') && (
             <>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
                   Radni sati
                 </label>
                 <input
@@ -654,11 +654,11 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
                   value={formData.attributes?.working_hours || ''}
                   onChange={(e) => handleAttributeChange('working_hours', e.target.value)}
                   placeholder="npr. 1250"
-                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                  className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+                <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
                   Nosivost (kg)
                 </label>
                 <input
@@ -666,7 +666,7 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
                   value={formData.attributes?.capacity || ''}
                   onChange={(e) => handleAttributeChange('capacity', e.target.value)}
                   placeholder="npr. 3500"
-                  className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+                  className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
                 />
               </div>
             </>
@@ -675,8 +675,8 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
       )}
 
       {/* Dodatna Oprema — Comma-to-Tag */}
-      <div className="border-t border-neutral-800 pt-8">
-        <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+      <div className="border-t border-border pt-8">
+        <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
           <Tag className="w-4 h-4 inline mr-2" />
           Dodatna oprema (odvojite zarezom)
         </label>
@@ -685,19 +685,19 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
           value={equipmentTags.join(', ')}
           onChange={(e) => handleEquipmentInput(e.target.value)}
           placeholder="npr. Klima, Grijači sjedala, Navigacija, PDC, LED..."
-          className="w-full px-8 py-4 bg-card border border-neutral-800 rounded-none text-white font-bold text-sm focus:outline-none focus:border-white transition-all"
+          className="w-full px-8 py-4 bg-card border border-border rounded-none text-foreground font-bold text-sm focus:outline-none focus:border-primary transition-all"
         />
         {equipmentTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {equipmentTags.map((tag: string) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 bg-white/5 border border-neutral-700 px-3 py-1 text-[10px] uppercase tracking-widest text-white/70"
+                className="inline-flex items-center gap-1 bg-muted/30 border border-border px-3 py-1 text-[10px] uppercase tracking-widest text-foreground/70"
               >
                 {tag}
                 <button
                   onClick={() => removeEquipmentTag(tag)}
-                  className="hover:text-white transition-colors ml-1"
+                  className="hover:text-foreground transition-colors ml-1"
                   title="Ukloni"
                 >
                   <X className="w-3 h-3" strokeWidth={2} />
@@ -766,7 +766,7 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
     activeClassName?: string;
   }) => (
     <div
-      className={`${className} ${dragActive === zone ? activeClassName || 'border-white/60 bg-white/5' : ''}`}
+      className={`${className} ${dragActive === zone ? activeClassName || 'border-white/60 bg-muted/30' : ''}`}
       onDragEnter={(e) => onDrag(e, zone, true)}
       onDragLeave={(e) => onDrag(e, zone, false)}
       onDragOver={(e) => e.preventDefault()}
@@ -789,18 +789,18 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs font-light uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-light uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="w-4 h-4" strokeWidth={1.5} />
           Natrag
         </button>
       </div>
 
-      <h2 className="text-2xl font-black text-white mb-8">Slike Vozila</h2>
+      <h2 className="text-2xl font-black text-foreground mb-8">Slike Vozila</h2>
 
       {/* Zone A: Hero Image - 16:9 Large Drop Zone */}
       <div>
-        <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+        <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
           <Camera className="w-4 h-4 inline mr-2" />
           Glavna Slika (Hero) - 16:9
         </label>
@@ -809,20 +809,20 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
           id="hero-upload"
           acceptMultiple={false}
           className="relative aspect-[16/9] border-2 border-dashed border-white/20 rounded-none overflow-hidden hover:border-white/40 transition-all"
-          activeClassName="border-white/60 bg-white/5"
+          activeClassName="border-white/60 bg-muted/30"
         >
           <label htmlFor="hero-upload" className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/20 hover:bg-black/40 transition-all">
             {formData.heroImage ? (
               <div className="text-center z-10">
                 <Check className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                <p className="text-sm font-black text-white">{formData.heroImage.name}</p>
-                <p className="text-xs text-neutral-400 mt-2">Kliknite ili prevucite za promjenu</p>
+                <p className="text-sm font-black text-foreground">{formData.heroImage.name}</p>
+                <p className="text-xs text-muted-foreground mt-2">Kliknite ili prevucite za promjenu</p>
               </div>
             ) : (
               <div className="text-center z-10">
-                <Camera className="w-12 h-12 text-white/40 mx-auto mb-4" />
-                <p className="text-sm font-black text-white">Dodaj glavnu sliku</p>
-                <p className="text-xs text-neutral-400 mt-2">Kliknite ili prevucite sliku</p>
+                <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-sm font-black text-foreground">Dodaj glavnu sliku</p>
+                <p className="text-xs text-muted-foreground mt-2">Kliknite ili prevucite sliku</p>
               </div>
             )}
           </label>
@@ -838,7 +838,7 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
 
       {/* Zone B: Gallery - Horizontal Scrollable Grid */}
       <div>
-        <label className="block text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">
+        <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-4">
           Galerija ({formData.galleryImages.length} slika)
         </label>
         <div className="space-y-4">
@@ -848,12 +848,12 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
             id="gallery-upload"
             acceptMultiple={true}
             className="border-2 border-dashed border-white/20 rounded-none p-8 text-center hover:border-white/40 transition-all"
-            activeClassName="border-white/60 bg-white/5"
+            activeClassName="border-white/60 bg-muted/30"
           >
             <label htmlFor="gallery-upload" className="cursor-pointer block">
-              <Upload className="w-8 h-8 mx-auto mb-2 text-white/40" />
-              <p className="text-xs font-black uppercase tracking-widest text-neutral-400">Dodaj slike galerije</p>
-              <p className="text-[10px] text-neutral-500 mt-1">Prevucite slike ovdje</p>
+              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Dodaj slike galerije</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">Prevucite slike ovdje</p>
             </label>
           </DropZone>
 
@@ -865,7 +865,7 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
                   <img
                     src={URL.createObjectURL(file)}
                     alt={`Gallery ${idx + 1}`}
-                    className="w-full h-full object-cover border border-neutral-800"
+                    className="w-full h-full object-cover border border-border"
                   />
                   <button
                     onClick={() => removeImage('gallery', idx)}
@@ -895,7 +895,7 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
           <AlertCircle className="w-4 h-4 inline mr-2" />
           Oštećenja ({formData.damageImages.length} slika)
         </label>
-        <p className="text-xs text-neutral-400 mb-4">
+        <p className="text-xs text-muted-foreground mb-4">
           Dodajte slike oštećenja kako biste izgradili povjerenje kupaca. Transparentnost je ključna.
         </p>
 
@@ -941,14 +941,14 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
       {/* Upload Progress Bar */}
       {isUploading && (
         <div className="space-y-2">
-          <div className="w-full h-1 bg-neutral-800 rounded-none overflow-hidden">
+          <div className="w-full h-1 bg-muted rounded-none overflow-hidden">
             <motion.div
               className="h-full bg-white"
               animate={{ width: `${uploadProgress}%` }}
               transition={{ duration: 0.3 }}
             />
           </div>
-          <p className="text-xs text-neutral-400 text-center">Učitavanje... {uploadProgress}%</p>
+          <p className="text-xs text-muted-foreground text-center">Učitavanje... {uploadProgress}%</p>
         </div>
       )}
     </div>

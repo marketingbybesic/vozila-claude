@@ -53,10 +53,10 @@ export const DynamicSidebar = ({ categorySlug }: DynamicSidebarProps) => {
   };
 
   return (
-    <aside className="w-80 bg-black border-r border-white/10 h-screen overflow-y-auto">
+    <aside className="w-80 bg-black border-r border-border h-screen overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 bg-black border-b border-white/10 px-8 py-6">
-        <h2 className="text-xs font-black uppercase tracking-widest text-white">Filteri</h2>
+      <div className="sticky top-0 bg-black border-b border-border px-8 py-6">
+        <h2 className="text-xs font-black uppercase tracking-widest text-foreground">Filteri</h2>
       </div>
 
       {/* Filter Groups */}
@@ -106,15 +106,15 @@ const FilterGroup = ({
   onFilterChange,
 }: FilterGroupProps) => {
   return (
-    <div className="border-b border-white/10 pb-8">
+    <div className="border-b border-border pb-8">
       {/* Accordion Header */}
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between py-4 hover:opacity-80 transition-opacity"
       >
-        <h3 className="text-xs font-black uppercase tracking-widest text-white">{title}</h3>
+        <h3 className="text-xs font-black uppercase tracking-widest text-foreground">{title}</h3>
         <ChevronDown
-          className={`w-4 h-4 text-white/40 transition-transform duration-300 ${
+          className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
             isExpanded ? 'rotate-180' : ''
           }`}
           strokeWidth={2}
@@ -179,7 +179,7 @@ const RangeFilter = ({ filter, value, onChange }: FilterInputProps) => {
 
   return (
     <div className="space-y-4">
-      <label className="block text-xs font-black uppercase tracking-widest text-white/60">
+      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
         {filter.label}
       </label>
 
@@ -187,33 +187,33 @@ const RangeFilter = ({ filter, value, onChange }: FilterInputProps) => {
       <div className="space-y-3">
         {/* Min Input */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-white/40 w-8">Od</span>
+          <span className="text-xs text-muted-foreground w-8">Od</span>
           <input
             type="number"
             value={min}
             onChange={handleMinChange}
             placeholder="Min"
-            className="flex-1 bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40 transition-all"
+            className="flex-1 bg-card border border-border rounded-none px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-all"
           />
-          {filter.unit && <span className="text-xs text-white/40 w-8">{filter.unit}</span>}
+          {filter.unit && <span className="text-xs text-muted-foreground w-8">{filter.unit}</span>}
         </div>
 
         {/* Max Input */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-white/40 w-8">Do</span>
+          <span className="text-xs text-muted-foreground w-8">Do</span>
           <input
             type="number"
             value={max}
             onChange={handleMaxChange}
             placeholder="Max"
-            className="flex-1 bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40 transition-all"
+            className="flex-1 bg-card border border-border rounded-none px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-all"
           />
-          {filter.unit && <span className="text-xs text-white/40 w-8">{filter.unit}</span>}
+          {filter.unit && <span className="text-xs text-muted-foreground w-8">{filter.unit}</span>}
         </div>
       </div>
 
       {/* Visual Range Bar */}
-      <div className="h-px bg-white/10 relative mt-4">
+      <div className="h-px bg-muted/50 relative mt-4">
         {min && max && (
           <div
             className="absolute h-full bg-white/40"
@@ -232,13 +232,13 @@ const RangeFilter = ({ filter, value, onChange }: FilterInputProps) => {
 const SelectFilter = ({ filter, value, onChange }: FilterInputProps) => {
   return (
     <div className="space-y-3">
-      <label className="block text-xs font-black uppercase tracking-widest text-white/60">
+      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
         {filter.label}
       </label>
       <select
         value={value || ''}
         onChange={(e) => onChange(e.target.value || null)}
-        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40 transition-all appearance-none cursor-pointer"
+        className="w-full bg-card border border-border rounded-none px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary/40 transition-all appearance-none cursor-pointer"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.4)' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
@@ -261,7 +261,7 @@ const SelectFilter = ({ filter, value, onChange }: FilterInputProps) => {
 const RadioFilter = ({ filter, value, onChange }: FilterInputProps) => {
   return (
     <div className="space-y-3">
-      <label className="block text-xs font-black uppercase tracking-widest text-white/60">
+      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
         {filter.label}
       </label>
       <div className="space-y-2">
@@ -275,7 +275,7 @@ const RadioFilter = ({ filter, value, onChange }: FilterInputProps) => {
               onChange={() => onChange(opt.value)}
               className="w-4 h-4 border border-white/20 rounded-none cursor-pointer accent-white"
             />
-            <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors">
+            <span className="text-xs text-muted-foreground group-hover:text-foreground/80 transition-colors">
               {opt.label}
             </span>
           </label>
@@ -295,7 +295,7 @@ const BooleanFilter = ({ filter, value, onChange }: FilterInputProps) => {
         onChange={(e) => onChange(e.target.checked || null)}
         className="w-4 h-4 border border-white/20 rounded-none cursor-pointer accent-white"
       />
-      <label className="text-xs text-white/60 cursor-pointer">{filter.label}</label>
+      <label className="text-xs text-muted-foreground cursor-pointer">{filter.label}</label>
     </div>
   );
 };

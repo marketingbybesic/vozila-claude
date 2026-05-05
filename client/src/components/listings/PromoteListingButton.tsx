@@ -123,14 +123,14 @@ export const PromoteListingButton = ({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-black border border-white/10 rounded-none p-8 space-y-6"
+            className="w-full max-w-md bg-black border border-border rounded-none p-8 space-y-6"
           >
             {/* Header */}
             <div>
               <h2 className="text-xl font-light text-white mb-1 uppercase tracking-widest">
                 Istakni oglas
               </h2>
-              <p className="text-[10px] text-neutral-400 uppercase tracking-widest">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
                 Učini svoj oglas vidljivijim
               </p>
             </div>
@@ -164,7 +164,7 @@ export const PromoteListingButton = ({
                   className={`w-full p-4 border rounded-none text-left transition-all ${
                     selectedPlan.id === plan.id
                       ? 'border-primary bg-primary/10'
-                      : 'border-white/10 hover:border-white/30'
+                      : 'border-border hover:border-foreground/30'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -180,7 +180,7 @@ export const PromoteListingButton = ({
                     </div>
                     <span className="text-lg font-light text-white">€{plan.price.toFixed(2)}</span>
                   </div>
-                  <p className="text-[10px] text-neutral-400 uppercase tracking-widest">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
                     Istaknuto na početnoj i u rezultatima pretrage
                   </p>
                 </button>
@@ -188,18 +188,18 @@ export const PromoteListingButton = ({
             </div>
 
             {/* Info */}
-            <div className="p-4 border border-white/10 bg-white/5 rounded-none">
-              <p className="text-[10px] text-neutral-400 uppercase tracking-widest leading-relaxed">
+            <div className="p-4 border border-border bg-muted/30 rounded-none">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest leading-relaxed">
                 Istaknuti oglasi primaju 3x više pregleda i 2x više kontakta
               </p>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-2 border-t border-white/10">
+            <div className="flex gap-3 pt-2 border-t border-border">
               <button
                 onClick={() => setShowModal(false)}
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-neutral-900 border border-white/10 text-white rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-800 transition-all disabled:opacity-50"
+                className="flex-1 px-6 py-3 bg-card border border-border text-foreground rounded-none font-light uppercase tracking-widest text-xs hover:bg-muted transition-all disabled:opacity-50"
               >
                 Zatvori
               </button>

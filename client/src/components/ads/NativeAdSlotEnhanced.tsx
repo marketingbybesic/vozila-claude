@@ -104,7 +104,7 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
         href={ad.target_link}
         target="_blank"
         rel="noopener noreferrer"
-        className="block relative aspect-[16/9] bg-neutral-900 border border-white/10 rounded-none overflow-hidden hover:border-white/30 transition-all duration-300 group-hover:shadow-2xl"
+        className="block relative aspect-[16/9] bg-card border border-border rounded-none overflow-hidden hover:border-foreground/30 transition-all duration-300 group-hover:shadow-2xl"
       >
         {/* Image Ad */}
         {ad.ad_type === 'image' && ad.image_url && (
@@ -126,7 +126,7 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
               autoPlay
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all">
-              <Play className="w-12 h-12 text-white/40" strokeWidth={1.5} />
+              <Play className="w-12 h-12 text-muted-foreground" strokeWidth={1.5} />
             </div>
           </div>
         )}
@@ -143,8 +143,8 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
         {/* PROMOTED Tag - Tiny, Unobtrusive */}
-        <div className="absolute top-4 left-4 px-1.5 py-0.5 bg-white/5 backdrop-blur-sm border border-white/20 rounded-none">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/60">
+        <div className="absolute top-4 left-4 px-1.5 py-0.5 bg-muted/30 backdrop-blur-sm border border-white/20 rounded-none">
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
             Promoted
           </span>
         </div>
@@ -169,7 +169,7 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                   <div className="space-y-4 flex-1">
                     {/* Ad Type */}
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Ad Type
                       </label>
                       <select
@@ -177,7 +177,7 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                         onChange={(e) =>
                           setEditData({ ...editData, ad_type: e.target.value as 'image' | 'video' | 'html' })
                         }
-                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white focus:outline-none focus:border-white/40"
+                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/40"
                       >
                         <option value="image">Image</option>
                         <option value="video">Video</option>
@@ -188,14 +188,14 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                     {/* Image URL */}
                     {editData.ad_type === 'image' && (
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                        <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                           Image URL
                         </label>
                         <input
                           type="text"
                           value={editData.image_url || ''}
                           onChange={(e) => setEditData({ ...editData, image_url: e.target.value })}
-                          className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40"
+                          className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40"
                           placeholder="https://example.com/image.jpg"
                         />
                       </div>
@@ -204,14 +204,14 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                     {/* Video URL */}
                     {editData.ad_type === 'video' && (
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                        <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                           Video URL
                         </label>
                         <input
                           type="text"
                           value={editData.video_url || ''}
                           onChange={(e) => setEditData({ ...editData, video_url: e.target.value })}
-                          className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40"
+                          className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40"
                           placeholder="https://example.com/video.mp4"
                         />
                       </div>
@@ -220,13 +220,13 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                     {/* HTML Content */}
                     {editData.ad_type === 'html' && (
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                        <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                           HTML Content
                         </label>
                         <textarea
                           value={editData.html_content || ''}
                           onChange={(e) => setEditData({ ...editData, html_content: e.target.value })}
-                          className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40 h-24 resize-none"
+                          className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 h-24 resize-none"
                           placeholder="<div>Custom HTML</div>"
                         />
                       </div>
@@ -234,14 +234,14 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
 
                     {/* Target Link */}
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Target Link
                       </label>
                       <input
                         type="text"
                         value={editData.target_link || ''}
                         onChange={(e) => setEditData({ ...editData, target_link: e.target.value })}
-                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40"
+                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40"
                         placeholder="https://example.com"
                       />
                     </div>
@@ -254,18 +254,18 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                         onChange={(e) => setEditData({ ...editData, is_dealership: e.target.checked })}
                         className="w-4 h-4 border border-white/20 rounded-none cursor-pointer accent-white"
                       />
-                      <label className="text-xs font-black uppercase tracking-widest text-white/60 cursor-pointer">
+                      <label className="text-xs font-black uppercase tracking-widest text-muted-foreground cursor-pointer">
                         Dealership Promotion
                       </label>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-4 border-t border-white/10">
+                  <div className="flex gap-2 pt-4 border-t border-border">
                     <button
                       onClick={handleSaveAd}
                       disabled={isSaving}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all disabled:opacity-50"
                     >
                       <Save className="w-4 h-4" strokeWidth={2} />
                       {isSaving ? 'Saving...' : 'Save'}
@@ -275,7 +275,7 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                         setEditData(ad);
                         setIsEditMode(false);
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-700 transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-muted text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted/70 transition-all"
                     >
                       <X className="w-4 h-4" strokeWidth={2} />
                       Cancel
@@ -287,15 +287,15 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                   {/* View Mode */}
                   <div className="flex-1 space-y-4">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Ad Type
                       </p>
-                      <p className="text-xs text-white/80 capitalize">{ad.ad_type}</p>
+                      <p className="text-xs text-foreground/80 capitalize">{ad.ad_type}</p>
                     </div>
 
                     {ad.ad_type === 'image' && ad.image_url && (
                       <div>
-                        <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                           Preview
                         </p>
                         <img
@@ -307,17 +307,17 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                     )}
 
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Target Link
                       </p>
-                      <p className="text-xs text-white/80 break-all font-mono">{ad.target_link}</p>
+                      <p className="text-xs text-foreground/80 break-all font-mono">{ad.target_link}</p>
                     </div>
 
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Type
                       </p>
-                      <p className="text-xs text-white/80">
+                      <p className="text-xs text-foreground/80">
                         {ad.is_dealership ? 'Dealership Promotion' : 'Regular Ad'}
                       </p>
                     </div>
@@ -326,7 +326,7 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
                   {/* Edit Button */}
                   <button
                     onClick={() => setIsEditMode(true)}
-                    className="w-full px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
+                    className="w-full px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all"
                   >
                     Edit Ad
                   </button>

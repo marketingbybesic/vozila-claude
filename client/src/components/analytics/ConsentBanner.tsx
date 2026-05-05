@@ -43,7 +43,7 @@ export const ConsentBanner = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/95 to-black/90 backdrop-blur-sm border-t border-white/10">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/95 to-black/90 backdrop-blur-sm border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {!showDetails ? (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -58,7 +58,7 @@ export const ConsentBanner = () => {
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setShowDetails(true)}
-                className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-300 hover:text-foreground transition-colors"
               >
                 Detalji
               </button>
@@ -84,13 +84,13 @@ export const ConsentBanner = () => {
               </h3>
               <button
                 onClick={() => setShowDetails(false)}
-                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                className="p-1 hover:bg-muted/50 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
 
-            <div className="space-y-3 bg-black/40 rounded-lg p-4 border border-white/5">
+            <div className="space-y-3 bg-black/40 rounded-lg p-4 border border-border/50">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <p className="text-sm font-bold text-white mb-1">Google Analytics 4</p>
@@ -113,7 +113,7 @@ export const ConsentBanner = () => {
                 </label>
               </div>
 
-              <div className="flex items-start justify-between pt-3 border-t border-white/10">
+              <div className="flex items-start justify-between pt-3 border-t border-border">
                 <div className="flex-1">
                   <p className="text-sm font-bold text-white mb-1">Meta Pixel</p>
                   <p className="text-xs text-slate-400">

@@ -87,7 +87,7 @@ export const Home = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-72 bg-white/5 border border-white/10 animate-pulse" />
+              <div key={i} className="h-72 bg-muted/30 border border-border animate-pulse" />
             ))}
           </div>
         ) : (
@@ -106,7 +106,7 @@ export const Home = () => {
 
       {/* Divider */}
       <div className="max-w-7xl mx-auto px-4">
-        <div className="h-px bg-white/5" />
+        <div className="h-px bg-muted/30" />
       </div>
 
       {/* Section: Najgledanije */}
@@ -135,7 +135,7 @@ export const Home = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-72 bg-white/5 border border-white/10 animate-pulse" />
+              <div key={i} className="h-72 bg-muted/30 border border-border animate-pulse" />
             ))}
           </div>
         ) : (
@@ -150,15 +150,15 @@ export const Home = () => {
       </section>
 
       {/* Sponsored Space - Minimal */}
-      <section className="py-12 px-4 border-t border-white/5">
+      <section className="py-12 px-4 border-t border-border/50">
         <div className="max-w-7xl mx-auto">
-          <div className="relative h-48 bg-white/[0.02] border border-white/10 overflow-hidden flex items-center justify-center">
+          <div className="relative h-48 bg-white/[0.02] border border-border overflow-hidden flex items-center justify-center">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5" />
             <div className="text-center relative">
-              <p className="text-[10px] font-light uppercase tracking-[0.2em] text-white/30 mb-2">
+              <p className="text-[10px] font-light uppercase tracking-[0.2em] text-muted-foreground/60 mb-2">
                 Sponzorirani prostor
               </p>
-              <p className="text-lg font-light uppercase tracking-widest text-white/50">
+              <p className="text-lg font-light uppercase tracking-widest text-muted-foreground">
                 Vaša reklama ovdje
               </p>
             </div>

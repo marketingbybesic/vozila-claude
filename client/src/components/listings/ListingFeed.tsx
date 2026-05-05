@@ -291,7 +291,7 @@ export const ListingCard = ({ car }: { car: Listing }) => {
         {/* Match Score pill — top-right, always visible. Quality signal at-a-glance. */}
         {(() => {
           const ms = matchScore(car);
-          const tone = ms.band === 'Premium' ? 'bg-primary text-primary-foreground' : ms.band === 'Solid' ? 'bg-foreground/85 text-background' : 'bg-black/65 text-white/80';
+          const tone = ms.band === 'Premium' ? 'bg-primary text-primary-foreground' : ms.band === 'Solid' ? 'bg-foreground/85 text-background' : 'bg-black/65 text-foreground/80';
           return (
             <span
               title={ms.reasons.length ? ms.reasons.join(' · ') : 'Osnovni oglas'}
@@ -305,7 +305,7 @@ export const ListingCard = ({ car }: { car: Listing }) => {
 
         {/* View count — bottom-right, only on hover */}
         {isHovered && (car.views_count ?? 0) > 0 && (
-          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-[9px] font-light uppercase tracking-[0.25em] text-white/80">
+          <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 text-[9px] font-light uppercase tracking-[0.25em] text-foreground/80">
             <Eye className="w-3 h-3" strokeWidth={1.5} aria-hidden="true" />
             {(car.views_count ?? 0).toLocaleString('hr-HR')}
           </span>

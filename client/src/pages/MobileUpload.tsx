@@ -97,7 +97,7 @@ export const MobileUpload = () => {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-black text-foreground">Učitaj slike</h1>
-          <p className="text-xs text-neutral-400 uppercase tracking-widest">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest">
             Vozila.hr Mobile Upload
           </p>
         </div>
@@ -146,7 +146,7 @@ export const MobileUpload = () => {
             {/* Selected Files */}
             {selectedFiles.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-black uppercase tracking-widest text-neutral-400">
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                   Odabrane slike ({selectedFiles.length})
                 </p>
                 <div className="grid grid-cols-3 gap-2">
@@ -166,13 +166,13 @@ export const MobileUpload = () => {
             {/* Upload Progress */}
             {isUploading && (
               <div className="space-y-2">
-                <div className="w-full h-1 bg-neutral-800 rounded-none overflow-hidden">
+                <div className="w-full h-1 bg-muted rounded-none overflow-hidden">
                   <div
                     className="h-full bg-white transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
-                <p className="text-xs text-neutral-400 text-center">Učitavanje... {uploadProgress}%</p>
+                <p className="text-xs text-muted-foreground text-center">Učitavanje... {uploadProgress}%</p>
               </div>
             )}
 
@@ -180,7 +180,7 @@ export const MobileUpload = () => {
             <button
               onClick={handleUpload}
               disabled={selectedFiles.length === 0 || isUploading}
-              className="w-full px-6 py-4 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-4 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isUploading ? 'Učitavanje...' : 'Učitaj slike'}
             </button>
@@ -188,7 +188,7 @@ export const MobileUpload = () => {
         )}
 
         {/* Session Info */}
-        <div className="text-center text-xs text-neutral-500">
+        <div className="text-center text-xs text-muted-foreground/70">
           <p>Session: {sessionId.substring(0, 12)}...</p>
         </div>
       </div>

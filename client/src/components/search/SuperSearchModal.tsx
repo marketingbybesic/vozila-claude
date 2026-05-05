@@ -85,7 +85,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
             placeholder="Od"
             value={advancedFilters[`${filter.id}Min`] || ''}
             onChange={(e) => handleFilterChange(`${filter.id}Min`, e.target.value)}
-            className="flex-1 h-9 px-3 bg-white/5 border border-white/10 text-white placeholder-white/20 text-xs font-light focus:outline-none focus:border-white/30 transition-colors"
+            className="flex-1 h-9 px-3 bg-muted/30 border border-border text-foreground placeholder:text-muted-foreground/50 text-xs font-light focus:outline-none focus:border-foreground/40 transition-colors"
           />
           <input
             type="number"
@@ -93,7 +93,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
             placeholder="Do"
             value={advancedFilters[`${filter.id}Max`] || ''}
             onChange={(e) => handleFilterChange(`${filter.id}Max`, e.target.value)}
-            className="flex-1 h-9 px-3 bg-white/5 border border-white/10 text-white placeholder-white/20 text-xs font-light focus:outline-none focus:border-white/30 transition-colors"
+            className="flex-1 h-9 px-3 bg-muted/30 border border-border text-foreground placeholder:text-muted-foreground/50 text-xs font-light focus:outline-none focus:border-foreground/40 transition-colors"
           />
         </div>
       );
@@ -104,7 +104,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
           name={filter.id}
           value={advancedFilters[filter.id] || ''}
           onChange={(e) => handleFilterChange(filter.id, e.target.value)}
-          className="w-full h-9 px-3 bg-white/5 border border-white/10 text-white text-xs font-light focus:outline-none focus:border-white/30 transition-colors appearance-none cursor-pointer"
+          className="w-full h-9 px-3 bg-muted/30 border border-border text-foreground text-xs font-light focus:outline-none focus:border-foreground/40 transition-colors appearance-none cursor-pointer"
         >
           <option value="" className="bg-black text-white">Sve</option>
           {filter.options?.map(opt => (
@@ -129,17 +129,17 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
 
         {/* Content - Large Centered Frosted Interface */}
         <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-4xl max-h-[90vh] overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
-          <div className="relative backdrop-blur-xl bg-black/60 border border-white/10">
+          <div className="relative backdrop-blur-xl bg-black/60 border border-border">
             {/* Fallback background for no backdrop-filter */}
             <div className="absolute inset-0 bg-black/80 -z-10" />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-              <Dialog.Title className="text-xs font-light uppercase tracking-widest text-white/60 flex items-center gap-3">
-                <Search className="h-4 w-4 text-white/40" strokeWidth={1.5} />
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <Dialog.Title className="text-xs font-light uppercase tracking-widest text-muted-foreground flex items-center gap-3">
+                <Search className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                 Napredna pretraga
               </Dialog.Title>
-              <Dialog.Close className="p-2 text-white/40 hover:text-white hover:bg-white/5 transition-all duration-200">
+              <Dialog.Close className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200">
                 <X className="h-4 w-4" strokeWidth={1.5} />
               </Dialog.Close>
             </div>
@@ -147,20 +147,20 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
             {/* Scrollable Body */}
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
               {/* Search Input */}
-              <div className="px-6 py-4 border-b border-white/10">
+              <div className="px-6 py-4 border-b border-border">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Unesite pojam..."
-                  className="w-full h-12 px-4 bg-white/5 border border-white/10 text-white placeholder-white/20 text-sm font-light focus:outline-none focus:border-white/30 transition-colors"
+                  className="w-full h-12 px-4 bg-muted/30 border border-border text-foreground placeholder:text-muted-foreground/50 text-sm font-light focus:outline-none focus:border-foreground/40 transition-colors"
                   autoFocus
                 />
               </div>
 
               {/* Category Selector */}
-              <div className="px-6 py-4 border-b border-white/10">
-                <label className="block text-[10px] font-light uppercase tracking-widest text-white/40 mb-3">
+              <div className="px-6 py-4 border-b border-border">
+                <label className="block text-[10px] font-light uppercase tracking-widest text-muted-foreground mb-3">
                   Kategorija
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -175,7 +175,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                       className={`px-4 py-2 text-[10px] font-light uppercase tracking-widest border transition-all duration-200 ${
                         selectedCategory === category.slug
                           ? 'bg-white text-black border-white'
-                          : 'bg-transparent text-white/60 border-white/10 hover:border-white/30 hover:text-white'
+                          : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
                       }`}
                     >
                       {category.name}
@@ -186,8 +186,8 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
 
               {/* Subcategory Selector */}
               {selectedCategoryObj && selectedCategoryObj.sub.length > 0 && (
-                <div className="px-6 py-4 border-b border-white/10">
-                  <label className="block text-[10px] font-light uppercase tracking-widest text-white/40 mb-3">
+                <div className="px-6 py-4 border-b border-border">
+                  <label className="block text-[10px] font-light uppercase tracking-widest text-muted-foreground mb-3">
                     Podkategorija
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -197,7 +197,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                       className={`px-4 py-2 text-[10px] font-light uppercase tracking-widest border transition-all duration-200 ${
                         !advancedFilters.subcategory
                           ? 'bg-white text-black border-white'
-                          : 'bg-transparent text-white/60 border-white/10 hover:border-white/30 hover:text-white'
+                          : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
                       }`}
                     >
                       Sve
@@ -210,7 +210,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                         className={`px-4 py-2 text-[10px] font-light uppercase tracking-widest border transition-all duration-200 ${
                           advancedFilters.subcategory === subcat.slug
                             ? 'bg-white text-black border-white'
-                            : 'bg-transparent text-white/60 border-white/10 hover:border-white/30 hover:text-white'
+                            : 'bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground'
                         }`}
                       >
                         {subcat.name}
@@ -227,14 +227,14 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                   if (!filters || filters.length === 0) return null;
                   return (
                     <div key={groupKey}>
-                      <h3 className="text-[10px] font-light uppercase tracking-widest text-white/40 mb-3 pb-2 border-b border-white/10">
+                      <h3 className="text-[10px] font-light uppercase tracking-widest text-muted-foreground mb-3 pb-2 border-b border-border">
                         {GROUP_LABELS[groupKey]}
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filters.map((filter) => (
                           <div key={filter.id}>
-                            <label className="block text-[10px] font-light uppercase tracking-widest text-white/30 mb-2">
-                              {filter.label} {filter.unit && <span className="text-white/20">({filter.unit})</span>}
+                            <label className="block text-[10px] font-light uppercase tracking-widest text-muted-foreground/60 mb-2">
+                              {filter.label} {filter.unit && <span className="text-muted-foreground/40">({filter.unit})</span>}
                             </label>
                             {renderFilterInput(filter)}
                           </div>
@@ -246,11 +246,11 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
               </div>
 
               {/* Actions */}
-              <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between gap-4">
+              <div className="px-6 py-4 border-t border-border flex items-center justify-between gap-4">
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-[10px] font-light uppercase tracking-widest text-white/40 hover:text-white/70 transition-colors duration-200"
+                  className="text-[10px] font-light uppercase tracking-widest text-muted-foreground hover:text-foreground/70 transition-colors duration-200"
                 >
                   Očisti filtere
                 </button>
@@ -258,7 +258,7 @@ export const SuperSearchModal = ({ open, onOpenChange }: SuperSearchModalProps) 
                   <button
                     type="button"
                     onClick={() => onOpenChange(false)}
-                    className="px-6 py-3 border border-white/10 text-white/60 text-xs font-light uppercase tracking-widest hover:border-white/30 hover:text-white transition-all duration-200"
+                    className="px-6 py-3 border border-border text-muted-foreground text-xs font-light uppercase tracking-widest hover:border-foreground/30 hover:text-foreground transition-all duration-200"
                   >
                     Odustani
                   </button>

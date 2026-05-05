@@ -97,14 +97,14 @@ export const Settings = () => {
         <ArrowLeft className="w-4 h-4" strokeWidth={1.5} /> Natrag
       </Link>
 
-      <h1 className="text-xl font-light uppercase tracking-[0.2em] text-foregroundmb-8">Postavke</h1>
+      <h1 className="text-xl font-light uppercase tracking-[0.2em] text-foreground mb-8">Postavke</h1>
 
       <div className="flex flex-col gap-6">
         {/* Subscription Card */}
         <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
             <CreditCard className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Pretplata</h2>
+            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-foreground">Pretplata</h2>
             {sub?.subscription_tier && (
               <span className="ml-auto"><VerifiedDealerBadge tier={sub.subscription_tier} size="md" /></span>
             )}
@@ -119,7 +119,7 @@ export const Settings = () => {
           {sub?.subscription_tier && sub.subscription_status === 'active' ? (
             <div className="space-y-3">
               <p className="text-sm font-light text-foreground/70">
-                Aktivni plan: <span className="text-white">{tierLabel(sub.subscription_tier)}</span>
+                Aktivni plan: <span className="text-foreground">{tierLabel(sub.subscription_tier)}</span>
               </p>
               {sub.subscription_renews_at && (
                 <p className="text-xs font-light text-muted-foreground">
@@ -129,7 +129,7 @@ export const Settings = () => {
               <button
                 onClick={handlePortal}
                 disabled={portalBusy}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-muted/30 text-foregroundfont-light uppercase tracking-[0.15em] text-[10px] border border-border hover:bg-muted/50 transition-all duration-300 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-muted/30 text-foreground font-light uppercase tracking-[0.15em] text-[10px] border border-border hover:bg-muted/50 transition-all duration-300 disabled:opacity-50"
               >
                 {portalBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />}
                 Upravljaj pretplatom
@@ -171,7 +171,7 @@ export const Settings = () => {
         <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
             <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Profil</h2>
+            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-foreground">Profil</h2>
           </div>
           <p className="text-sm font-light text-muted-foreground leading-relaxed">
             Upravljanje profilom dolazi uskoro. Trenutno možete zatražiti brisanje svih Vaših podataka u skladu s GDPR-om.
@@ -182,7 +182,7 @@ export const Settings = () => {
         <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
             <Bell className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Obavijesti</h2>
+            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-foreground">Obavijesti</h2>
           </div>
 
           <div className="space-y-4">
@@ -217,7 +217,7 @@ export const Settings = () => {
         <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
-            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Privatnost i sigurnost</h2>
+            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-foreground">Privatnost i sigurnost</h2>
           </div>
 
           {/* GDPR — data export */}
@@ -267,7 +267,7 @@ export const Settings = () => {
                 ) : (
                   <>
                     <p className="text-sm font-light text-muted-foreground mb-4">
-                      Za potvrdu, upišite <span className="text-white font-light">"obrisi"</span> u polje ispod:
+                      Za potvrdu, upišite <span className="text-foreground font-light">"obrisi"</span> u polje ispod:
                     </p>
                     <input
                       type="text"

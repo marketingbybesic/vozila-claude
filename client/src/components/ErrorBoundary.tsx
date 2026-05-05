@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <h1 className="text-2xl font-light uppercase tracking-[0.15em] text-foreground mb-4">
               Something went wrong
             </h1>
-            <p className="text-sm text-neutral-400 mb-8 leading-relaxed">
+            <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
               Došlo je do neočekivane greške. Molimo vas pokušajte ponovno.
             </p>
             <button

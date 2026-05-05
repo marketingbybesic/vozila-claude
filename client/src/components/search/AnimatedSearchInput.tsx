@@ -41,12 +41,12 @@ export const AnimatedSearchInput = ({
       {/* Input Container */}
       <div className="relative flex items-center">
         {/* Search Icon */}
-        <div className="absolute left-4 text-white/40 pointer-events-none">
+        <div className="absolute left-4 text-muted-foreground pointer-events-none">
           <Search className="w-5 h-5" strokeWidth={1.5} />
         </div>
 
         {/* Animated Placeholder Text (Behind Input) */}
-        <div className="absolute left-12 top-1/2 -translate-y-1/2 text-white/30 font-light pointer-events-none overflow-hidden">
+        <div className="absolute left-12 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-light pointer-events-none overflow-hidden">
           <motion.span
             key={displayText}
             initial={{ opacity: 0 }}
@@ -72,7 +72,7 @@ export const AnimatedSearchInput = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder={placeholder}
-          className="w-full bg-black border border-white/10 rounded-none pl-12 pr-4 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all"
+          className="w-full bg-card border border-border rounded-none pl-12 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/40 transition-all"
         />
       </div>
 

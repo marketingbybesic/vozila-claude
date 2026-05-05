@@ -76,7 +76,7 @@ export const Hero = () => {
 
           {/* Bottom-right caption + four-rectangle index meter (signature interaction) */}
           <div className="absolute bottom-6 right-6 flex items-end gap-4 text-white">
-            <span className="text-[10px] font-light uppercase tracking-[0.25em] text-white/60">
+            <span className="text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground">
               {SLIDES[activeSlide].label}
             </span>
             <div className="flex items-center gap-1.5" aria-hidden="true">

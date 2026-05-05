@@ -115,7 +115,7 @@ export const NoviOglasiCarousel = () => {
   if (loading) {
     return (
       <section className="py-16 px-4 max-w-7xl mx-auto">
-        <div className="h-72 bg-white/5 border border-white/10 animate-pulse" />
+        <div className="h-72 bg-muted/30 border border-border animate-pulse" />
       </section>
     );
   }
@@ -163,14 +163,14 @@ export const NoviOglasiCarousel = () => {
           <div className="flex gap-2">
             <button
               onClick={goPrev}
-              className="p-2 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all duration-300"
+              className="p-2 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all duration-300"
               aria-label="Previous"
             >
               <ChevronLeft className="w-4 h-4" strokeWidth={1} />
             </button>
             <button
               onClick={goNext}
-              className="p-2 border border-white/10 text-white/40 hover:text-white hover:border-white/30 transition-all duration-300"
+              className="p-2 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-all duration-300"
               aria-label="Next"
             >
               <ChevronRight className="w-4 h-4" strokeWidth={1} />
@@ -197,7 +197,7 @@ export const NoviOglasiCarousel = () => {
                 to={`/listing/${listing.id}`}
                 className="group flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 min-w-[260px] px-2"
               >
-                <div className="border border-white/10 bg-black overflow-hidden">
+                <div className="border border-border bg-black overflow-hidden">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <img
                       src={img}

@@ -8,7 +8,7 @@ interface RentalToggleProps {
 export const RentalToggle = ({ value, onChange }: RentalToggleProps) => {
   return (
     <div className="space-y-3">
-      <label className="block text-xs font-black uppercase tracking-widest text-white/60">
+      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground">
         Tip oglasa
       </label>
 
@@ -20,7 +20,7 @@ export const RentalToggle = ({ value, onChange }: RentalToggleProps) => {
           className={`flex items-center justify-center gap-2 px-4 py-3 rounded-none font-black uppercase tracking-widest text-xs transition-all ${
             value === 'prodaja'
               ? 'bg-white text-black border border-white'
-              : 'bg-black border border-white/20 text-white/60 hover:border-white/40'
+              : 'bg-black border border-white/20 text-muted-foreground hover:border-white/40'
           }`}
         >
           <Home className="w-4 h-4" strokeWidth={2} />
@@ -33,7 +33,7 @@ export const RentalToggle = ({ value, onChange }: RentalToggleProps) => {
           className={`flex items-center justify-center gap-2 px-4 py-3 rounded-none font-black uppercase tracking-widest text-xs transition-all ${
             value === 'najam'
               ? 'bg-white text-black border border-white'
-              : 'bg-black border border-white/20 text-white/60 hover:border-white/40'
+              : 'bg-black border border-white/20 text-muted-foreground hover:border-white/40'
           }`}
         >
           <Repeat2 className="w-4 h-4" strokeWidth={2} />
@@ -42,13 +42,13 @@ export const RentalToggle = ({ value, onChange }: RentalToggleProps) => {
       </div>
 
       {/* Price Label Info */}
-      <div className="p-3 border border-white/10 bg-white/5 rounded-none">
-        <p className="text-xs text-neutral-400">
+      <div className="p-3 border border-border bg-muted/30 rounded-none">
+        <p className="text-xs text-muted-foreground">
           <span className="font-black text-white">
             {value === 'prodaja' ? 'Cijena' : 'Cijena po danu'}
           </span>
           {value === 'najam' && (
-            <span className="text-neutral-500 ml-1">(npr. 50€/dan)</span>
+            <span className="text-muted-foreground/70 ml-1">(npr. 50€/dan)</span>
           )}
         </p>
       </div>

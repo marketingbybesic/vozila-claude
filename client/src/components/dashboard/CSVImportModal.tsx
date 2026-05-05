@@ -96,21 +96,21 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="w-full max-w-2xl bg-black border border-white/10 rounded-none p-8 space-y-6"
+          className="w-full max-w-2xl bg-black border border-border rounded-none p-8 space-y-6"
         >
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-black text-white">Grupni uvoz oglasa</h2>
-              <p className="text-xs text-neutral-400 uppercase tracking-widest mt-1">
+              <h2 className="text-2xl font-black text-foreground">Grupni uvoz oglasa</h2>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
                 Učitaj više vozila odjednom iz CSV datoteke
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-none transition-all"
+              className="p-2 hover:bg-muted/50 rounded-none transition-all"
             >
-              <X className="w-5 h-5 text-white" strokeWidth={2} />
+              <X className="w-5 h-5 text-foreground" strokeWidth={2} />
             </button>
           </div>
 
@@ -121,13 +121,13 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
               <div className="space-y-6">
                 {/* Category Selection */}
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                     Kategorija vozila
                   </label>
                   <select
                     value={categorySlug}
                     onChange={(e) => setCategorySlug(e.target.value)}
-                    className="w-full bg-black border border-white/10 rounded-none px-4 py-3 text-xs text-white focus:outline-none focus:border-white/30"
+                    className="w-full bg-card border border-border rounded-none px-4 py-3 text-xs text-white focus:outline-none focus:border-foreground/40"
                   >
                     {navigationMenu.map((cat) => (
                       <option key={cat.slug} value={cat.slug}>
@@ -147,16 +147,16 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
                     id="csv-upload"
                   />
                   <label htmlFor="csv-upload" className="cursor-pointer block">
-                    <Upload className="w-12 h-12 text-white/40 mx-auto mb-4" strokeWidth={1.5} />
-                    <p className="text-sm font-black text-white mb-2">Odaberi CSV datoteku</p>
-                    <p className="text-xs text-neutral-400">Ili prevuci datoteku ovdje</p>
+                    <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" strokeWidth={1.5} />
+                    <p className="text-sm font-black text-foreground mb-2">Odaberi CSV datoteku</p>
+                    <p className="text-xs text-muted-foreground">Ili prevuci datoteku ovdje</p>
                   </label>
                 </div>
 
                 {/* Template Download */}
                 <button
                   onClick={handleDownloadTemplate}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-neutral-900 border border-white/10 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-800 transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-card border border-border text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted transition-all"
                 >
                   <Download className="w-4 h-4" strokeWidth={2} />
                   Preuzmi CSV template
@@ -178,26 +178,26 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
             {/* Preview Step */}
             {step === 'preview' && selectedFile && (
               <div className="space-y-6">
-                <div className="p-4 border border-white/10 bg-white/5 rounded-none">
-                  <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                <div className="p-4 border border-border bg-muted/30 rounded-none">
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                     Datoteka
                   </p>
-                  <p className="text-sm text-white font-mono">{selectedFile.name}</p>
-                  <p className="text-xs text-neutral-400 mt-1">
+                  <p className="text-sm text-foreground font-mono">{selectedFile.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {(selectedFile.size / 1024).toFixed(2)} KB
                   </p>
                 </div>
 
-                <div className="p-4 border border-white/10 bg-white/5 rounded-none">
-                  <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                <div className="p-4 border border-border bg-muted/30 rounded-none">
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                     Kategorija
                   </p>
-                  <p className="text-sm text-white">
+                  <p className="text-sm text-foreground">
                     {navigationMenu.find(c => c.slug === categorySlug)?.name}
                   </p>
                 </div>
 
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted-foreground">
                   Pritisnite "Počni uvoz" da započnete učitavanje vozila.
                 </p>
               </div>
@@ -211,12 +211,12 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                   >
-                    <Upload className="w-5 h-5 text-white" strokeWidth={2} />
+                    <Upload className="w-5 h-5 text-foreground" strokeWidth={2} />
                   </motion.div>
-                  <span className="text-sm font-black text-white">Učitavanje u tijeku...</span>
+                  <span className="text-sm font-black text-foreground">Učitavanje u tijeku...</span>
                 </div>
 
-                <div className="w-full h-2 bg-neutral-800 rounded-none overflow-hidden">
+                <div className="w-full h-2 bg-muted rounded-none overflow-hidden">
                   <motion.div
                     className="h-full bg-white"
                     initial={{ width: 0 }}
@@ -225,7 +225,7 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
                   />
                 </div>
 
-                <p className="text-xs text-neutral-400 text-center">{importProgress}%</p>
+                <p className="text-xs text-muted-foreground text-center">{importProgress}%</p>
               </div>
             )}
 
@@ -269,8 +269,8 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
 
                 {/* Error Details */}
                 {importResult.errors?.length > 0 && (
-                  <div className="p-4 border border-white/10 bg-white/5 rounded-none max-h-48 overflow-y-auto">
-                    <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-3">
+                  <div className="p-4 border border-border bg-muted/30 rounded-none max-h-48 overflow-y-auto">
+                    <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">
                       Detalji grešaka
                     </p>
                     <div className="space-y-2">
@@ -280,7 +280,7 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
                         </p>
                       ))}
                       {importResult.errors.length > 10 && (
-                        <p className="text-xs text-neutral-400">
+                        <p className="text-xs text-muted-foreground">
                           ... i još {importResult.errors.length - 10} grešaka
                         </p>
                       )}
@@ -292,11 +292,11 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-6 border-t border-white/10">
+          <div className="flex gap-3 pt-6 border-t border-border">
             {step === 'upload' && (
               <button
                 onClick={onClose}
-                className="flex-1 px-6 py-3 bg-neutral-900 border border-white/10 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-800 transition-all"
+                className="flex-1 px-6 py-3 bg-card border border-border text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted transition-all"
               >
                 Zatvori
               </button>
@@ -306,14 +306,14 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
               <>
                 <button
                   onClick={() => setStep('upload')}
-                  className="flex-1 px-6 py-3 bg-neutral-900 border border-white/10 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-800 transition-all"
+                  className="flex-1 px-6 py-3 bg-card border border-border text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted transition-all"
                 >
                   Natrag
                 </button>
                 <button
                   onClick={handleStartImport}
                   disabled={isImporting}
-                  className="flex-1 px-6 py-3 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all disabled:opacity-50"
+                  className="flex-1 px-6 py-3 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all disabled:opacity-50"
                 >
                   Počni uvoz
                 </button>
@@ -324,13 +324,13 @@ export const CSVImportModal = ({ isOpen, onClose, onSuccess }: CSVImportModalPro
               <>
                 <button
                   onClick={handleReset}
-                  className="flex-1 px-6 py-3 bg-neutral-900 border border-white/10 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-800 transition-all"
+                  className="flex-1 px-6 py-3 bg-card border border-border text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted transition-all"
                 >
                   Novi uvoz
                 </button>
                 <button
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
+                  className="flex-1 px-6 py-3 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all"
                 >
                   Zatvori
                 </button>

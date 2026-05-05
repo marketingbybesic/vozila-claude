@@ -78,14 +78,14 @@ export const QuickSearch = () => {
   };
 
   const inputBase =
-    'w-full bg-black border border-white/10 rounded-none px-4 py-3 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all duration-300';
+    'w-full bg-card border border-border rounded-none px-4 py-3 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground/40 transition-all duration-300';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
-      className="w-full bg-black border-b border-white/10"
+      className="w-full bg-black border-b border-border"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
         {/* Header */}
@@ -98,7 +98,7 @@ export const QuickSearch = () => {
           <h1 className="text-2xl sm:text-3xl font-light tracking-widest text-white mb-2">
             Pronađi vozilo
           </h1>
-          <p className="text-xs sm:text-sm font-light uppercase tracking-widest text-white/40">
+          <p className="text-xs sm:text-sm font-light uppercase tracking-widest text-muted-foreground">
             Pretraži našu bazu od 10,000+ vozila
           </p>
         </motion.div>
@@ -113,7 +113,7 @@ export const QuickSearch = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Kategorija
               </label>
               <select
@@ -130,7 +130,7 @@ export const QuickSearch = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Marka
               </label>
               <select
@@ -148,7 +148,7 @@ export const QuickSearch = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Model
               </label>
               <select
@@ -171,7 +171,7 @@ export const QuickSearch = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                className="w-full bg-white text-black rounded-none px-6 py-3 font-light uppercase tracking-[0.2em] text-xs hover:bg-neutral-200 transition-colors duration-300 flex items-center justify-center gap-2"
+                className="w-full bg-white text-black rounded-none px-6 py-3 font-light uppercase tracking-[0.2em] text-xs hover:bg-foreground/10 transition-colors duration-300 flex items-center justify-center gap-2"
               >
                 <Search className="w-4 h-4" strokeWidth={1.5} />
                 Pretraži
@@ -187,7 +187,7 @@ export const QuickSearch = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Cijena od (€)
               </label>
               <input
@@ -200,7 +200,7 @@ export const QuickSearch = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Cijena do (€)
               </label>
               <input
@@ -213,7 +213,7 @@ export const QuickSearch = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Godište od
               </label>
               <input
@@ -226,7 +226,7 @@ export const QuickSearch = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Godište do
               </label>
               <input
@@ -247,7 +247,7 @@ export const QuickSearch = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
             <div>
-              <label className="block text-xs font-light uppercase tracking-widest text-white/40 mb-2">
+              <label className="block text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">
                 Kilometraža do
               </label>
               <input
@@ -266,23 +266,23 @@ export const QuickSearch = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
-          className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center"
+          className="mt-8 pt-8 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-4 text-center"
         >
           <div>
             <p className="text-2xl font-light text-white">10,000+</p>
-            <p className="text-xs font-light text-white/40 uppercase tracking-widest">Vozila</p>
+            <p className="text-xs font-light text-muted-foreground uppercase tracking-widest">Vozila</p>
           </div>
           <div>
             <p className="text-2xl font-light text-white">500+</p>
-            <p className="text-xs font-light text-white/40 uppercase tracking-widest">Prodavača</p>
+            <p className="text-xs font-light text-muted-foreground uppercase tracking-widest">Prodavača</p>
           </div>
           <div>
             <p className="text-2xl font-light text-white">24/7</p>
-            <p className="text-xs font-light text-white/40 uppercase tracking-widest">Dostupno</p>
+            <p className="text-xs font-light text-muted-foreground uppercase tracking-widest">Dostupno</p>
           </div>
           <div>
             <p className="text-2xl font-light text-white">100%</p>
-            <p className="text-xs font-light text-white/40 uppercase tracking-widest">Sigurno</p>
+            <p className="text-xs font-light text-muted-foreground uppercase tracking-widest">Sigurno</p>
           </div>
         </motion.div>
       </div>

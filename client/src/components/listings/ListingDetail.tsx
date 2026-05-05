@@ -61,11 +61,11 @@ const VehicleHistoryTimeline = ({ attributes }: { attributes: Record<string, any
   };
 
   return (
-    <div className="bg-card border border-neutral-800 rounded-none p-8">
-      <h2 className="text-xs font-light uppercase tracking-widest text-white/40 mb-8">Povijest vozila</h2>
+    <div className="bg-card border border-border rounded-none p-8">
+      <h2 className="text-xs font-light uppercase tracking-widest text-muted-foreground mb-8">Povijest vozila</h2>
       <div className="relative">
         {/* Vertical line */}
-        <div className="absolute left-[7px] top-2 bottom-2 w-px bg-white/10" />
+        <div className="absolute left-[7px] top-2 bottom-2 w-px bg-muted/50" />
         <div className="space-y-6">
           {history.map((item, idx) => (
             <div key={idx} className="flex items-start gap-4 relative">
@@ -76,10 +76,10 @@ const VehicleHistoryTimeline = ({ attributes }: { attributes: Record<string, any
                 <p className={`text-[10px] font-light uppercase tracking-widest mb-1 ${getLineColor(item.event, idx)}`}>
                   {item.year}
                 </p>
-                <p className="text-sm font-light text-white/80 uppercase tracking-widest">
+                <p className="text-sm font-light text-foreground/80 uppercase tracking-widest">
                   {item.event}
                 </p>
-                <p className="text-[10px] font-light text-white/40 uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] font-light text-muted-foreground uppercase tracking-widest mt-0.5">
                   {item.owner}
                 </p>
               </div>
@@ -313,7 +313,7 @@ export const ListingDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Image Gallery Skeleton */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="relative aspect-video bg-neutral-900 rounded-none overflow-hidden">
+              <div className="relative aspect-video bg-card rounded-none overflow-hidden">
                 <Skeleton className="w-full h-full" />
               </div>
               <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
@@ -321,7 +321,7 @@ export const ListingDetail = () => {
                   <Skeleton key={i} className="aspect-video" />
                 ))}
               </div>
-              <div className="bg-card border border-neutral-800 rounded-none p-8">
+              <div className="bg-card border border-border rounded-none p-8">
                 <Skeleton className="h-6 w-32 mb-4" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-3/4 mb-2" />
@@ -331,7 +331,7 @@ export const ListingDetail = () => {
             {/* Info Panel Skeleton */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-8">
-                <div className="bg-card border border-neutral-800 rounded-none p-8">
+                <div className="bg-card border border-border rounded-none p-8">
                   <Skeleton className="h-8 w-full mb-8" />
                   <Skeleton className="h-10 w-32 mb-8" />
                   <Skeleton className="h-8 w-40 mb-8" />
@@ -482,7 +482,7 @@ export const ListingDetail = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Premium Gallery Layout */}
             {sortedImages.length === 0 ? (
-              <div className="relative aspect-video bg-neutral-900 rounded-none overflow-hidden">
+              <div className="relative aspect-video bg-card rounded-none overflow-hidden">
                 <img
                   src={PLACEHOLDER_CAR}
                   alt={listing.title}
@@ -491,7 +491,7 @@ export const ListingDetail = () => {
                 />
               </div>
             ) : sortedImages.length === 1 ? (
-              <div className="relative aspect-video bg-neutral-900 rounded-none overflow-hidden cursor-pointer"
+              <div className="relative aspect-video bg-card rounded-none overflow-hidden cursor-pointer"
                 onClick={() => {
                   setLightboxSlides(sortedImages.map((img) => ({ src: img.url })));
                   setLightboxIndex(0);
@@ -507,8 +507,8 @@ export const ListingDetail = () => {
                 {listing.status === 'sold' && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
                     <div className="text-center">
-                      <div className="text-8xl font-light text-white/30 transform -rotate-45 mb-4 tracking-widest">PRODANO</div>
-                      <p className="text-sm font-light uppercase tracking-widest text-white/40">Oglas je arhiviran</p>
+                      <div className="text-8xl font-light text-muted-foreground/60 transform -rotate-45 mb-4 tracking-widest">PRODANO</div>
+                      <p className="text-sm font-light uppercase tracking-widest text-muted-foreground">Oglas je arhiviran</p>
                     </div>
                   </div>
                 )}
@@ -520,7 +520,7 @@ export const ListingDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 h-[300px] md:h-[500px]">
                 {/* Main Image - Left (spans 2 columns, full height) */}
                 <div
-                  className="md:col-span-2 h-full relative bg-neutral-900 rounded-none overflow-hidden cursor-pointer"
+                  className="md:col-span-2 h-full relative bg-card rounded-none overflow-hidden cursor-pointer"
                   onClick={() => {
                     setLightboxSlides(sortedImages.map((img) => ({ src: img.url })));
                     setLightboxIndex(0);
@@ -536,8 +536,8 @@ export const ListingDetail = () => {
                   {listing.status === 'sold' && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
                       <div className="text-center">
-                        <div className="text-8xl font-light text-white/30 transform -rotate-45 mb-4 tracking-widest">PRODANO</div>
-                        <p className="text-sm font-light uppercase tracking-widest text-white/40">Oglas je arhiviran</p>
+                        <div className="text-8xl font-light text-muted-foreground/60 transform -rotate-45 mb-4 tracking-widest">PRODANO</div>
+                        <p className="text-sm font-light uppercase tracking-widest text-muted-foreground">Oglas je arhiviran</p>
                       </div>
                     </div>
                   )}
@@ -550,7 +550,7 @@ export const ListingDetail = () => {
                   {sortedImages.slice(1, 3).map((img, idx) => (
                     <div
                       key={img.id}
-                      className="flex-1 relative bg-neutral-900 rounded-none overflow-hidden cursor-pointer"
+                      className="flex-1 relative bg-card rounded-none overflow-hidden cursor-pointer"
                       onClick={() => {
                         setLightboxSlides(sortedImages.map((i) => ({ src: i.url })));
                         setLightboxIndex(idx + 1);
@@ -572,14 +572,14 @@ export const ListingDetail = () => {
                       )}
                     </div>
                   ))}
-                  {sortedImages.length === 2 && <div className="flex-1 bg-neutral-900 rounded-none" />}
+                  {sortedImages.length === 2 && <div className="flex-1 bg-card rounded-none" />}
                 </div>
                 {/* Mobile: horizontal scroll for extra images */}
                 <div className="flex md:hidden gap-2 overflow-x-auto pb-2">
                   {sortedImages.slice(1).map((img, idx) => (
                     <div
                       key={img.id}
-                      className="flex-shrink-0 w-32 aspect-video bg-neutral-900 rounded-none overflow-hidden cursor-pointer"
+                      className="flex-shrink-0 w-32 aspect-video bg-card rounded-none overflow-hidden cursor-pointer"
                       onClick={() => {
                         setLightboxSlides(sortedImages.map((i) => ({ src: i.url })));
                         setLightboxIndex(idx + 1);
@@ -609,26 +609,26 @@ export const ListingDetail = () => {
             )}
 
             {/* Description */}
-            <div className="bg-card border border-neutral-800 rounded-none p-8">
-              <h2 className="text-xs font-light uppercase tracking-widest text-white/40 mb-4">Opis</h2>
-              <p className="text-white/80 leading-relaxed font-light">
+            <div className="bg-card border border-border rounded-none p-8">
+              <h2 className="text-xs font-light uppercase tracking-widest text-muted-foreground mb-4">Opis</h2>
+              <p className="text-foreground/80 leading-relaxed font-light">
                 {listing.description || 'Nema dostupnog opisa.'}
               </p>
             </div>
 
             {/* Dynamic Specs - Porsche Grid */}
-            <div className="bg-card border border-neutral-800 rounded-none p-8">
-              <h2 className="text-xs font-light uppercase tracking-widest text-white/40 mb-8">Specifikacije</h2>
+            <div className="bg-card border border-border rounded-none p-8">
+              <h2 className="text-xs font-light uppercase tracking-widest text-muted-foreground mb-8">Specifikacije</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                 {specs.map((spec, idx) => {
                   const Icon = spec.icon;
                   return (
                     <div key={idx} className="space-y-2">
-                      <Icon className="w-5 h-5 text-white/40 mb-3" strokeWidth={1.5} />
-                      <p className="text-[10px] font-light uppercase tracking-widest text-white/40">
+                      <Icon className="w-5 h-5 text-muted-foreground mb-3" strokeWidth={1.5} />
+                      <p className="text-[10px] font-light uppercase tracking-widest text-muted-foreground">
                         {spec.label}
                       </p>
-                      <p className="text-lg font-light text-white">{spec.value}</p>
+                      <p className="text-lg font-light text-foreground">{spec.value}</p>
                     </div>
                   );
                 })}
@@ -637,13 +637,13 @@ export const ListingDetail = () => {
 
             {/* Equipment Tags - Dodatna Oprema */}
             {attributes.equipment && Array.isArray(attributes.equipment) && attributes.equipment.length > 0 && (
-              <div className="bg-card border border-neutral-800 rounded-none p-8">
-                <h2 className="text-xs font-light uppercase tracking-widest text-white/40 mb-4">Dodatna Oprema</h2>
+              <div className="bg-card border border-border rounded-none p-8">
+                <h2 className="text-xs font-light uppercase tracking-widest text-muted-foreground mb-4">Dodatna Oprema</h2>
                 <div className="flex flex-wrap gap-2">
                   {attributes.equipment.map((tag: string) => (
                     <span
                       key={tag}
-                      className="bg-white/5 border border-border px-3 py-1 text-[10px] uppercase tracking-widest text-white/70"
+                      className="bg-muted/30 border border-border px-3 py-1 text-[10px] uppercase tracking-widest text-foreground/70"
                     >
                       {tag}
                     </span>
@@ -675,14 +675,14 @@ export const ListingDetail = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-8">
               {/* Price Card */}
-              <div className="bg-card border border-neutral-800 rounded-none p-8">
-                <h1 className="text-2xl font-light text-white mb-8 leading-tight tracking-widest">
+              <div className="bg-card border border-border rounded-none p-8">
+                <h1 className="text-2xl font-light text-foreground mb-8 leading-tight tracking-widest">
                   {listing.title}
                 </h1>
                 
                 <div className="mb-8">
-                  <p className="text-xs font-light uppercase tracking-widest text-white/40 mb-2">Cijena</p>
-                  <p className="text-4xl font-light text-white">
+                  <p className="text-xs font-light uppercase tracking-widest text-muted-foreground mb-2">Cijena</p>
+                  <p className="text-4xl font-light text-foreground">
                     {listing.price === 0 ? 'Na upit' : `${listing.price.toLocaleString()} ${listing.currency || '€'}`}
                   </p>
                 </div>
@@ -707,7 +707,7 @@ export const ListingDetail = () => {
 
                 {/* Location */}
                 {listing.location && (
-                  <div className="flex items-center gap-2 text-white/40 mb-8">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-8">
                     <MapPin className="w-4 h-4" strokeWidth={1.5} />
                     <span className="text-xs font-light uppercase tracking-widest">{listing.location}</span>
                   </div>
@@ -770,7 +770,7 @@ export const ListingDetail = () => {
                     {listing.contact_phone && phoneRevealed && (
                       <a
                         href={`tel:${listing.contact_phone}`}
-                        className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-white text-black rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all duration-300"
+                        className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-white text-black rounded-none font-light uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all duration-300"
                       >
                         <Phone className="w-5 h-5" strokeWidth={1.5} />
                         <span className="tabular-nums">{listing.contact_phone}</span>
@@ -780,7 +780,7 @@ export const ListingDetail = () => {
                     {listing.contact_email && (
                       <a
                         href={`mailto:${listing.contact_email}`}
-                        className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-neutral-800 text-white rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-700 transition-all duration-300"
+                        className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-muted text-foreground rounded-none font-light uppercase tracking-widest text-xs hover:bg-muted/70 transition-all duration-300"
                       >
                         <Mail className="w-5 h-5" strokeWidth={1.5} />
                         Email
@@ -799,15 +799,15 @@ export const ListingDetail = () => {
               <CostPer100km attributes={attributes} />
 
               {/* Seller Info */}
-              <div className="bg-card border border-neutral-800 rounded-none p-8">
+              <div className="bg-card border border-border rounded-none p-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <User className="w-5 h-5 text-white/40" strokeWidth={1.5} />
-                  <h3 className="text-xs font-light uppercase tracking-widest text-white/40">
+                  <User className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+                  <h3 className="text-xs font-light uppercase tracking-widest text-muted-foreground">
                     Prodavač
                   </h3>
                 </div>
                 <div className="flex items-center flex-wrap gap-2 mb-2">
-                  <p className="text-sm text-white/80 font-light">
+                  <p className="text-sm text-foreground/80 font-light">
                     {listing.owner?.company_name || 'Privatni prodavač'}
                   </p>
                   {(() => {
@@ -816,9 +816,9 @@ export const ListingDetail = () => {
                     if (subTier && subActive) return <VerifiedDealerBadge tier={subTier} size="sm" />;
                     if (listing.owner?.is_verified || listing.owner?.dealer_verified || listing.owner?.tier === 'premium') {
                       return (
-                        <div className="flex items-center gap-1 px-2 py-0.5 bg-white/5 border border-white/10">
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-muted/30 border border-border">
                           <ShieldCheck className="w-3 h-3 text-primary" strokeWidth={2} />
-                          <span className="text-[9px] font-light uppercase tracking-widest text-white/60">
+                          <span className="text-[9px] font-light uppercase tracking-widest text-muted-foreground">
                             Verificirani
                           </span>
                         </div>

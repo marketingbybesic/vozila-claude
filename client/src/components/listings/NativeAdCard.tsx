@@ -36,10 +36,10 @@ export const NativeAdCard = ({
   return (
     <Link
       to={`/listing/${id}`}
-      className="group relative block bg-neutral-900 border border-white/10 rounded-none overflow-hidden hover:border-white/30 transition-all duration-300"
+      className="group relative block bg-card border border-border rounded-none overflow-hidden hover:border-foreground/30 transition-all duration-300"
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] bg-neutral-800 overflow-hidden">
+      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -48,7 +48,7 @@ export const NativeAdCard = ({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
-            <span className="text-neutral-600 text-xs font-black uppercase tracking-widest">
+            <span className="text-muted-foreground/60 text-xs font-black uppercase tracking-widest">
               Nema slike
             </span>
           </div>
@@ -61,8 +61,8 @@ export const NativeAdCard = ({
         </div>
 
         {/* SPONZORIRANO Tag - Tiny, Elegant */}
-        <div className="absolute top-3 left-3 px-1.5 py-0.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-none">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/70">
+        <div className="absolute top-3 left-3 px-1.5 py-0.5 bg-muted/50 backdrop-blur-sm border border-white/20 rounded-none">
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground/70">
             Sponzorirano
           </span>
         </div>
@@ -74,7 +74,7 @@ export const NativeAdCard = ({
       {/* Content */}
       <div className="p-4 space-y-3">
         {/* Title */}
-        <h3 className="text-sm font-black text-white line-clamp-2 group-hover:text-neutral-200 transition-colors">
+        <h3 className="text-sm font-black text-white line-clamp-2 group-hover:text-foreground/90 transition-colors">
           {title}
         </h3>
 
@@ -86,14 +86,14 @@ export const NativeAdCard = ({
         </div>
 
         {/* Specs */}
-        <div className="flex items-center gap-3 text-xs text-neutral-400">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {year && <span>{year}</span>}
           {mileage && <span>{mileage.toLocaleString()} km</span>}
         </div>
 
         {/* Location */}
         {location && (
-          <div className="flex items-center gap-2 text-xs text-neutral-400">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <MapPin className="w-3 h-3" strokeWidth={1.5} />
             <span>{location}</span>
           </div>

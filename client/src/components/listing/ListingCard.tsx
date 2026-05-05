@@ -44,7 +44,7 @@ export const ListingCard = ({ listing, isLoading = false }: ListingCardProps) =>
       onMouseLeave={() => setShowSecondImage(false)}
     >
       {/* Image Container - 16:9 Aspect Ratio */}
-      <div className="relative aspect-[16/9] bg-neutral-900 overflow-hidden">
+      <div className="relative aspect-[16/9] bg-card overflow-hidden">
         {/* Multiple Images with Hover Slide */}
         {hasMultipleImages && primaryImage && secondaryImage ? (
           <div className="relative w-full h-full">
@@ -81,10 +81,10 @@ export const ListingCard = ({ listing, isLoading = false }: ListingCardProps) =>
           />
         ) : (
           // Fallback: Vozila.hr Logo
-          <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+          <div className="w-full h-full bg-card flex items-center justify-center">
             <div className="text-center">
-              <div className="text-4xl font-black text-white/20 mb-2">V</div>
-              <p className="text-xs font-black uppercase tracking-widest text-white/10">
+              <div className="text-4xl font-black text-muted-foreground/40 mb-2">V</div>
+              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/30">
                 Vozila.hr
               </p>
             </div>
@@ -94,10 +94,10 @@ export const ListingCard = ({ listing, isLoading = false }: ListingCardProps) =>
         {/* Favorite Button */}
         <button
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleFavorite(listing.id); }}
-          className="absolute top-3 left-3 p-2 z-10 transition-all duration-300 hover:bg-white/10"
+          className="absolute top-3 left-3 p-2 z-10 transition-all duration-300 hover:bg-muted/50"
         >
           <Heart
-            className={`w-5 h-5 transition-colors duration-300 ${isFavorite(listing.id) ? 'text-red-500 fill-red-500' : 'text-white/60 hover:text-white'}`}
+            className={`w-5 h-5 transition-colors duration-300 ${isFavorite(listing.id) ? 'text-red-500 fill-red-500' : 'text-muted-foreground hover:text-foreground'}`}
             strokeWidth={1.5}
           />
         </button>
@@ -129,17 +129,17 @@ export const ListingCard = ({ listing, isLoading = false }: ListingCardProps) =>
         {listing.attributes && (
           <div className="flex flex-wrap gap-2">
             {listing.attributes.year && (
-              <span className="text-xs font-medium text-neutral-400">
+              <span className="text-xs font-medium text-muted-foreground">
                 {listing.attributes.year}
               </span>
             )}
             {listing.attributes.mileage && (
-              <span className="text-xs font-medium text-neutral-400">
+              <span className="text-xs font-medium text-muted-foreground">
                 {listing.attributes.mileage.toLocaleString()} km
               </span>
             )}
             {listing.attributes.fuelType && (
-              <span className="text-xs font-medium text-neutral-400">
+              <span className="text-xs font-medium text-muted-foreground">
                 {listing.attributes.fuelType}
               </span>
             )}

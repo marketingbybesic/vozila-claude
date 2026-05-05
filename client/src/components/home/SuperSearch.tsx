@@ -59,15 +59,15 @@ export const SuperSearch = () => {
   }, [charIndex, isTyping, currentQuery]);
 
   return (
-    <div className="relative w-full bg-black py-24 px-8 border-b border-white/10">
+    <div className="relative w-full bg-black py-24 px-8 border-b border-border">
       <div className="max-w-2xl mx-auto">
         {/* Input Container with Glassmorphism */}
         <div className="relative group">
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/0 rounded-none blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
-          <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-none overflow-hidden">
+          <div className="relative bg-black/40 backdrop-blur-xl border border-border rounded-none overflow-hidden">
             {/* Search Icon */}
-            <div className="absolute left-8 top-1/2 -translate-y-1/2 text-white/40">
+            <div className="absolute left-8 top-1/2 -translate-y-1/2 text-muted-foreground">
               <Search className="w-5 h-5" strokeWidth={1.5} />
             </div>
 
@@ -75,13 +75,13 @@ export const SuperSearch = () => {
             <input
               type="text"
               placeholder="Pretraži vozila..."
-              className="w-full pl-20 pr-8 py-6 bg-transparent text-white font-light text-lg focus:outline-none placeholder-white/20 caret-white"
+              className="w-full pl-20 pr-8 py-6 bg-transparent text-white font-light text-lg focus:outline-none placeholder:text-muted-foreground/50 caret-white"
             />
 
             {/* AI Typing Animation Overlay */}
             <div className="absolute left-20 top-1/2 -translate-y-1/2 pointer-events-none">
               <motion.span
-                className="text-white/40 font-light text-lg"
+                className="text-muted-foreground font-light text-lg"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
@@ -104,7 +104,7 @@ export const SuperSearch = () => {
 
         {/* Subtle Hint Text */}
         <div className="mt-6 text-center">
-          <p className="text-white/30 text-xs font-light uppercase tracking-widest">
+          <p className="text-muted-foreground/60 text-xs font-light uppercase tracking-widest">
             Počnite pisati ili odaberite iz prijedloga
           </p>
         </div>

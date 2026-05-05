@@ -88,7 +88,7 @@ export const NativeAdSlot = ({
         href={adHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="block relative aspect-[16/9] bg-neutral-900 border-2 border-white/20 rounded-none overflow-hidden hover:border-white/40 transition-all duration-300 group-hover:shadow-2xl"
+        className="block relative aspect-[16/9] bg-card border-2 border-white/20 rounded-none overflow-hidden hover:border-white/40 transition-all duration-300 group-hover:shadow-2xl"
       >
         {/* Ad Image */}
         <img
@@ -102,18 +102,18 @@ export const NativeAdSlot = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         {/* Promoted Badge */}
-        <div className="absolute top-4 left-4 px-2 py-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-none">
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
+        <div className="absolute top-4 left-4 px-2 py-1 bg-muted/50 backdrop-blur-sm border border-white/20 rounded-none">
+          <span className="text-[10px] font-black uppercase tracking-widest text-foreground/80">
             Promoted
           </span>
         </div>
 
         {/* Content Overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-6 space-y-2">
-          <p className="text-xs font-black uppercase tracking-widest text-white/60">
+          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
             Sadržaj partnera
           </p>
-          <p className="text-sm font-black text-white line-clamp-2">
+          <p className="text-sm font-black text-foreground line-clamp-2">
             Otkrij premium vozila
           </p>
         </div>
@@ -138,37 +138,37 @@ export const NativeAdSlot = ({
                   {/* Edit Mode */}
                   <div className="space-y-4 flex-1 overflow-y-auto">
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Image URL
                       </label>
                       <input
                         type="text"
                         value={editImage}
                         onChange={(e) => setEditImage(e.target.value)}
-                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40 transition-all"
+                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-all"
                         placeholder="https://example.com/image.jpg"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Link URL
                       </label>
                       <input
                         type="text"
                         value={editHref}
                         onChange={(e) => setEditHref(e.target.value)}
-                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/40 transition-all"
+                        className="w-full bg-black border border-white/20 rounded-none px-3 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-all"
                         placeholder="https://example.com"
                       />
                     </div>
 
                     {/* Image Preview */}
                     <div>
-                      <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <label className="block text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Preview
                       </label>
-                      <div className="aspect-[16/9] bg-neutral-900 border border-white/20 rounded-none overflow-hidden">
+                      <div className="aspect-[16/9] bg-card border border-white/20 rounded-none overflow-hidden">
                         <img
                           src={editImage}
                           alt="Preview"
@@ -182,18 +182,18 @@ export const NativeAdSlot = ({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-4 border-t border-white/10">
+                  <div className="flex gap-2 pt-4 border-t border-border">
                     <button
                       onClick={handleSaveAd}
                       disabled={isSaving}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all disabled:opacity-50"
                     >
                       <Save className="w-4 h-4" strokeWidth={2} />
                       {isSaving ? 'Saving...' : 'Save'}
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-neutral-800 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-700 transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-muted text-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-muted/70 transition-all"
                     >
                       <X className="w-4 h-4" strokeWidth={2} />
                       Cancel
@@ -205,10 +205,10 @@ export const NativeAdSlot = ({
                   {/* View Mode */}
                   <div className="flex-1 space-y-4">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Current Image
                       </p>
-                      <div className="aspect-[16/9] bg-neutral-900 border border-white/20 rounded-none overflow-hidden">
+                      <div className="aspect-[16/9] bg-card border border-white/20 rounded-none overflow-hidden">
                         <img
                           src={adImage}
                           alt="Current"
@@ -218,10 +218,10 @@ export const NativeAdSlot = ({
                     </div>
 
                     <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-white/60 mb-2">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
                         Current Link
                       </p>
-                      <p className="text-xs text-white/80 break-all font-mono">
+                      <p className="text-xs text-foreground/80 break-all font-mono">
                         {adHref}
                       </p>
                     </div>
@@ -230,7 +230,7 @@ export const NativeAdSlot = ({
                   {/* Edit Button */}
                   <button
                     onClick={() => setIsEditMode(true)}
-                    className="w-full px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all"
+                    className="w-full px-4 py-2 bg-white text-black rounded-none font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all"
                   >
                     Edit Ad
                   </button>

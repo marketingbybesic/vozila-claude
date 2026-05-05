@@ -196,7 +196,7 @@ export const Header = () => {
         <div className="lg:hidden fixed inset-0 z-[100] bg-background">
           <div className="max-w-7xl mx-auto h-full flex flex-col relative overflow-hidden">
             {/* Branding Header */}
-            <div className="flex flex-col items-center pt-12 pb-6 border-b border-white/10">
+            <div className="flex flex-col items-center pt-12 pb-6 border-b border-border">
               <img
                 src="/vozilahrlogo-light.svg"
                 alt="Vozila.hr"
@@ -225,11 +225,11 @@ export const Header = () => {
                   const isActive = activeCategory === category.slug;
                   return (
                     <div key={category.slug}>
-                      <div className={`flex items-center justify-between px-4 py-4 border-b border-white/10 transition-all duration-200 ${isActive ? 'bg-white/5 text-white' : 'text-white/50'}`}>
+                      <div className={`flex items-center justify-between px-4 py-4 border-b border-border transition-all duration-200 ${isActive ? 'bg-muted/30 text-white' : 'text-muted-foreground'}`}>
                         <Link
                           to={`/${category.slug}`}
                           onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 flex-1 hover:text-white transition-colors"
+                          className="flex items-center gap-3 flex-1 hover:text-foreground transition-colors"
                         >
                           {Icon && <Icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />}
                           <span className="font-light uppercase tracking-widest text-sm">{category.name}</span>
@@ -237,7 +237,7 @@ export const Header = () => {
                         {category.sub.length > 0 && (
                           <button
                             onClick={() => setMobileDrillLevel(category.slug)}
-                            className="p-2 hover:text-white transition-colors"
+                            className="p-2 hover:text-foreground transition-colors"
                           >
                             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
                           </button>
@@ -262,17 +262,17 @@ export const Header = () => {
                   if (!cat) return null;
                   return (
                     <div className="flex flex-col h-full">
-                      <div className="flex items-center px-4 py-3 border-b border-white/10">
-                        <button onClick={() => setMobileDrillLevel('categories')} className="flex items-center gap-2 text-white/50 hover:text-white text-xs font-light uppercase tracking-widest transition-colors duration-200">
+                      <div className="flex items-center px-4 py-3 border-b border-border">
+                        <button onClick={() => setMobileDrillLevel('categories')} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-xs font-light uppercase tracking-widest transition-colors duration-200">
                           <ChevronRight className="h-4 w-4 rotate-180" strokeWidth={1.5} /> Natrag
                         </button>
                       </div>
                       <nav className="flex-1 overflow-y-auto px-4 py-4">
-                        <Link to={`/${cat.slug}`} onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-light uppercase tracking-widest text-white/50 hover:bg-white/5 hover:text-white transition-all duration-200">{cat.name}</Link>
-                        <div className="border-t border-white/10 my-1" />
+                        <Link to={`/${cat.slug}`} onClick={() => setMobileMenuOpen(false)} className="block px-4 py-3 text-sm font-light uppercase tracking-widest text-muted-foreground hover:bg-muted/30 hover:text-foreground transition-all duration-200">{cat.name}</Link>
+                        <div className="border-t border-border my-1" />
                         {cat.sub.map((subcat) => (
-                          <Link key={subcat.slug} to={`/${cat.slug}?sub=${subcat.slug}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-light text-white/50 hover:text-white hover:bg-white/5 transition-all duration-200">
-                            {subcat.icon && <subcat.icon className="h-4 w-4 text-white/40" strokeWidth={1.5} />}
+                          <Link key={subcat.slug} to={`/${cat.slug}?sub=${subcat.slug}`} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-sm font-light text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all duration-200">
+                            {subcat.icon && <subcat.icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />}
                             <span className="uppercase tracking-widest">{subcat.name}</span>
                           </Link>
                         ))}
