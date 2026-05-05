@@ -953,5 +953,53 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(b)** Phase 14 — inspections fulfilment workflow (inspector role + queue + report upload + Vozila Inspected badge) + auctions stub.
   - Recommendation: (a) — finish the theme so light mode is fully production-quality before adding more features. Say `continue Vozila theme cleanup`.
 
+### Checkpoint 2026-05-05 (phase 14 — inspections fulfilment + auctions stub)
+- **Shipped this session:**
+  - `server/db/migrations/008_phase14.sql` — idempotent migration adding:
+    - 4 new columns on `inspection_bookings` for the inspector report (storage path, summary, score 0-100, internal notes) + composite index on (inspector_id, status, created_at).
+    - `inspection_queue` view joining bookings with listing title/price/main_image for the inspector workspace.
+    - `auctions(id, listing_id UNIQUE, seller_id, start_at, end_at, reserve_eur, starting_bid_eur, current_bid_eur, current_bidder, bid_count, buyer_premium_pct=5.0, min_bid_increment_eur=100, status, winner_id, settled_at)`.
+    - `auction_bids(id BIGSERIAL, auction_id, bidder_id, amount_eur, placed_at, extended_end_to)` — extended_end_to is non-null when this bid triggered an anti-snipe extension.
+    - RLS: auctions + bids public-readable, seller-writable on auctions, self-bidder insert on bids, admin-all override.
+    - **`place_auction_bid(uuid, numeric)` Postgres function** (SECURITY DEFINER): atomic ownership check, status check, minimum-bid validation, anti-snipe end-time extension (60s window → +60s), insert bid + bump auction in one transaction. Returns JSONB `{ok, error?, new_high?, end_at?, extended?, min_next?}`.
+    - **`settle_ended_auctions()` Postgres function**: flips live auctions whose `end_at` has passed to `sold` (if reserve met) or `reserve_not_met`. Returns count.
+    - Realtime publication for `auctions` + `auction_bids` so detail pages update live.
+  - `client/src/lib/inspections.ts` (new) — `listInspectorQueue` (paid-unassigned + my-assigned), `listMyInspections` (buyer-side), `claimInspection` (optimistic-locked update), `uploadInspectionReport` (writes report URL+summary+score+notes, flips status to completed), `getInspection`. Croatian status + time-window labels.
+  - `client/src/lib/auctions.ts` (new) — `listLiveAuctions`, `listEndedAuctions`, `getAuction`, `listAuctionBids`, `placeBid` (calls `supabase.rpc('place_auction_bid', …)` and decodes the returned JSONB), `subscribeToAuction` (realtime channel filtered to a single auction's UPDATEs + INSERTs to its bids), `formatCountdown` (Xd Yh Zm Ws), `statusLabel`.
+  - `client/src/pages/Inspector.tsx` (new lazy at `/inspector`) — RBAC-gated to admin/owner/moderator (any user with `profiles.role` set). Queue cards show status pill + listing thumbnail/title + address + preferred date+window + buyer notes. Claim button uses optimistic-lock (`status='paid'` precondition). After claim: inline form to enter report URL + summary + score (0-100) + internal notes → marks completed.
+  - `client/src/pages/Auctions.tsx` (new lazy at `/aukcija`) — public auction grid. Live section sorted by end_at asc with 1s countdown ticker, card showing current bid + countdown + LIVE badge with pulse. Ended section (last 20 sold/reserve_not_met) shown below as social proof. SEO meta + canonical.
+  - `client/src/pages/AuctionDetail.tsx` (new lazy at `/aukcija/:id`) — full bid surface: hero image, title, location, link to underlying listing. Sticky sidebar with status pill + current bid + countdown + bid input enforcing `min_next` validation client-side, real `placeBid` RPC call, decoded error messages (`auth_required`, `seller_cannot_bid`, `not_live`, `bid_too_low`), success notice when extended (`Aukcija produžena na HH:MM:SS`). Bid history list with timestamp + amount + Anti-snipe pill on extending bids. Realtime channel re-runs both queries on any change.
+  - `supabase/functions/auction-settle/index.ts` (new cron Edge Function) — calls `settle_ended_auctions()` via supabaseAdmin.rpc, wrapped in `withCron('auction-settle', …)` for the heartbeat surface. Runs every 5 min via Supabase scheduled function.
+  - `client/src/App.tsx` — added 3 lazy imports (`Auctions`, `AuctionDetail`, `Inspector`) + 3 routes (`/aukcija`, `/aukcija/:id`, `/inspector`).
+- **Build:** ✅ green, 2.15s. **Bundle (vs theme cleanup baseline)**:
+  - `index-*.js`: 449.19 → **449.91 kB** (gzip 141.49 → **141.70 kB**, +0.21 — 3 new lazy route imports in shell)
+  - **NEW lazy chunks** (only loaded when route is hit):
+    - `Auctions-*.js`: 6.68 / **2.01 kB gzip**
+    - `AuctionDetail-*.js`: 8.80 / **2.86 kB gzip**
+    - `Inspector-*.js`: 10.41 / **3.01 kB gzip**
+  - `supabase-*.js`: 50.74 kB gzip — unchanged (cache-stable across deploys ✓)
+- **Bugs / gaps still open after phase 14 (deferred):**
+  - **Inspector role enforcement is loose.** Inspector page lets `admin`, `owner`, `moderator` access. The dedicated `inspector` role is in `profiles.role` enum (since 002) but the gate accepts anyone with admin-level role for v1. Tighten in 14.x once inspector hiring flow is real.
+  - **No "Create auction" UI yet.** Sellers can technically insert via Supabase but there's no `/aukcija/nova` page. Adding to the wizard "promote to auction" toggle is a 14.1 task — needs admin curation first anyway (BaT model is hand-curated).
+  - **Inspector report storage is URL-only.** Inspector pastes a public URL; we don't yet host a Supabase Storage bucket `inspection-reports` with signed-URL upload. Add when first 10 inspections are real.
+  - **Auction Stripe escrow not wired.** Buyer premium 5% is computed in DB but the actual settlement flow (notify winner, collect funds, release seller payout) is phase 14.1+ work. For v1 the platform acts as price-discovery only; payment happens off-platform.
+  - **Auction-settle cron not yet scheduled in Supabase Dashboard.** Edge Function exists; needs `0/5 * * * *` schedule via pg_cron + net.http_get. Same pattern as expire-featured.
+  - **No auction notifications.** Outbid emails / "you won" emails are obvious next-feature; uses existing send-email pipeline. Deferred.
+  - **`/inspector` not surfaced in user menu.** Reachable only by direct URL until we add to Header dropdown for `inspector` role.
+- **Devil's-advocate this round:**
+  - *Atomic bid placement with FOR UPDATE could deadlock under high concurrency.* Single-row lock per auction; bidders contending for the same auction serialize, which is the desired behavior. No cross-row dependency, so no deadlock geometry.
+  - *Anti-snipe could be exploited by a bidder placing a tiny bid right at end_at to extend.* `min_bid_increment_eur` (default 100) prevents micro-bids. Could still place 100 EUR over current to extend by 60s — that's the intended behavior of anti-snipe (exhaust the snipers' patience).
+  - *settle_ended_auctions runs every 5 min — winner is announced up to 5 min late.* Acceptable. UI shows "Završeno" once `end_at` passes; the cron just flips the DB status. Could shrink to 1 min if needed.
+  - *Realtime channel in detail page subscribes on every mount.* Cleanup in effect-cleanup; verified pattern.
+  - *Inspector workspace shows everyone's paid bookings.* By design — inspectors are platform staff; we want them to see the queue. Once we have multiple competing inspectors, switch to first-claim-wins via the optimistic-lock that's already in place.
+  - *Auctions page renders countdown by re-rendering every second.* Fine for ≤30 cards; if list grows, virtualize.
+- **Manual deploy steps for phase 14:**
+  1. Run `008_phase14.sql` against the live Supabase DB.
+  2. Set at least one user's `profiles.role` to `inspector` (or use existing admin/moderator).
+  3. `supabase functions deploy auction-settle --no-verify-jwt`.
+  4. Schedule `0/5 * * * *` cron in Supabase Dashboard → Database → Cron, calling `https://<ref>.supabase.co/functions/v1/auction-settle` with service-role auth header (same pattern as `expire-featured`).
+  5. (Optional) Insert a test auction: `INSERT INTO auctions (listing_id, seller_id, end_at, starting_bid_eur, reserve_eur) VALUES (...);` to verify the bid panel.
+- **Next concrete action:** Phase 14.1 — wire "Promote to auction" toggle in CreateListingWizard, "You're outbid" + "You won" email templates via existing send-email, surface `/inspector` in Header dropdown for `inspector` role. Or jump to **post-launch polish**: live test runbook v2 covering all 14 phases, end-to-end manual smoke test script (`scripts/smoke-test.mjs`).
+
 ### Checkpoint <next>
 *(append next session)*
