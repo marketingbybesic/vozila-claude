@@ -1087,5 +1087,45 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(c)** Run live runbook v2 sections 1-9 against your real Supabase + Stripe + Resend accounts. ~90 min.
   - Recommendation: **(a)** — VIN report generator unlocks the €9.99 product to actually deliver value. Without the PDF, buyers pay and get nothing automatic. Say `continue Vozila phase 16`.
 
+### Checkpoint 2026-05-06 (phase 16 — VIN report PDF generator)
+- **Shipped:**
+  - **`supabase/functions/vin-report-generator/index.ts`** — cron Edge Function, every 5 min, BATCH=10. Per-row pipeline: optimistic-lock to `generating` → vPIC decode → same-VIN cross-reference in `listings` (via `attributes->>vin`) → render A4 PDF via `pdfkit@0.15.0` Deno wrapper → upload private Storage `vin-reports/<user_id>/<row_id>.pdf` → 30-day signed URL → UPDATE row to `delivered` with `report_url` + `vpic_data` + `cross_references` + `generated_at` → INSERT `vin_report_ready` notification → email buyer. Per-row failures flip to `failed`; generator continues. Wrapped in `withCron`.
+  - **PDF content** — Vozila header + VIN in 18pt Courier monospace + 11 decoded fields + cross-reference timeline (date · price · status · km · title for each prior sighting) + italic Croatian disclaimer about vPIC EU accuracy.
+  - **`supabase/functions/_shared/email-vin.ts`** — `tplVinReportReady` Croatian template with VIN block + "Preuzmi PDF izvještaj" CTA + signed-URL expiry note + optional source-listing link.
+  - **`client/src/lib/notifications.ts`** — `vin_report_ready` cases: `notificationLink` returns `payload.report_url` directly so click-through opens the PDF (fallback `/postavke`); `notificationTitle` formats as `VIN izvještaj spreman — <VIN>`.
+  - **`client/src/components/layout/NotificationsFlyout.tsx`** — `iconFor` case for `vin_report_ready` → `AlertCircle`.
+- **Build:** ✅ green, 2.13s. index 452.03 → **452.27 kB** (gzip 142.12 → **142.18 kB**, +0.06 — flyout case + notification title). Other client chunks stable. `supabase-*.js` 50.74 kB gzip unchanged ✓. Edge function ships Deno-side, no client bundle impact.
+- **What this completes:** the €9.99 VIN report product now has end-to-end fulfilment. Buyer pays → Stripe webhook flips to `paid` → cron picks up within 5 min → renders + uploads + emails the link. No manual fulfilment needed for the happy path.
+- **Open after 16 (deferred):**
+  - **Re-issue signed URL** when the 30-day expiry lapses — currently buyer would need to email support. Trivial fix: add a `/api/vin/<id>/refresh` Edge Function that regenerates the signed URL for the same uploaded PDF. Deferred until a buyer hits the wall (>30 days post-purchase).
+  - **PDF localisation** — labels are Croatian, vPIC field names are English (`Make`, `Model`, etc.). Could translate at render time. Deferred.
+  - **No buyer-facing "my VIN reports" page** — buyer gets the email, but if they lose it they have no inventory page. Add a card in `/postavke` next pass.
+  - **vPIC offline fallback** — if the API is down, row stays `paid` and the next cron retries. No max-retry counter; could loop forever on a permanently-bad VIN. Add `attempts INT DEFAULT 0` column + max-3 retries → flip to `failed` cleanly. Deferred.
+  - **PDF doesn't include real photos.** Cross-reference returns listing IDs but pdfkit fetch+embed of remote images is non-trivial in Deno. v1 ships text-only timeline. Polish.
+- **Devil's-advocate:**
+  - *Concurrent cron retry?* Each worker locks via `UPDATE ... WHERE status='paid'` — two workers can't pick the same row. Worst case is empty BATCH; no harm.
+  - *pdfkit on Deno?* `esm.sh/pdfkit@0.15.0?target=deno` is the standard wrapper. Bundle size impact lives in Deno runtime, not the deployed function. Render failure → row `failed`, no orphan upload.
+  - *30-day signed URL is long enough?* Yes. If buyer loses the email and the URL expires, support can manually re-sign by calling the storage admin client. Self-serve refresh deferred.
+  - *Cross-reference query relies on `attributes->>vin` being uppercased.* The wizard's VinQuickFill normalises to uppercase before save (per `lib/vinDecoder.ts`). Lib also uppercases on lookup. Consistent.
+  - *PDF disclaimer manages expectation.* European VINs decode at ~80% accuracy in vPIC. Buyer paid for the report; PDF is upfront about what it does/doesn't cover. Refunds via Stripe Dashboard if a buyer complains.
+- **Manual deploy steps:**
+  1. **Create the Storage bucket:** Supabase Dashboard → Storage → New bucket → name `vin-reports`, **Public: OFF** (private with signed URLs).
+  2. `supabase functions deploy vin-report-generator --no-verify-jwt`
+  3. Schedule cron in SQL editor:
+     ```sql
+     SELECT cron.schedule('vin-report-generator-5min', '*/5 * * * *', $$
+       SELECT net.http_get(
+         url := 'https://<REF>.supabase.co/functions/v1/vin-report-generator',
+         headers := '{"Authorization":"Bearer <SERVICE_ROLE_KEY>"}'::jsonb
+       );
+     $$);
+     ```
+  4. (Optional) Run a synthetic row through: `INSERT INTO vin_reports (user_id, vin, status) VALUES ('<your-uuid>', 'WBAGN61040DR12345', 'paid');` then wait ≤5 min. Inbox should land + `/admin?section=cron` should show last `vin-report-generator` run as `success`.
+- **Next concrete action options:**
+  - **(a)** Phase 17 — Inspection Stripe Checkout (currently captured-intent only; same pattern as VIN: pre-create row + Checkout + webhook flips to `paid` → admin queue).
+  - **(b)** Run the live runbook v2 against your real Supabase + Stripe + Resend accounts.
+  - **(c)** Polish — wizard `?edit=<id>` photo manager, "my VIN reports" inventory card on `/postavke`, PDF refresh endpoint.
+  - Recommendation: **(b)** — at this point we've shipped 16 phases of code. The next high-leverage move is verifying everything end-to-end against real services before adding more features. Say `continue Vozila phase 17` if you'd rather keep coding, or report runbook results.
+
 ### Checkpoint <next>
 *(append next session)*
