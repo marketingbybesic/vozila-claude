@@ -1049,5 +1049,43 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Manual deploy:** `supabase functions deploy notify-auction-event`. No new env vars.
 - **Next:** Phase 15 (auction admin approval gate) **OR** Phase 16 (VIN report PDF generator) **OR** run live runbook v2 sections 1-9 against real accounts. Recommendation: live runbook execution. Say `continue Vozila phase 15`, `continue Vozila phase 16`, or report runbook results.
 
+### Checkpoint 2026-05-06 (phase 15 — auction admin approval gate)
+- **Shipped:**
+  - **Migration 009_auction_approval.sql** (idempotent): `auctions.approval_status` (default `pending`), `approval_notes`, `approved_by`, `approved_at` columns. Backfill grandfathers pre-existing live auctions older than 1 min as `approved` so deploy doesn't hide working data. RLS rewritten so non-approved auctions are readable only by their seller + admin/owner/moderator. `auction_bids` INSERT policy gated on auction.approval_status='approved'. `place_auction_bid` Postgres fn extended with approval check returning `not_approved` so even service-role can't bid on unapproved.
+  - **Client:**
+    - `lib/auctions.ts`: `AuctionApprovalStatus` type, `listLive/EndedAuctions` now filter `approval_status='approved'`, `approvalLabel` helper.
+    - `lib/admin.ts`: `AdminAuctionRow` type, `listAdminAuctions(filter)`, `adminApproveAuction(id, notes)`, `adminRejectAuction(id, notes)`. Both emit `audit_log` row + fire-and-forget `notify-auction-event` call.
+    - `lib/notifications.ts` + `NotificationsFlyout iconFor`: `auction_approved` + `auction_rejected` cases.
+    - `components/admin/AdminAuctions.tsx` (new lazy section): pending/approved/rejected/all filter tabs, per-card thumbnail + listing link + seller info + starting/reserve/duration meta + approval-notes display. Approve + Reject buttons with `prompt()` for notes.
+    - `components/admin/AdminDashboard.tsx`: `auctions` SectionId + "Aukcije" sidebar tab between Moderacija and Leadovi (gate: `moderate`). Gavel icon.
+    - `components/listings/CreateListingWizard.tsx`: amber AlertCircle hint paragraph under the auction toggle: "Aukcija ide na pregled administratora prije objave (do 24h)."
+  - **Edge Function:**
+    - `_shared/email-auctions.ts`: `tplAuctionApproved` + `tplAuctionRejected` Croatian templates. Approved shows admin notes as primary call-out; rejected as red-bordered reason block. Both link to `/aukcija/<id>`.
+    - `notify-auction-event`: `kind='approved'` and `kind='rejected'` branches. Both run through the `wasRecentlyNotified` 30-min dedupe sentinel from 14.2. Drops `auction_approved` or `auction_rejected` notification row + sends seller email.
+- **Build:** ✅ green, 2.11s. **Bundle (vs 14.2 baseline):**
+  - `index-*.js` 451.84 → **452.03 kB** (gzip 142.10 → **142.12 kB**, +0.02)
+  - `CreateListingWizard` 43.97 → 44.19 kB (gzip 11.98 → 12.02, +0.04)
+  - `admin-*.js` shared lib 7.18 → 8.61 kB (gzip 2.12 → 2.37, +0.25 — auction CRUD wrappers)
+  - `AdminDashboard` 95.92 → 96.19 kB (sidebar entry + lazy import)
+  - New lazy chunk `AdminAuctions-*.js` (loaded only on click of Aukcije tab)
+  - `supabase-*.js` 50.74 kB gzip — unchanged ✓
+- **Open after 15 (deferred):**
+  - Buyer push notifications for "auction approved" / "auction rejected" (only seller gets notified currently — buyers learn from the public grid).
+  - "Resubmit auction" workflow after rejection (seller would need to delete + re-create from wizard; reasonable for v1).
+  - Admin auction-edit (override starting bid / reserve / duration during approval) — currently approve-as-is or reject. Adding inline edit in AdminAuctions is a future polish.
+- **Devil's-advocate:**
+  - *Backfill could grandfather data we'd rather curate.* The `> 1 minute` filter avoids touching auctions created right at deploy (which would be the new ones we want to gate). Existing live auctions stay live — that's the right call (don't break working data).
+  - *RLS lets sellers see their own pending submission, which is correct UX.* Verified policy chain.
+  - *Two earlier Edits silently failed (file-not-read).* Caught via grep verification before commit; retried with proper Read first. Both refinements (wizard hint + flyout icon case) landed in final build.
+- **Manual deploy steps:**
+  1. Run `server/db/migrations/009_auction_approval.sql` against the live Supabase DB.
+  2. `supabase functions deploy notify-auction-event` (now handles `approved` / `rejected`).
+  3. No new env vars.
+- **Next concrete action options:**
+  - **(a)** Phase 16 — VIN report PDF generator (Edge Function: pulls vPIC + cross-references same-VIN listings + renders PDF via pdfkit, emails buyer the link, flips `vin_reports.status` to `delivered`).
+  - **(b)** Phase 17 — Inspection Stripe Checkout (currently captured-intent only; same pattern as VIN: pre-create row + Checkout + webhook flips to `paid`).
+  - **(c)** Run live runbook v2 sections 1-9 against your real Supabase + Stripe + Resend accounts. ~90 min.
+  - Recommendation: **(a)** — VIN report generator unlocks the €9.99 product to actually deliver value. Without the PDF, buyers pay and get nothing automatic. Say `continue Vozila phase 16`.
+
 ### Checkpoint <next>
 *(append next session)*
