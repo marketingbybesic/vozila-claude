@@ -1035,5 +1035,19 @@ Append after each session. Format: date, what shipped, build status, next concre
   - *No rollback drill in CI.* Manual via section 12. Adding `npm run rollback` is overkill for a small team.
 - **Next concrete action:** Run the runbook against testiranje.cloud (now), confirm everything green, then **Phase 14.2** (cron-retry dedupe, bell flyout cases, wizard `?edit=<id>` mode) **OR** Phase 15 (auction admin approval gate). Recommendation: 14.2 — small polish that closes the operational loose ends. Say `continue Vozila phase 14.2`.
 
+### Checkpoint 2026-05-06 (phase 14.2 — bell flyout cases + cron-retry dedupe + wizard ?edit mode)
+- **Shipped:**
+  - `lib/notifications.ts`: 4 auction-event cases in `notificationLink` (route to `/aukcija/<id>`) + Croatian-formatted titles in `notificationTitle` with embedded `hr-HR` thousands ("Niste više najbolji ponuđač (nova ponuda 1.500 €)", etc). `ai_copy_call` returns `null`.
+  - `NotificationsFlyout.tsx iconFor`: 4 auction types → `Sparkles` icon.
+  - `notify-auction-event`: `wasRecentlyNotified(user, type)` helper queries `notifications` for `(user_id, type, payload->>auction_id)` within 30-min window. All three branches skip insert + email on duplicate. Response `skipped[]` exposes dedupe outcomes. Closes the cron-retry hole from 14.1.
+  - `CreateListingWizard ?edit=<uuid>` mode: `useSearchParams` reads param. Hydrate effect fetches listing, asserts ownership, populates `formData`. `handleSubmit` branches INSERT vs UPDATE; UPDATE excludes `user_id`/`status` + filters by `.eq('user_id', user.id)` (RLS belt + suspenders). Image columns updated only when user selected new files (no-op resave preserves existing). Listing-limit guard + auction enrolment skipped in edit mode. Spinner: `border-white` → `border-foreground`. Croatian error UI when listing not found / not yours.
+- **Build:** ✅ green, 2.15s. index 451.04 → 451.84 kB (gzip 141.92 → **142.10 kB**, +0.18). CreateListingWizard 41.68 → 43.97 kB (gzip 11.47 → **11.98 kB**, +0.51). Supabase chunk unchanged.
+- **Open after 14.2 (deferred):**
+  - Photo edit-mode is upload-only; no managed grid for existing photos. Full media manager is a phase-15-ish polish.
+  - Outbid notify still client-fired — 14.2 dedupe contains the spam vector but moving dispatch to a DB AFTER INSERT trigger via pg_net is the right shape.
+  - "Edit auction settings" mid-auction not exposed; reasonable for BaT model (binding terms at start).
+- **Manual deploy:** `supabase functions deploy notify-auction-event`. No new env vars.
+- **Next:** Phase 15 (auction admin approval gate) **OR** Phase 16 (VIN report PDF generator) **OR** run live runbook v2 sections 1-9 against real accounts. Recommendation: live runbook execution. Say `continue Vozila phase 15`, `continue Vozila phase 16`, or report runbook results.
+
 ### Checkpoint <next>
 *(append next session)*
