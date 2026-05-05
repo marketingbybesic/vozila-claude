@@ -859,5 +859,55 @@ Append after each session. Format: date, what shipped, build status, next concre
   7. Deploy site — `sw.js` and `manifest.webmanifest` ship from `/client/public/` automatically.
 - **Next concrete action:** Phase 13 — Admin console refactor (KPI overview, listings/users tables with bulk actions, moderation queue, payments dashboard, leads pipeline, RBAC, audit log, kill-switch). Highest operability impact now that all major data surfaces exist. Say `continue Vozila phase 13`.
 
+### Checkpoint 2026-05-05 (phase 13 — admin console refactor + RBAC + audit + kill-switches)
+- **Shipped this session:**
+  - `server/db/migrations/006_admin.sql` — idempotent migration adding:
+    - `audit_log(actor_id, actor_role, action, entity_type, entity_id, payload, ip_hash, created_at)` — admin-insert+select RLS only, immutable for non-service-role.
+    - `kill_switches(name PK, enabled, reason, toggled_by, toggled_at)` — 5 default switches seeded (`new_listings`, `payments`, `messaging`, `signups`, `maintenance_banner`). Public select, admin update.
+    - Performance indexes for `listings.created_at`, `reports(open)`, `leads(new)`.
+    - `admin_overview` view returning 10 KPI counts in a single round-trip (active/sold/new7d listings, total/subscribed users, open reports, new leads, 24h conversations+messages, featured live).
+  - `client/src/lib/admin.ts` (new, lazy-loaded as `admin-*.js` shared chunk) — RBAC helpers (`getMyAdminRole`, `canWrite`, `canModerate`, `canViewPayments`), audit-log writer (`audit(action, opts)`), and full CRUD wrappers: listings (search/filter/paginate, status change, force-feature/unfeature, delete), users (search, role change, dealer-verify toggle), reports (queue, resolve), kill-switches (list, toggle), leads (filter, status change with payout capture), audit-log read, search-insights aggregation. Every write call also emits an audit row.
+  - `client/src/components/admin/AdminOverview.tsx` — 10-card KPI grid pulling from the `admin_overview` view in one query. Accent-colored when value > 0 (open reports, new leads, featured live, subscribers).
+  - `client/src/components/admin/AdminListings.tsx` — paginated table (25/page) with title search + status filter, force-feature/unfeature, pause/resume/mark-sold, delete with confirm. External-link to public listing in new tab. Status pills.
+  - `client/src/components/admin/AdminUsers.tsx` — paginated table with email/company search, inline role select (7 roles), inline dealer-verify toggle, link to public dealer profile.
+  - `client/src/components/admin/AdminModeration.tsx` — reports queue with 3 filter tabs (open/reviewed/all). Per-card actions: Pregledano, Odbij, "Obriši oglas" (compound action that also resolves the report).
+  - `client/src/components/admin/AdminLeads.tsx` — partner-type + status filter, per-lead card with phone/email links, listing link, expandable JSON payload for partner-specific fields, status transitions (new → contacted → won/lost) with prompt-captured payout in EUR on "won".
+  - `client/src/components/admin/AdminSearchInsights.tsx` — top 50 search URLs (last 7 days), zero-result % per URL, warning banner when >50% zero-result rate. Empty state when search_log not yet populated (waits for ListingFeed to start logging in 13.x).
+  - `client/src/components/admin/AdminAuditLog.tsx` — last 200 audit rows with timestamp, role, action, entity ref, truncated payload preview.
+  - `client/src/components/admin/AdminKillSwitch.tsx` — 5 toggle rows with hint copy, confirm-on-enable, optional reason capture, audit-log entry per toggle.
+  - `client/src/components/admin/AdminDashboard.tsx` — REFACTORED from a flat placeholder to a sidebar-tabs shell: `<Suspense>`-wrapped lazy-imported sections, URL state via `?section=<id>`, RBAC gate per section (any/moderate/write/payments), responsive (sidebar on lg+, horizontal scroll bar below). Role badge in the header. The legacy seed-data block lives as one of the sections (`SeedSection`).
+- **Build:** ✅ green, 2.34s. **Bundle (vs phase 12 = 141.21 kB initial)**:
+  - `index-*.js` 447.96 → 448.15 kB (gzip 141.21 → 141.30 kB, **+0.09**) — minor shell footprint
+  - `AdminDashboard` 93.50 → 95.31 kB (gzip 22.52 → 23.53, +1.01) — sidebar shell + Suspense
+  - **NEW lazy admin chunks** (only loaded when /admin is opened):
+    - `admin-*.js` (shared lib): 6.07 / **1.80 kB gzip**
+    - `AdminOverview`: 2.16 / **0.97 kB**, `AdminListings`: 7.60 / **2.35 kB**, `AdminUsers`: 6.07 / **2.12 kB**, `AdminModeration`: 4.69 / **1.60 kB**, `AdminLeads`: 6.23 / **1.84 kB**, `AdminSearchInsights`: 3.09 / **1.23 kB**, `AdminAuditLog`: 2.22 / **0.92 kB**, `AdminKillSwitch`: 3.19 / **1.46 kB**
+  - `supabase-*.js` 50.74 kB gzip — unchanged (cache-stable across deploys ✓)
+- **Bugs / gaps still open after phase 13 (deferred):**
+  - **Build failed once on first attempt** — JSX parser caught `>50%` as a tag opener in `AdminSearchInsights.tsx`. Fixed by escaping to `{'>'}50%`. Lesson noted: be careful with literal `>` / `<` inside JSX text.
+  - **`admin_overview` view scans full tables on every load.** For >100k listings + millions of messages, this gets slow. Materialized view or pg_cron-refreshed cache deferred until volume warrants.
+  - **Search insights empty until `ListingFeed` logs to `search_log`.** Need a small `INSERT INTO search_log` call in `ListingFeed.tsx` after every fetch. Deferred to a one-line patch in 13.1.
+  - **Payments admin section NOT yet built.** Master plan called for Stripe events feed + refund button + MRR/churn charts. Currently rolled into `AdminLeads` partial; a dedicated `AdminPayments.tsx` reading from `stripe_events` is the obvious next slice.
+  - **Email console NOT yet built** (Resend send rate, deliverability, unsubscribe rate, top-clicked CTAs). Needs Resend webhook → `email_events` table → admin section. Deferred.
+  - **Cron status console NOT yet built** (last-run + lag for digest, expiry, sitemap, etc.). Add `cron_runs` table + decorate Edge Functions with a heartbeat write. Deferred.
+  - **DB health console NOT yet built** (Supabase quota, image-storage usage, slow queries). Needs the `pg_stat_*` views + a service-role Edge Function. Deferred.
+  - **Global search console NOT yet built** (cross-table fuzzy search). Deferred.
+  - **Impersonation read-only token** NOT yet built (mentioned in plan but cosmetic until support volume justifies it).
+  - **`audit_log` writes don't capture IP.** Service-role Edge Function path is the right place to hash + record `x-forwarded-for`. Deferred.
+- **Devil's-advocate this round:**
+  - *RBAC enforcement is client-side only.* Sidebar gates by role, but a clever user with admin URL could bypass UI gates. Mitigated by RLS at the DB layer: `audit_log` admin-only, `reports` admin-only update, `kill_switches` admin-only update, `profiles.role` only writable by admin/owner. Even if the sidebar showed every tab to a moderator, the RLS policies reject the writes.
+  - *Sections all bundle the same `lib/admin.ts`.* Rolldown extracted it as a 1.80 kB gzip shared chunk so each section pulls from cache.
+  - *Confirm() and prompt() are jarring UX.* Acceptable for v1 admin console (internal users only) — will upgrade to Radix dialogs in a polish pass once data volume stress-tests the flows.
+  - *`audit_log` could grow unboundedly.* It's append-only; we'll add a 90-day partition + cold-storage rollup in phase 13.x once we see real volume. For v1, indexed by `created_at` so even 1M rows query fast.
+  - *AdminLeads payload `details` is a `<details>` raw JSON dump.* Intentional for partner CRM hand-off — partners want to see the full lead. Once partners are integrated via API, switch to per-partner-type formatted views.
+- **Manual deploy steps for phase 13:**
+  1. Run `006_admin.sql` against the live Supabase DB.
+  2. Set at least one user's `profiles.role` to `'admin'` or `'owner'` so admin UI is reachable.
+- **Next concrete action options:**
+  - **(a)** Phase 13.1 — wire `search_log` insert from `ListingFeed`, build `AdminPayments` from `stripe_events` table, ship `cron_runs` heartbeat. ~1 turn each.
+  - **(b)** Phase 14 — inspections fulfilment workflow (inspector role + queue + report upload + Vozila Inspected branded badge) + auctions stub.
+  - **(c)** Polish — collapse the two header bells (carried from 10.4), implement wizard `?edit=<id>` mode (carried from 9.4), add slug-canonical search URLs (carried from 12).
+  - Recommendation: (a) — phase 13 surfaces are useless without the data flowing through them. Wire `search_log` first, then ship `AdminPayments`. Say `continue Vozila phase 13.1`.
+
 ### Checkpoint <next>
 *(append next session)*
