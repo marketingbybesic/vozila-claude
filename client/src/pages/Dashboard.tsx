@@ -5,15 +5,17 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { PromoteListingButton } from '../components/listings/PromoteListingButton';
 import {
   Plus, Eye, MoreVertical, Car as CarIcon,
-  ToggleLeft, ToggleRight, TrendingUp
+  ToggleLeft, ToggleRight, TrendingUp, Pause, Play, Trash2, CheckCircle2
 } from 'lucide-react';
 import { matchScore } from '../lib/matchScore';
+
+type ListingStatus = 'draft' | 'active' | 'paused' | 'sold';
 
 interface Listing {
   id: string;
   title: string;
   price: number;
-  status: 'draft' | 'active' | 'sold';
+  status: ListingStatus;
   views_count: number;
   listing_analytics?: {
     whatsapp_clicks: number;
@@ -107,29 +109,33 @@ export const Dashboard = () => {
     }
   };
 
-  const toggleStatus = async (listingId: string, currentStatus: string) => {
+  const setStatus = async (listingId: string, newStatus: ListingStatus) => {
     setTogglingId(listingId);
-    
     try {
-      const newStatus: 'active' | 'sold' = currentStatus === 'active' ? 'sold' : 'active';
-      
       const { error } = await supabase
         .from('listings')
         .update({ status: newStatus })
         .eq('id', listingId);
-
       if (error) throw error;
-      
-      // Update local state
-      setListings(prev => 
-        prev.map(listing => 
-          listing.id === listingId 
-            ? { ...listing, status: newStatus }
-            : listing
-        )
-      );
-    } catch (error) {
-      console.error('Error toggling status:', error);
+      setListings(prev => prev.map(l => (l.id === listingId ? { ...l, status: newStatus } : l)));
+    } catch (e) {
+      console.error('Error updating status:', e);
+      alert('Promjena statusa nije uspjela.');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const deleteListing = async (listingId: string) => {
+    if (!confirm('Sigurno želite obrisati ovaj oglas? Akcija je nepovratna.')) return;
+    setTogglingId(listingId);
+    try {
+      const { error } = await supabase.from('listings').delete().eq('id', listingId);
+      if (error) throw error;
+      setListings(prev => prev.filter(l => l.id !== listingId));
+    } catch (e) {
+      console.error('Error deleting listing:', e);
+      alert('Brisanje nije uspjelo.');
     } finally {
       setTogglingId(null);
     }
@@ -142,18 +148,20 @@ export const Dashboard = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return 'Objavljeno';
-      case 'sold': return 'Prodano';
-      case 'draft': return 'Nacrt';
-      default: return status;
+      case 'paused': return 'Pauzirano';
+      case 'sold':   return 'Prodano';
+      case 'draft':  return 'Nacrt';
+      default:       return status;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'text-green-400 bg-green-400/10';
-      case 'sold': return 'text-red-400 bg-red-400/10';
-      case 'draft': return 'text-yellow-400 bg-yellow-400/10';
-      default: return 'text-slate-400 bg-slate-400/10';
+      case 'paused': return 'text-amber-400 bg-amber-400/10';
+      case 'sold':   return 'text-red-400 bg-red-400/10';
+      case 'draft':  return 'text-yellow-400 bg-yellow-400/10';
+      default:       return 'text-slate-400 bg-slate-400/10';
     }
   };
 
@@ -318,34 +326,77 @@ export const Dashboard = () => {
                         />
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => toggleStatus(listing.id, listing.status)}
-                          disabled={togglingId === listing.id || listing.status === 'draft'}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-300 ${
-                            listing.status === 'active' 
-                              ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' 
-                              : listing.status === 'sold'
-                              ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                              : 'bg-neutral-800 text-neutral-400 cursor-not-allowed'
-                          } ${togglingId === listing.id ? 'opacity-50 cursor-wait' : ''}`}
-                        >
-                          {listing.status === 'active' ? (
-                            <>
-                              <ToggleRight className="w-4 h-4" />
-                              Objavljeno
-                            </>
-                          ) : listing.status === 'sold' ? (
-                            <>
-                              <ToggleLeft className="w-4 h-4" />
-                              Prodano
-                            </>
-                          ) : (
-                            <>
-                              <MoreVertical className="w-4 h-4" />
-                              Nacrt
-                            </>
+                        <div className="inline-flex items-center justify-end gap-1.5 flex-wrap">
+                          {/* Edit: jump to wizard preloaded with this listing (wizard reads ?edit=<id>) */}
+                          <Link
+                            to={`/predaj-oglas?edit=${listing.id}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-border text-foreground hover:border-primary text-[10px] font-light uppercase tracking-[0.2em] transition-colors"
+                            title="Uredi"
+                          >
+                            <MoreVertical className="w-3 h-3" strokeWidth={1.5} />
+                            Uredi
+                          </Link>
+
+                          {/* Pause / Resume — only when active or paused */}
+                          {listing.status === 'active' && (
+                            <button
+                              onClick={() => setStatus(listing.id, 'paused')}
+                              disabled={togglingId === listing.id}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 text-[10px] font-light uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                              title="Pauziraj"
+                            >
+                              <Pause className="w-3 h-3" strokeWidth={1.5} />
+                              Pauziraj
+                            </button>
                           )}
-                        </button>
+                          {listing.status === 'paused' && (
+                            <button
+                              onClick={() => setStatus(listing.id, 'active')}
+                              disabled={togglingId === listing.id}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 text-[10px] font-light uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                              title="Nastavi"
+                            >
+                              <Play className="w-3 h-3" strokeWidth={1.5} />
+                              Nastavi
+                            </button>
+                          )}
+
+                          {/* Mark sold — when active or paused */}
+                          {(listing.status === 'active' || listing.status === 'paused') && (
+                            <button
+                              onClick={() => setStatus(listing.id, 'sold')}
+                              disabled={togglingId === listing.id}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 text-[10px] font-light uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                              title="Označi kao prodano"
+                            >
+                              <CheckCircle2 className="w-3 h-3" strokeWidth={1.5} />
+                              Prodano
+                            </button>
+                          )}
+
+                          {/* Restore — when sold */}
+                          {listing.status === 'sold' && (
+                            <button
+                              onClick={() => setStatus(listing.id, 'active')}
+                              disabled={togglingId === listing.id}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 text-[10px] font-light uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                              title="Vrati u prodaju"
+                            >
+                              <ToggleRight className="w-3 h-3" strokeWidth={1.5} />
+                              Vrati
+                            </button>
+                          )}
+
+                          {/* Delete — always available */}
+                          <button
+                            onClick={() => deleteListing(listing.id)}
+                            disabled={togglingId === listing.id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-red-400 hover:bg-red-500/10 text-[10px] font-light uppercase tracking-[0.2em] transition-colors disabled:opacity-50"
+                            title="Obriši"
+                          >
+                            <Trash2 className="w-3 h-3" strokeWidth={1.5} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

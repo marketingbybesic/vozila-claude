@@ -30,6 +30,7 @@ const NotFound            = lazy(() => import('./pages/NotFound').then(m => ({ d
 const DealerIndex         = lazy(() => import('./pages/DealerIndex').then(m => ({ default: m.DealerIndex })));
 const About               = lazy(() => import('./pages/About').then(m => ({ default: m.About })));
 const Compare             = lazy(() => import('./pages/Compare').then(m => ({ default: m.Compare })));
+const Messages            = lazy(() => import('./pages/Messages').then(m => ({ default: m.Messages })));
 
 const RouteFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -73,6 +74,8 @@ function App() {
                   <Route path="/saloni/:dealerSlug" element={<DealerProfile />} />
                   <Route path="/o-nama" element={<About />} />
                   <Route path="/usporedba" element={<Compare />} />
+                  <Route path="/poruke" element={<Messages />} />
+                  <Route path="/poruke/:id" element={<Messages />} />
                   {/* /pretraga — general search with nuqs URL state */}
                   <Route path="/pretraga" element={<ListingFeed />} />
                   <Route path="/:categorySlug" element={<ListingFeed />} />

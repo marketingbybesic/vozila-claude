@@ -20,6 +20,9 @@ import 'yet-another-react-lightbox/plugins/thumbnails.css';
 import { onImgError, PLACEHOLDER_CAR } from '../../lib/imageFallback';
 import { pushRecent } from '../../lib/recentlyViewed';
 import { VerifiedDealerBadge } from './VerifiedDealerBadge';
+import { ReportListingButton } from './ReportListingButton';
+import { ensureConversation, NotAuthedError } from '../../lib/messaging';
+import { useNavigate } from 'react-router-dom';
 
 // --- MILESTONE 4: HISTORY TIMELINE ---
 
@@ -212,11 +215,29 @@ const SimilarVehicles = ({ listing }: { listing: Listing }) => {
 
 export const ListingDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxSlides, setLightboxSlides] = useState<{ src: string }[]>([]);
+  const [phoneRevealed, setPhoneRevealed] = useState(false);
+  const [messagingError, setMessagingError] = useState<string | null>(null);
+
+  const startMessage = async () => {
+    if (!id) return;
+    setMessagingError(null);
+    try {
+      const conv = await ensureConversation(id);
+      navigate(`/poruke/${conv.id}`);
+    } catch (e) {
+      if (e instanceof NotAuthedError) {
+        setMessagingError('Prijavite se za slanje poruke prodavaču.');
+      } else {
+        setMessagingError(e instanceof Error ? e.message : 'Greška pri slanju poruke.');
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -677,8 +698,21 @@ export const ListingDetail = () => {
                   </div>
                 ) : (
                   <div className="hidden lg:flex flex-col space-y-2">
-                    {whatsappLink && (
-                      <a 
+                    {/* Primary CTA: in-platform message — anti-scam path */}
+                    <button
+                      onClick={startMessage}
+                      className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-primary text-primary-foreground rounded-none font-light uppercase tracking-widest text-xs hover:bg-primary/90 transition-all duration-300"
+                    >
+                      <Mail className="w-5 h-5" strokeWidth={1.5} />
+                      Pošalji poruku prodavaču
+                    </button>
+
+                    {messagingError && (
+                      <p className="text-[10px] font-light text-red-400 px-1">{messagingError}</p>
+                    )}
+
+                    {whatsappLink && phoneRevealed && (
+                      <a
                         href={whatsappLink}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -690,9 +724,7 @@ export const ListingDetail = () => {
                               price: listing.price,
                               category: listing.categories?.slug,
                             });
-                          } catch {
-                            // Analytics not initialized yet, silently fail
-                          }
+                          } catch { /* analytics may not be initialized */ }
                         }}
                         className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-green-600 text-white rounded-none font-light uppercase tracking-widest text-xs hover:bg-green-700 transition-all duration-300"
                       >
@@ -700,19 +732,29 @@ export const ListingDetail = () => {
                         WhatsApp
                       </a>
                     )}
-                    
-                    {listing.contact_phone && (
-                      <a 
+
+                    {listing.contact_phone && !phoneRevealed && (
+                      <button
+                        onClick={() => setPhoneRevealed(true)}
+                        className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-card border border-border text-foreground rounded-none font-light uppercase tracking-widest text-xs hover:border-primary transition-all duration-300"
+                      >
+                        <Phone className="w-5 h-5" strokeWidth={1.5} />
+                        Prikaži broj
+                      </button>
+                    )}
+
+                    {listing.contact_phone && phoneRevealed && (
+                      <a
                         href={`tel:${listing.contact_phone}`}
                         className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-white text-black rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all duration-300"
                       >
                         <Phone className="w-5 h-5" strokeWidth={1.5} />
-                        Nazovi
+                        <span className="tabular-nums">{listing.contact_phone}</span>
                       </a>
                     )}
-                    
+
                     {listing.contact_email && (
-                      <a 
+                      <a
                         href={`mailto:${listing.contact_email}`}
                         className="flex items-center justify-center gap-3 w-full px-8 py-4 bg-neutral-800 text-white rounded-none font-light uppercase tracking-widest text-xs hover:bg-neutral-700 transition-all duration-300"
                       >
@@ -720,6 +762,11 @@ export const ListingDetail = () => {
                         Email
                       </a>
                     )}
+
+                    {/* Report listing — bottom of contact column, low-emphasis */}
+                    <div className="pt-3 mt-1 border-t border-border/40 flex justify-center">
+                      <ReportListingButton listingId={listing.id} />
+                    </div>
                   </div>
                 )}
               </div>

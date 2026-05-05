@@ -657,5 +657,47 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(b)** Continue to phase 10 (messaging + email + anti-scam) without waiting for live test — deploys are independent.
   - Recommendation: do (b) in parallel; runbook is yours to execute when you have a Supabase + Stripe session free. Say `continue Vozila phase 10` for (b).
 
+### Checkpoint 2026-05-05 (phase 10.1 — messaging core + report-listing + lifecycle)
+- **Shipped this session:**
+  - `server/db/migrations/003_messaging.sql` — idempotent migration adding:
+    - `conversations(listing, buyer, seller, last_message_at, buyer/seller_unread, status, buyer_revealed_phone)` with `UNIQUE(listing_id, buyer_id)` (one thread per buyer-listing pair).
+    - `messages(conversation, sender, body 1..4000, read_at, flagged, flag_reason)` with after-insert trigger that bumps `last_message_at` + the recipient's unread counter.
+    - `notifications(user, type, payload, read_at)` for the bell + future digests.
+    - `reports(listing, reporter, reason, notes, status, reviewed_by/at)` for moderation queue.
+    - `saved_searches(user, label, url, params, last_seen_ids[], email/push_alert, last_visited_at, last_digest_sent_at)` — promotes localStorage to DB so cron can run digests in 10.2.
+    - `email_unsubscribes(user, category)` for HMAC unsub tokens.
+    - RLS on all 6 tables. Realtime publication for messages/conversations/notifications.
+  - `client/src/lib/messaging.ts` — full client API: `ensureConversation` (race-safe upsert), `sendMessage`, `listMyConversations` (joined), `getConversation`, `listMessages`, `markConversationRead`, `revealPhone`, `getUnreadTotal`, `subscribeToMessages` + `subscribeToMyConversations` (Supabase Realtime channels), `detectScamSignals` (phone-number / external-channel / phishing patterns).
+  - `client/src/pages/Messages.tsx` (new, lazy-loaded at `/poruke` and `/poruke/:id`) — split-pane inbox: conversation list with unread badges + selected thread with realtime append + composer with Ctrl/Cmd+Enter to send + scam warning inline. Auth gate, mobile back-arrow, max length 4000 enforced both client + DB CHECK.
+  - `client/src/components/layout/NotificationsBell.tsx` (new) — Header bell with live unread total, subscribes to conversations channel, hides when signed out, formats `99+`.
+  - `client/src/components/listings/ReportListingButton.tsx` (new) — Radix dialog with 6 reason radios + free-text notes, inserts into `reports`, shows success state.
+  - `client/src/components/layout/Header.tsx` — `<NotificationsBell />` mounted next to Heart in the desktop utility row.
+  - `client/src/App.tsx` — added `/poruke` + `/poruke/:id` lazy routes pointing at `Messages`.
+  - `client/src/components/listings/ContactActionHub.tsx` — replaced fake-send simulation with real `ensureConversation` + `sendMessage` + post-send navigation to `/poruke/<id>`. Added `obfuscatePhone` prop, phone reveal flow with masked display, `Eye`/`Phone` icons. Scam-pattern warning shown inline when draft contains red flags.
+  - `client/src/components/listings/ListingDetail.tsx` — desktop contact column rebuilt:
+    - Primary CTA "Pošalji poruku prodavaču" → `ensureConversation` → routes to `/poruke/<id>`.
+    - Phone column gated by `Prikaži broj` reveal (anti-scam).
+    - WhatsApp button only shows after reveal.
+    - `<ReportListingButton>` mounted at the bottom of the contact column with hairline divider.
+  - `client/src/pages/Dashboard.tsx` — old single-toggle replaced with full lifecycle: Edit (link to `/predaj-oglas?edit=<id>`), Pause / Resume, Mark sold, Restore (when sold), Delete (with `confirm()`). New `paused` status enum value displayed amber. Uses `setStatus(id, status)` and `deleteListing(id)`. Optimistic UI updates.
+- **Build:** ✅ green, 2.96s, 189.78 kB initial gzip (+1.73 vs 9.4). New `Messages-*.js` chunk 3.03 kB gzip. Dashboard 13.85→16.10 (lifecycle). ListingDetail 90.90→96.45 (message CTA + report + phone reveal).
+- **Bugs / gaps still open after 10.1 (deferred to 10.2):**
+  - `send-email` Edge Function (Resend wrapper) NOT yet built — no transactional email on new message / boost receipt / sub receipt.
+  - `saved-searches-digest` Edge Function NOT yet built — saved-search emails still inert.
+  - `unsubscribe` Edge Function NOT yet built.
+  - Wizard `?edit=<id>` mode NOT yet implemented — Edit button currently sends user to a new-listing wizard (would need a hydrate-from-existing path; deferred).
+  - Browser push (web-push + VAPID) deferred to phase 12.
+  - Notifications table is created but no UI yet beyond the message bell (saved-search hits land here in 10.2).
+  - Phase 10's "edit listing" path needs a small wizard refactor; doing it now would risk bulldozing the wizard's auth/upload flow. Marking for a focused 10.3.
+- **Devil's-advocate this round:**
+  - *Realtime channels leak on unmount?* — Both inbox + bell return the channel from subscribe and call `.unsubscribe()` in the cleanup of the effect. Verified pattern matches `@supabase/supabase-js` v2 docs.
+  - *Self-message via `ensureConversation`?* — Guarded explicitly: throws "Ne možete poslati poruku samom sebi" before insert.
+  - *Concurrent inserts → duplicate conversation?* — `UNIQUE(listing_id, buyer_id)` constraint + race fallback re-read. Tested logically.
+  - *RLS on messages too tight?* — INSERT policy requires `auth.uid() = sender_id` AND a matching open conversation row visible via the SELECT policy. Service role (Edge Functions) bypasses RLS, so future bot/system messages still possible.
+  - *DB trigger races with realtime broadcast?* — Trigger and broadcast both fire on INSERT; since the unread bump is part of the same transaction as the message insert, the bell's refetch (triggered by conversation change) will see the new counter atomically.
+  - *Detect scam patterns might false-positive on legit Croatian numbers?* — Yes, intentionally. The signal is shown inline as a tip, never blocks send. Server-side flagging in 10.2 will use the same heuristic to set `messages.flagged=true` for moderation review without rejecting the message.
+  - *Phone reveal on detail not synced with conversation flag?* — Detail-page reveal is local state per session (component). Once the buyer sends a message via `ensureConversation`, the `buyer_revealed_phone` column flips for permanent reveal across devices via `revealPhone()` (will wire in 10.2 when the inbox surfaces the listing's phone in the thread header).
+- **Next concrete action:** Phase 10.2 — `send-email` Edge Function + Resend templates + `saved-searches-digest` daily cron + `unsubscribe` Edge Function. Say "continue Vozila phase 10.2".
+
 ### Checkpoint <next>
 *(append next session)*

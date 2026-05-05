@@ -5,6 +5,7 @@ import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { navigationMenu } from '../../config/taxonomy';
 import { supabase } from '../../lib/supabase';
 import { SuperSearchModal } from '../search/SuperSearchModal';
+import { NotificationsBell } from './NotificationsBell';
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -78,6 +79,7 @@ export const Header = () => {
               <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-primary-foreground text-[10px] font-light flex items-center justify-center shadow-sm">{favoritesCount}</span>
             )}
           </Link>
+          <NotificationsBell />
           <div className="relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}

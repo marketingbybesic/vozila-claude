@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, Mail, X, Send } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { MessageCircle, Mail, X, Send, Phone, Eye } from 'lucide-react';
 import { trackLead } from '../../lib/leadTracking';
+import { ensureConversation, sendMessage, detectScamSignals, NotAuthedError } from '../../lib/messaging';
 
 interface ContactActionHubProps {
   listingId: string;
@@ -9,6 +11,17 @@ interface ContactActionHubProps {
   listingUrl: string;
   contactPhone?: string;
   contactEmail?: string;
+  // When true, contactPhone is hidden behind a Reveal click and the WhatsApp
+  // button is gated. This is the anti-scam path used until the buyer messages.
+  obfuscatePhone?: boolean;
+}
+
+// Mask all but the last 2 digits of a phone string. "+385 91 234 5678" → "+385 9X XXX XX78".
+function maskPhone(p: string): string {
+  const digits = p.replace(/\D/g, '');
+  if (digits.length < 4) return p;
+  const visible = digits.slice(-2);
+  return `${p.slice(0, p.length - digits.length + 2).replace(/\d/g, '+').replace(/\++/, '+').padEnd(p.length - 2, 'X')}${visible}`;
 }
 
 export const ContactActionHub = ({
@@ -17,12 +30,15 @@ export const ContactActionHub = ({
   listingUrl,
   contactPhone,
   contactEmail,
+  obfuscatePhone = false,
 }: ContactActionHubProps) => {
+  const navigate = useNavigate();
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
   const [messageSent, setMessageSent] = useState(false);
+  const [phoneRevealed, setPhoneRevealed] = useState(!obfuscatePhone);
 
   const handleWhatsAppClick = async () => {
     // Track lead
@@ -40,7 +56,6 @@ export const ContactActionHub = ({
   };
 
   const handleMessageClick = async () => {
-    // Track lead
     await trackLead(listingId, 'message');
     setShowMessageModal(true);
   };
@@ -55,38 +70,45 @@ export const ContactActionHub = ({
     setMessageError(null);
 
     try {
-      // In production, this would send to a messages table
-      // For now, we'll simulate the send
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Here you would insert into a messages table:
-      // await supabase.from('messages').insert({
-      //   sender_id: currentUserId,
-      //   receiver_id: ownerId,
-      //   listing_id: listingId,
-      //   content: messageText,
-      //   created_at: new Date().toISOString(),
-      // });
-
+      const conv = await ensureConversation(listingId);
+      await sendMessage(conv.id, messageText);
       setMessageSent(true);
       setMessageText('');
       setTimeout(() => {
         setShowMessageModal(false);
         setMessageSent(false);
-      }, 2000);
+        navigate(`/poruke/${conv.id}`);
+      }, 1200);
     } catch (error) {
-      setMessageError(error instanceof Error ? error.message : 'Greška pri slanju poruke');
+      if (error instanceof NotAuthedError) {
+        setMessageError('Prijavite se za slanje poruke prodavaču.');
+      } else {
+        setMessageError(error instanceof Error ? error.message : 'Greška pri slanju poruke');
+      }
     } finally {
       setIsSendingMessage(false);
     }
   };
 
+  const draftScam = messageText ? detectScamSignals(messageText) : { suspicious: false, reasons: [] as string[] };
+
   return (
     <>
       {/* Action Buttons */}
       <div className="space-y-3">
-        {/* WhatsApp Lead Button */}
-        {contactPhone && (
+        {/* Internal Message Button — primary CTA, anti-scam path */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleMessageClick}
+          className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-none font-black uppercase tracking-widest text-xs hover:bg-primary/90 transition-all duration-300"
+        >
+          <Mail className="w-5 h-5" strokeWidth={2} />
+          Pošalji poruku prodavaču
+        </motion.button>
+
+        {/* WhatsApp Lead Button (gated by reveal when obfuscation is on) */}
+        {contactPhone && phoneRevealed && (
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -98,16 +120,27 @@ export const ContactActionHub = ({
           </motion.button>
         )}
 
-        {/* Internal Message Button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleMessageClick}
-          className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-black border border-white/10 text-white rounded-none font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all duration-300"
-        >
-          <Mail className="w-5 h-5" strokeWidth={2} />
-          Pošalji poruku
-        </motion.button>
+        {/* Phone reveal — anti-scam */}
+        {contactPhone && !phoneRevealed && (
+          <button
+            onClick={() => { setPhoneRevealed(true); trackLead(listingId, 'phone'); }}
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-card border border-border rounded-none text-foreground font-black uppercase tracking-widest text-xs hover:border-primary transition-all duration-300"
+          >
+            <Eye className="w-4 h-4" strokeWidth={1.5} />
+            <span className="tabular-nums opacity-70">{maskPhone(contactPhone)}</span>
+            <span className="opacity-60">— klikni za prikaz</span>
+          </button>
+        )}
+        {contactPhone && phoneRevealed && (
+          <a
+            href={`tel:${contactPhone}`}
+            onClick={() => trackLead(listingId, 'phone')}
+            className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-card border border-border rounded-none text-foreground font-black uppercase tracking-widest text-xs hover:border-primary transition-all duration-300"
+          >
+            <Phone className="w-4 h-4" strokeWidth={1.5} />
+            <span className="tabular-nums">{contactPhone}</span>
+          </a>
+        )}
 
         {/* Email Button (if available) */}
         {contactEmail && (
@@ -185,6 +218,15 @@ export const ContactActionHub = ({
                     </motion.div>
                   )}
 
+                  {/* Anti-scam tip when message contains red-flag patterns */}
+                  {draftScam.suspicious && (
+                    <div className="p-3 border border-amber-500/30 bg-amber-500/5">
+                      {draftScam.reasons.map((r) => (
+                        <p key={r} className="text-[10px] text-amber-300 leading-relaxed">{r}</p>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Message Input */}
                   <div>
                     <label className="block text-xs font-black uppercase tracking-widest text-white/60 mb-2">
@@ -194,10 +236,11 @@ export const ContactActionHub = ({
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                       placeholder="Napišite vašu poruku..."
+                      maxLength={4000}
                       className="w-full bg-black border border-white/10 rounded-none px-4 py-3 text-xs text-white placeholder-white/20 focus:outline-none focus:border-white/30 transition-all resize-none h-32"
                     />
                     <p className="text-xs text-neutral-500 mt-2">
-                      {messageText.length} / 500 znakova
+                      {messageText.length} / 4000 znakova
                     </p>
                   </div>
 
