@@ -1,9 +1,11 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Check, Building2, ShieldCheck, Crown, Sparkles, Zap, BarChart3, Users, Headphones, Globe } from 'lucide-react';
+import { Check, Building2, ShieldCheck, Crown, Sparkles, Zap, BarChart3, Users, Headphones, Globe, Loader2 } from 'lucide-react';
+import { startSubscriptionCheckout, getMySubscription, type SubTierId, type ProfileSubscription } from '../lib/subscription';
 
 interface Tier {
-  id: string;
+  id: SubTierId | 'enterprise';
   name: string;
   priceEur: number;
   period: string;
@@ -11,6 +13,7 @@ interface Tier {
   perks: { icon: any; text: string }[];
   highlighted?: boolean;
   ctaText: string;
+  contactOnly?: boolean;
 }
 
 const tiers: Tier[] = [
@@ -61,11 +64,42 @@ const tiers: Tier[] = [
       { icon: Headphones,   text: 'Dedicated account manager' },
       { icon: Globe,        text: 'Internacionalna distribucija (uskoro)' },
     ],
-    ctaText: 'Razgovaraj s timom',
+    ctaText: 'Pokreni Gold',
   },
 ];
 
 export const Pricing = () => {
+  const [params] = useSearchParams();
+  const cancelled = params.get('sub') === 'cancel';
+  const [me, setMe] = useState<ProfileSubscription | null>(null);
+  const [busy, setBusy] = useState<SubTierId | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    getMySubscription().then((p) => { if (alive) setMe(p); });
+    return () => { alive = false; };
+  }, []);
+
+  const onPick = async (tier: Tier) => {
+    setError(null);
+    if (tier.contactOnly || tier.id === 'enterprise') return;
+    const tierId = tier.id as SubTierId;
+    setBusy(tierId);
+    try {
+      const { url, error: err } = await startSubscriptionCheckout(tierId);
+      if (url) {
+        window.location.href = url;
+        return;
+      }
+      setError(err ?? 'Nepoznata greška.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Greška.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -137,19 +171,51 @@ export const Pricing = () => {
                 })}
               </ul>
 
-              <Link
-                to="/kontakt"
-                className={`block text-center px-5 py-3 text-[10px] font-light uppercase tracking-[0.25em] transition-colors ${
-                  tier.highlighted
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'border border-foreground text-foreground hover:bg-foreground hover:text-background'
-                }`}
-              >
-                {tier.ctaText}
-              </Link>
+              {tier.contactOnly ? (
+                <Link
+                  to="/kontakt"
+                  className={`block text-center px-5 py-3 text-[10px] font-light uppercase tracking-[0.25em] transition-colors ${
+                    tier.highlighted
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'border border-foreground text-foreground hover:bg-foreground hover:text-background'
+                  }`}
+                >
+                  {tier.ctaText}
+                </Link>
+              ) : (
+                <button
+                  onClick={() => onPick(tier)}
+                  disabled={busy !== null || (me?.subscription_tier === tier.id && me?.subscription_status === 'active')}
+                  className={`flex items-center justify-center gap-2 text-center px-5 py-3 text-[10px] font-light uppercase tracking-[0.25em] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    tier.highlighted
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'border border-foreground text-foreground hover:bg-foreground hover:text-background'
+                  }`}
+                >
+                  {busy === tier.id && <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />}
+                  {me?.subscription_tier === tier.id && me?.subscription_status === 'active'
+                    ? 'Trenutni plan'
+                    : tier.ctaText}
+                </button>
+              )}
             </div>
           ))}
         </div>
+
+        {(error || cancelled) && (
+          <div className="mt-6 max-w-xl mx-auto">
+            {cancelled && !error && (
+              <p className="text-xs font-light text-muted-foreground text-center border border-border px-4 py-3">
+                Pretplata otkazana — niste naplaćeni. Možete pokušati ponovo.
+              </p>
+            )}
+            {error && (
+              <p className="text-xs font-light text-red-500 text-center border border-red-500/30 px-4 py-3">
+                {error}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Comparison strip */}
         <div className="mt-20 lg:mt-24 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">

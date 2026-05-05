@@ -596,5 +596,36 @@ Append after each session. Format: date, what shipped, build status, next concre
   6. Set `VITE_SUPABASE_FUNCTIONS_URL` in `client/.env` and redeploy.
 - **Next concrete action:** Phase 9.3 — write `create-subscription-checkout`, `customer-portal`, extend `stripe-webhook` for `customer.subscription.created/updated/deleted`, add `subscription_tier` reads to UI for verified-dealer badge. Say "continue Vozila phase 9.3".
 
+### Checkpoint 2026-05-05 (phase 9.3 — Stripe Subscriptions + dealer badge)
+- **Shipped this session:**
+  - `supabase/functions/_shared/stripe.ts` — added `SubTierId` type, `SUB_PRICE_ENV` mapping, `priceIdToSubTier()` helper.
+  - `supabase/functions/create-subscription-checkout/index.ts` — Stripe Checkout in `mode=subscription`, reuses existing `stripe_customer_id` from profiles when available, attaches `user_id`+`tier` metadata to both session and `subscription_data`, allows promo codes, redirects to `/postavke?sub=success` on success.
+  - `supabase/functions/customer-portal/index.ts` — returns one-time Billing Portal URL, requires existing `stripe_customer_id` on profile.
+  - `supabase/functions/stripe-webhook/index.ts` — extended:
+    - `checkout.session.completed` for `kind=subscription` stashes `stripe_customer_id` on profile immediately (so portal works before subscription event lands).
+    - `customer.subscription.created` + `customer.subscription.updated` → `applySubscription()` writes `subscription_tier` (resolved via `priceIdToSubTier`), `subscription_status`, `subscription_renews_at`, `stripe_customer_id`.
+    - `customer.subscription.deleted` → null tier, status=`canceled`.
+    - `invoice.payment_failed` → status=`past_due` (matched by `stripe_customer_id`).
+  - `client/src/lib/subscription.ts` — `startSubscriptionCheckout()`, `openCustomerPortal()`, `getMySubscription()` (reads from `profiles`), `isVerifiedDealer()`, `tierLabel()`. Throws clean errors when JWT or `VITE_SUPABASE_FUNCTIONS_URL` missing.
+  - `client/src/components/listings/VerifiedDealerBadge.tsx` — tier-aware pill (Bronze=ShieldCheck amber, Silver=Award slate, Gold=Crown gold), `sm`+`md` sizes.
+  - `client/src/pages/Pricing.tsx` — Bronze/Silver CTAs (and Gold) now call `startSubscriptionCheckout`. "Trenutni plan" indicator when user is already on that tier. Shows error if Edge Function returns one. Reads `?sub=cancel` to show cancellation notice.
+  - `client/src/pages/Settings.tsx` — new "Pretplata" card at top: shows current tier + renewal date + "Upravljaj pretplatom" → Customer Portal. `past_due` state shows orange "Ažuriraj plaćanje" CTA. Empty state links to `/za-partnere`. Polls profile after `?sub=success` to give webhook time to land.
+  - `client/src/pages/DealerProfile.tsx` — fetches profile.subscription_tier alongside dealer row, replaces hand-rolled "Verificirani salon" pill with `<VerifiedDealerBadge>` when tier is active (falls back to dealer_verified pill otherwise).
+- **Build:** ✅ green, 2.14s, 187.61 kB initial gzip (+0.05 vs baseline). Pricing 7.41→9.06, Settings 7.62→11.28, DealerProfile 5.99→6.41 — all expected.
+- **Bugs / gaps still open after 9.3:**
+  - ListingCard + ListingDetail seller block do NOT yet show the dealer badge — needs an `owner` profile join in `ListingFeed` query and a small render change. Deferred to phase 9.4.
+  - No "force-feature" / "force-verify" admin actions yet — phase 13.
+  - Subscription tiers do NOT yet enforce listing limits (Bronze=15, Silver=50, Gold=∞) — needs wizard guard. Deferred to phase 9.4.
+  - Tier-based Boost credits (10€ / 40€ / 150€ monthly) NOT modeled — needs `boost_credits` table + monthly accrual cron. Deferred to phase 11.
+- **New env vars required for live test:**
+  - `STRIPE_PRICE_SUB_BRONZE`, `STRIPE_PRICE_SUB_SILVER`, `STRIPE_PRICE_SUB_GOLD` (Stripe Dashboard recurring prices).
+  - Webhook in Stripe Dashboard must now also listen for: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed` (in addition to `checkout.session.completed`).
+- **Devil's-advocate notes from this round:**
+  - *Customer Portal opens but user has no profile row yet?* — `handle_new_user()` trigger from migration 002 ensures every `auth.users` insert auto-creates `public.profiles`. Existing accounts backfilled by migration. Verify after running migration.
+  - *User upgrades Bronze → Gold mid-cycle?* — Stripe sends `customer.subscription.updated`, our handler resolves new `priceId` → new tier, profile updated. Test by changing in Customer Portal.
+  - *User cancels mid-cycle?* — `customer.subscription.deleted` only fires at period end (not immediate cancel). During the grace period, `subscription_status='active'` until period_end → badge stays. After period_end, deleted event nulls tier. Acceptable: user paid for the month.
+  - *Webhook order out of sequence?* — `checkout.session.completed` writes `stripe_customer_id`; `customer.subscription.created` writes tier+status. Both upsert by user_id, idempotent. If subscription event arrives first (rare), customer_id still gets written from its own `customer` field via `applySubscription`.
+- **Next concrete action:** Phase 9.4 — wire dealer badge into ListingCard + ListingDetail seller block (needs `owner` join in ListingFeed query); add listing-count guard to wizard so Bronze stops at 15 active. Then end-to-end live test with Stripe test card. Say "continue Vozila phase 9.4".
+
 ### Checkpoint <next>
 *(append next session)*

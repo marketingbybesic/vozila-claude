@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { ShieldCheck, MapPin, Phone, Mail, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ListingCard } from '../components/listings/ListingFeed';
+import { VerifiedDealerBadge } from '../components/listings/VerifiedDealerBadge';
+import type { SubTierId, SubStatus } from '../lib/subscription';
 import type { Listing } from '../types';
 
 interface DealerData {
@@ -18,6 +20,8 @@ interface DealerData {
   bio?: string;
   logo_url?: string;
   created_at?: string;
+  subscription_tier?: SubTierId | null;
+  subscription_status?: SubStatus;
 }
 
 // /saloni/:dealerSlug — public dealer profile.
@@ -38,6 +42,19 @@ export const DealerProfile = () => {
         const { data: u } = await supabase
           .from('users').select('*').eq('email', email).maybeSingle();
         const dealerRow = u as DealerData | null;
+
+        // Pull subscription state from profiles (canonical source).
+        if (dealerRow) {
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('subscription_tier, subscription_status')
+            .eq('id', dealerRow.id)
+            .maybeSingle();
+          if (prof) {
+            dealerRow.subscription_tier = (prof as any).subscription_tier ?? null;
+            dealerRow.subscription_status = (prof as any).subscription_status ?? null;
+          }
+        }
         setDealer(dealerRow);
 
         if (!dealerRow) {
@@ -112,12 +129,15 @@ export const DealerProfile = () => {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light uppercase tracking-[0.04em] text-foreground">
                   {display}
                 </h1>
-                {dealer.dealer_verified && (
+                {dealer.subscription_tier &&
+                  (dealer.subscription_status === 'active' || dealer.subscription_status === 'trialing') ? (
+                  <VerifiedDealerBadge tier={dealer.subscription_tier} size="md" />
+                ) : dealer.dealer_verified ? (
                   <span className="inline-flex items-center gap-1.5 px-2 py-1 border border-primary text-primary text-[9px] font-light uppercase tracking-[0.25em]">
                     <ShieldCheck className="w-3 h-3" strokeWidth={1.5} aria-hidden="true" />
                     Verificirani salon
                   </span>
-                )}
+                ) : null}
               </div>
 
               {dealer.bio && (

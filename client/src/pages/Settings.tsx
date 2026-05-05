@@ -1,15 +1,46 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { AlertTriangle, Trash2, ArrowLeft, Shield, User, Bell, BellRing } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { AlertTriangle, Trash2, ArrowLeft, Shield, User, Bell, BellRing, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
 import { deleteAccount } from '../lib/auth';
+import { getMySubscription, openCustomerPortal, tierLabel, type ProfileSubscription } from '../lib/subscription';
+import { VerifiedDealerBadge } from '../components/listings/VerifiedDealerBadge';
 
 export const Settings = () => {
+  const [params] = useSearchParams();
+  const subSuccess = params.get('sub') === 'success';
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [priceAlerts, setPriceAlerts] = useState(false);
+  const [sub, setSub] = useState<ProfileSubscription | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const reload = () => getMySubscription().then((p) => { if (alive) setSub(p); });
+    reload();
+    // After Checkout success, the webhook may take a beat; poll briefly.
+    if (subSuccess) {
+      const t = setTimeout(reload, 1500);
+      return () => { alive = false; clearTimeout(t); };
+    }
+    return () => { alive = false; };
+  }, [subSuccess]);
+
+  const handlePortal = async () => {
+    setPortalError(null);
+    setPortalBusy(true);
+    try {
+      const { url, error } = await openCustomerPortal();
+      if (url) { window.location.href = url; return; }
+      setPortalError(error ?? 'Greška.');
+    } finally {
+      setPortalBusy(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (confirmText.trim().toLowerCase() !== 'obrisi') return;
@@ -35,6 +66,73 @@ export const Settings = () => {
       <h1 className="text-xl font-light uppercase tracking-[0.2em] text-white mb-8">Postavke</h1>
 
       <div className="flex flex-col gap-6">
+        {/* Subscription Card */}
+        <div className="border border-white/10 bg-white/5 backdrop-blur-md p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <CreditCard className="w-5 h-5 text-white/40" strokeWidth={1.5} />
+            <h2 className="text-xs font-light uppercase tracking-[0.15em] text-white">Pretplata</h2>
+            {sub?.subscription_tier && (
+              <span className="ml-auto"><VerifiedDealerBadge tier={sub.subscription_tier} size="md" /></span>
+            )}
+          </div>
+
+          {subSuccess && (
+            <p className="text-xs font-light text-green-400 mb-4 border border-green-500/30 px-3 py-2">
+              Plaćanje je uspjelo. Status pretplate ažurira se u nekoliko sekundi.
+            </p>
+          )}
+
+          {sub?.subscription_tier && sub.subscription_status === 'active' ? (
+            <div className="space-y-3">
+              <p className="text-sm font-light text-white/70">
+                Aktivni plan: <span className="text-white">{tierLabel(sub.subscription_tier)}</span>
+              </p>
+              {sub.subscription_renews_at && (
+                <p className="text-xs font-light text-white/40">
+                  Sljedeća naplata: {new Date(sub.subscription_renews_at).toLocaleDateString('hr-HR')}
+                </p>
+              )}
+              <button
+                onClick={handlePortal}
+                disabled={portalBusy}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/5 text-white font-light uppercase tracking-[0.15em] text-[10px] border border-white/10 hover:bg-white/10 transition-all duration-300 disabled:opacity-50"
+              >
+                {portalBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />}
+                Upravljaj pretplatom
+              </button>
+              {portalError && (
+                <p className="text-[10px] font-light text-red-400">{portalError}</p>
+              )}
+            </div>
+          ) : sub?.subscription_status === 'past_due' ? (
+            <div className="space-y-3">
+              <p className="text-sm font-light text-orange-400">
+                Plaćanje nije uspjelo. Ažurirajte karticu da zadržite pristup.
+              </p>
+              <button
+                onClick={handlePortal}
+                disabled={portalBusy}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500/10 text-orange-400 font-light uppercase tracking-[0.15em] text-[10px] border border-orange-500/30 hover:bg-orange-500/20 transition-all duration-300 disabled:opacity-50"
+              >
+                {portalBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />}
+                Ažuriraj plaćanje
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm font-light text-white/40 leading-relaxed">
+                Nemate aktivnu pretplatu. Pretplate Bronze / Silver / Gold otključavaju verificiranu značku, više oglasa i Boost kredite.
+              </p>
+              <Link
+                to="/za-partnere"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-light uppercase tracking-[0.15em] text-[10px] hover:bg-primary/90 transition-colors"
+              >
+                Pogledaj pakete
+              </Link>
+            </div>
+          )}
+        </div>
+
         {/* Profile Card */}
         <div className="border border-white/10 bg-white/5 backdrop-blur-md p-6">
           <div className="flex items-center gap-3 mb-4">
