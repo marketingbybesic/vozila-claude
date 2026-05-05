@@ -28,14 +28,20 @@ interface FormData {
   description: string;
   contact_phone: string;
   contact_email: string;
-  
+
   // Step 2: Dynamic Attributes (JSONB)
   attributes: Record<string, any>;
-  
+
   // Step 3: Media
   heroImage: File | null;
   galleryImages: File[];
   damageImages: File[];
+
+  // Step 3b: Auction track (premium opt-in, BaT-style 7-day)
+  auctionEnabled: boolean;
+  auctionDays: number;
+  auctionStartingBid: number;
+  auctionReserve: number | null;
 }
 
 export const CreateListingWizard = () => {
@@ -58,6 +64,10 @@ export const CreateListingWizard = () => {
     heroImage: null,
     galleryImages: [],
     damageImages: [],
+    auctionEnabled: false,
+    auctionDays: 7,
+    auctionStartingBid: 0,
+    auctionReserve: null,
   });
 
   // Get current category filters
@@ -215,7 +225,29 @@ export const CreateListingWizard = () => {
 
       if (updateError) throw updateError;
 
-      // Navigate to listing detail
+      // Optional: opt this listing into the BaT-style auction track.
+      // RLS: auctions_seller_insert requires auth.uid() = seller_id, satisfied here.
+      if (formData.auctionEnabled) {
+        const days = Math.max(1, Math.min(30, formData.auctionDays || 7));
+        const endAt = new Date(Date.now() + days * 86_400_000).toISOString();
+        const { error: aucErr } = await supabase.from('auctions').insert({
+          listing_id: listing.id,
+          seller_id: user.id,
+          start_at: new Date().toISOString(),
+          end_at: endAt,
+          starting_bid_eur: Math.max(0, formData.auctionStartingBid || 0),
+          reserve_eur: formData.auctionReserve != null && formData.auctionReserve > 0
+            ? formData.auctionReserve : null,
+          status: 'live',
+        });
+        if (aucErr) {
+          // Non-fatal — listing is published, just couldn't enroll in auction.
+          console.warn('Auction enrolment failed:', aucErr.message);
+          alert('Oglas je objavljen, ali aukciju nismo uspjeli pokrenuti: ' + aucErr.message);
+        }
+      }
+
+      // Navigate to listing detail (or auction detail if enrolled).
       navigate(`/listing/${listing.id}`);
     } catch (error) {
       console.error('Error creating listing:', error);
@@ -349,7 +381,7 @@ export const CreateListingWizard = () => {
           >
             {currentStep === 1 && <Step1 formData={formData} setFormData={setFormData} />}
             {currentStep === 2 && <Step2 formData={formData} setFormData={setFormData} filters={currentFilters} onBack={handleBack} />}
-            {currentStep === 3 && <Step3 formData={formData} handleFileChange={handleFileChange} onBack={handleBack} />}
+            {currentStep === 3 && <Step3 formData={formData} setFormData={setFormData} handleFileChange={handleFileChange} onBack={handleBack} />}
           </motion.div>
         </AnimatePresence>
 
@@ -712,7 +744,7 @@ const Step2 = ({ formData, setFormData, filters, onBack }: any) => {
 };
 
 // Step 3: Triple-Zone Media Upload with Drag-and-Drop
-const Step3 = ({ formData, handleFileChange, onBack }: any) => {
+const Step3 = ({ formData, setFormData, handleFileChange, onBack }: any) => {
   const [uploadProgress] = useState(0);
   const [isUploading] = useState(false);
   const [dragActive, setDragActive] = useState<string | null>(null);
@@ -938,12 +970,84 @@ const Step3 = ({ formData, handleFileChange, onBack }: any) => {
         </div>
       </div>
 
+      {/* Auction track opt-in — premium BaT-style 7-day auction */}
+      <div className="border border-border bg-card p-6 space-y-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-light uppercase tracking-[0.3em] text-primary mb-2 inline-flex items-center gap-2">
+              <Tag className="w-3 h-3" strokeWidth={1.5} aria-hidden="true" />
+              Aukcija (premium)
+            </p>
+            <h3 className="text-base font-light uppercase tracking-tight text-foreground mb-2">
+              Pokreni 7-dnevnu aukciju
+            </h3>
+            <p className="text-xs font-light text-muted-foreground leading-relaxed">
+              Transparentno licitiranje s anti-snipe zaštitom. Vaše vozilo se pojavljuje na <code className="font-mono text-[10px]">/aukcija</code> uz oglas. Buyer premium 5%. Aukciju kuriraju administratori.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFormData((p: any) => ({ ...p, auctionEnabled: !p.auctionEnabled }))}
+            className={`relative w-12 h-6 transition-colors flex-shrink-0 ${
+              formData.auctionEnabled ? 'bg-primary border border-primary/40' : 'bg-muted/40 border border-border'
+            }`}
+            aria-pressed={formData.auctionEnabled}
+            aria-label="Toggle aukcija"
+          >
+            <span className={`absolute top-0.5 left-0.5 h-5 w-5 transition-transform ${
+              formData.auctionEnabled ? 'translate-x-6 bg-white' : 'translate-x-0 bg-foreground/40'
+            }`} />
+          </button>
+        </div>
+
+        {formData.auctionEnabled && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-border">
+            <label className="block">
+              <span className="block text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground mb-1.5">Trajanje (dana)</span>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={formData.auctionDays}
+                onChange={(e) => setFormData((p: any) => ({ ...p, auctionDays: Math.max(1, Math.min(30, Number(e.target.value) || 7)) }))}
+                className="w-full bg-background border border-border px-3 py-2 text-sm font-light text-foreground focus:outline-none focus:border-primary tabular-nums"
+              />
+            </label>
+            <label className="block">
+              <span className="block text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground mb-1.5">Početna ponuda (€)</span>
+              <input
+                type="number"
+                min={0}
+                value={formData.auctionStartingBid || ''}
+                onChange={(e) => setFormData((p: any) => ({ ...p, auctionStartingBid: Math.max(0, Number(e.target.value) || 0) }))}
+                placeholder="1000"
+                className="w-full bg-background border border-border px-3 py-2 text-sm font-light text-foreground focus:outline-none focus:border-primary tabular-nums"
+              />
+            </label>
+            <label className="block">
+              <span className="block text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground mb-1.5">Rezerva (€) <span className="opacity-60">— opcionalno</span></span>
+              <input
+                type="number"
+                min={0}
+                value={formData.auctionReserve ?? ''}
+                onChange={(e) => setFormData((p: any) => ({ ...p, auctionReserve: e.target.value === '' ? null : Math.max(0, Number(e.target.value)) }))}
+                placeholder="Bez rezerve"
+                className="w-full bg-background border border-border px-3 py-2 text-sm font-light text-foreground focus:outline-none focus:border-primary tabular-nums"
+              />
+            </label>
+            <p className="text-[10px] font-light uppercase tracking-[0.2em] text-muted-foreground sm:col-span-3 pt-1">
+              Ako rezerva nije postavljena, vozilo ide najboljem ponuđaču. Ako je postavljena i nije dostignuta, aukcija se završava bez prodaje.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Upload Progress Bar */}
       {isUploading && (
         <div className="space-y-2">
           <div className="w-full h-1 bg-muted rounded-none overflow-hidden">
             <motion.div
-              className="h-full bg-white"
+              className="h-full bg-foreground"
               animate={{ width: `${uploadProgress}%` }}
               transition={{ duration: 0.3 }}
             />

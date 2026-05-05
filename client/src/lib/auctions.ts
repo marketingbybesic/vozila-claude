@@ -121,7 +121,25 @@ export async function placeBid(auctionId: string, amount: number): Promise<Place
     p_amount: amount,
   });
   if (error) return { ok: false, error: error.message };
-  return (data ?? { ok: false, error: 'Nepoznata greška.' }) as PlaceBidResult;
+  const result = (data ?? { ok: false, error: 'Nepoznata greška.' }) as PlaceBidResult;
+  // Fire-and-forget outbid email to the previous high bidder.
+  if (result.ok) {
+    notifyOutbid(auctionId).catch(() => {});
+  }
+  return result;
+}
+
+async function notifyOutbid(auctionId: string): Promise<void> {
+  const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+  if (!fnUrl) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+  await fetch(`${fnUrl}/notify-auction-event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ kind: 'outbid', auction_id: auctionId }),
+  });
 }
 
 // Subscribe to real-time changes for a single auction (UPDATE + new bids).

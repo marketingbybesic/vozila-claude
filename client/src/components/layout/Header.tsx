@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { X, Plus, Sun, Moon, Heart, User, ChevronDown, Search, ChevronRight, LayoutDashboard, Settings as SettingsIcon, LogOut, LogIn } from 'lucide-react';
+import { X, Plus, Sun, Moon, Heart, User, ChevronDown, Search, ChevronRight, LayoutDashboard, Settings as SettingsIcon, LogOut, LogIn, Wrench, Gavel } from 'lucide-react';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { navigationMenu } from '../../config/taxonomy';
 import { supabase } from '../../lib/supabase';
@@ -16,6 +16,7 @@ export const Header = () => {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
+  const [authRole, setAuthRole] = useState<string | null>(null);
   const location = useLocation();
   // Active category derived from URL path (e.g. /osobni-automobili -> osobni-automobili)
   const activeCategory = location.pathname.startsWith('/')
@@ -29,17 +30,27 @@ export const Header = () => {
     const savedFavorites = JSON.parse(localStorage.getItem('vozila_favs') || '[]');
     setFavoritesCount(savedFavorites.length);
 
+    const loadRole = async (userId: string | undefined) => {
+      if (!userId) { setAuthRole(null); return; }
+      const { data } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
+      setAuthRole((data?.role ?? null) as string | null);
+    };
+
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setAuthUser(session?.user ?? null);
+      loadRole(session?.user?.id);
     };
     checkSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthUser(session?.user ?? null);
+      loadRole(session?.user?.id);
     });
     return () => { listener?.subscription.unsubscribe(); };
   }, []);
+
+  const showInspectorLink = authRole === 'inspector' || authRole === 'admin' || authRole === 'owner' || authRole === 'moderator';
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -104,9 +115,17 @@ export const Header = () => {
                     <Link to="/favoriti" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
                       <Heart className="h-4 w-4" strokeWidth={1.5} /> Favoriti
                     </Link>
+                    <Link to="/aukcija" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                      <Gavel className="h-4 w-4" strokeWidth={1.5} /> Aukcija
+                    </Link>
                     <Link to="/postavke" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
                       <SettingsIcon className="h-4 w-4" strokeWidth={1.5} /> Postavke
                     </Link>
+                    {showInspectorLink && (
+                      <Link to="/inspector" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-primary hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                        <Wrench className="h-4 w-4" strokeWidth={1.5} /> Inspector queue
+                      </Link>
+                    )}
                     <div className="border-t border-border" />
                     <button
                       onClick={async () => { await supabase.auth.signOut(); setUserMenuOpen(false); window.location.reload(); }}
