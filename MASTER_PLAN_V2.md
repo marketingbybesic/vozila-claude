@@ -1150,5 +1150,38 @@ Append after each session. Format: date, what shipped, build status, next concre
   3. `supabase functions deploy create-inspection-checkout`.
 - **Next:** Run live runbook v2 — at this point all 17 phases are code-complete and every revenue line has end-to-end fulfilment. Or polish: "my VIN reports + my inspections" card on `/postavke`, refund flow, inspector-assigned notification. Say `continue Vozila polish` for the polish pass, or report runbook results.
 
+### Checkpoint 2026-05-06 (polish — my-purchases card + cancel-inspection refund + inspector-assigned email)
+- **Shipped:**
+  - **`supabase/functions/cancel-inspection/index.ts`** — buyer-initiated cancel. State machine: `pending` → `canceled` (no refund), `paid|assigned` → `canceled` + Stripe refund via PaymentIntent, `completed` → reject (too late). Drops `inspection_canceled` notification with `refund_id` + `paid_eur` payload.
+  - **`supabase/functions/notify-inspection-event/index.ts`** — `kind='assigned'|'canceled'` body. 30-min dedupe sentinel keyed on `(user_id, type, payload->>booking_id)`. Routes through `_shared/email-inspections.ts` templates.
+  - **`supabase/functions/_shared/email-inspections.ts`** — `tplInspectionAssigned` (buyer learns inspector took the booking with date/window) + `tplInspectionCanceled` (refund-amount or no-refund variant).
+  - **`client/src/lib/vinReports.ts`** (new) — `listMyVinReports` + `VIN_STATUS_LABEL_HR` Croatian labels.
+  - **`client/src/lib/inspections.ts`** — `claimInspection` now fires `notify-inspection-event kind=assigned` after a successful claim. `cancelMyInspection(id)` helper for the buyer-side cancel button.
+  - **`client/src/lib/notifications.ts`** + **`NotificationsFlyout.tsx`** — `inspection_assigned` + `inspection_canceled` cases in `notificationLink` (route to `/postavke`), `notificationTitle` (Croatian labels), `iconFor` (AlertCircle).
+  - **`client/src/components/settings/MyPurchasesCard.tsx`** (new) — buyer's purchase inventory on `/postavke`. Renders only when there's at least one VIN report or inspection. Two sub-sections:
+    - **VIN reports:** VIN + date + status pill. `delivered` → "Preuzmi PDF" button linking to signed URL. `failed` → red pill (admin can retry).
+    - **Inspekcije:** listing link or address + date + preferred window + status pill. Cancelable rows (`pending|paid|assigned`) get an "Otkaži" button → calls `cancelMyInspection` → prompt confirm → surfaces refund_id on success.
+  - **`client/src/pages/Settings.tsx`** — `<MyPurchasesCard />` mounted as the first card in the stack (above Subscription) since it's the most-used recovery surface.
+- **Build:** ✅ green, 2.77s. **Bundle:**
+  - `index-*.js` 452.27 → **452.55 kB** (gzip 142.17 → **142.24 kB**, +0.07 — Settings imports the new card which pulls in `vinReports` + cancel path)
+  - `Inspector` 10.41 → 10.45 kB (+0.04 — `notifyInspectionAssigned` helper)
+  - `supabase-*.js` 50.74 kB gzip — unchanged ✓
+- **Mid-flight bug + recovery:** I accidentally `Write`-clobbered `client/src/lib/notifications.ts` with Edge Function source code (wrote the wrong file path). Restored from `HEAD` via `git checkout HEAD -- client/src/lib/notifications.ts`, re-applied the inspection cases via Edit, verified via grep before committing. Lesson: when writing a new Edge Function, double-check the destination path before pressing Write — the tool doesn't ask for confirmation.
+- **What this completes:** the buyer-side recovery loop. If a buyer loses the email, they can self-serve their VIN PDF (signed URL still valid) or check inspection status from `/postavke`. Cancel-inspection automates the refund the CTA promised in phase 17.
+- **Open after polish (deferred):**
+  - **Signed URL refresh after 30 days** — still no auto-renewal. If a buyer hits a `delivered` row in `MyPurchasesCard` whose URL has expired, the click 404s. Quick fix: the card calls a new `vin-report-refresh-url` Edge Function on click, which re-signs the path for another 30 days. Filed for next polish round.
+  - **Cancel-inspection partial refund** — currently full 100 EUR refund. If we want a fee structure ("non-refundable 20 EUR after assignment"), needs a more nuanced state machine.
+  - **Buyer-facing cancel reason** — currently free-form `confirm()` dialog; a dropdown of common reasons would feed admin analytics.
+- **Devil's-advocate:**
+  - *Multiple cancel attempts on the same row?* The Edge Function returns `already_canceled` no-op on the second call. Idempotent.
+  - *Refund fails after status flip?* The function returns the error early before flipping; row stays `paid|assigned`. Buyer can retry. Worst case admin handles via Stripe Dashboard.
+  - *Notification dedupe could swallow a legitimate second `assigned` (e.g. inspector swap).* 30-min window is appropriate; if admin re-assigns immediately, second email is silent. If they wait > 30 min, second email lands. Acceptable for v1.
+  - *MyPurchasesCard renders nothing when empty.* Returns `null` early so no empty card chrome appears for users who haven't bought anything.
+- **Manual deploy:**
+  - `supabase functions deploy cancel-inspection`
+  - `supabase functions deploy notify-inspection-event`
+  - No new env vars; reuses `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, `EMAIL_HMAC_SECRET`.
+- **Next:** Live runbook v2 walk-through against real Supabase + Stripe + Resend. Or a second polish pass — VIN URL refresh, partial-refund logic, cancel-reason analytics. Say `continue Vozila polish` for round 2 or report runbook results.
+
 ### Checkpoint <next>
 *(append next session)*
