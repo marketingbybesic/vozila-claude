@@ -126,6 +126,9 @@ export function notificationLink(n: NotificationRow): string | null {
       const url = n.payload?.report_url;
       return typeof url === 'string' && url ? url : '/postavke';
     }
+    case 'inspection_assigned':
+    case 'inspection_canceled':
+      return '/postavke';
     case 'ai_copy_call':
       // Internal sentinel — not user-visible navigation.
       return null;
@@ -176,6 +179,10 @@ export function notificationTitle(n: NotificationRow): string {
       const vin = n.payload?.vin;
       return vin ? `VIN izvještaj spreman — ${vin}` : 'VIN izvještaj spreman';
     }
+    case 'inspection_assigned':
+      return 'Inspektor je preuzeo rezervaciju';
+    case 'inspection_canceled':
+      return 'Rezervacija inspekcije otkazana';
     default:
       return n.type;
   }

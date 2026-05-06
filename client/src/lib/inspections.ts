@@ -69,7 +69,43 @@ export async function claimInspection(id: string): Promise<{ ok: boolean; error?
     .eq('id', id)
     .eq('status', 'paid');  // optimistic lock — only claim if still unassigned
   if (error) return { ok: false, error: error.message };
+  // Fire-and-forget buyer notification email.
+  notifyInspectionAssigned(id).catch(() => {});
   return { ok: true };
+}
+
+async function notifyInspectionAssigned(bookingId: string): Promise<void> {
+  const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+  if (!fnUrl) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return;
+  await fetch(`${fnUrl}/notify-inspection-event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ kind: 'assigned', booking_id: bookingId }),
+  });
+}
+
+// Buyer-initiated cancel — refunds via Stripe if paid.
+export async function cancelMyInspection(id: string): Promise<{ ok: boolean; refunded?: boolean; refund_id?: string | null; error?: string }> {
+  const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+  if (!fnUrl) return { ok: false, error: 'Servis nije dostupan.' };
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) return { ok: false, error: 'Sesija je istekla.' };
+  try {
+    const res = await fetch(`${fnUrl}/cancel-inspection`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ booking_id: id }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: j?.error ?? `(${res.status})` };
+    return j;
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Mrežna greška.' };
+  }
 }
 
 export async function uploadInspectionReport(args: {

@@ -4,6 +4,7 @@ import { AlertTriangle, Trash2, ArrowLeft, Shield, User, Bell, BellRing, CreditC
 import { deleteAccount } from '../lib/auth';
 import { getMySubscription, openCustomerPortal, tierLabel, type ProfileSubscription } from '../lib/subscription';
 import { VerifiedDealerBadge } from '../components/listings/VerifiedDealerBadge';
+import { MyPurchasesCard } from '../components/settings/MyPurchasesCard';
 import { supabase } from '../lib/supabase';
 
 export const Settings = () => {
@@ -100,6 +101,9 @@ export const Settings = () => {
       <h1 className="text-xl font-light uppercase tracking-[0.2em] text-foreground mb-8">Postavke</h1>
 
       <div className="flex flex-col gap-6">
+        {/* Purchases inventory — VIN reports + inspections */}
+        <MyPurchasesCard />
+
         {/* Subscription Card */}
         <div className="border border-border bg-card p-6">
           <div className="flex items-center gap-3 mb-4">
