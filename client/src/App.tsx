@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import { HelmetProvider } from 'react-helmet-async';
+import { MotionConfig } from 'framer-motion';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
@@ -51,12 +52,25 @@ function App() {
 
   return (
     <HelmetProvider>
+      {/* RESPONSIVE_AUDIT R8: respect user's prefers-reduced-motion OS
+          setting. WCAG 2.3.3 — disables hover-scale, slide-in panels,
+          framer-motion variants for users with vestibular disorders. */}
+      <MotionConfig reducedMotion="user">
       <BrowserRouter>
         <NuqsAdapter>
+          {/* Skip-to-content link — RESPONSIVE_AUDIT R15. Visually hidden
+              until keyboard-focused; lets keyboard users bypass the
+              header on every page. */}
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:text-xs focus:font-light focus:uppercase focus:tracking-widest"
+          >
+            Preskoči na sadržaj
+          </a>
           <div className="flex flex-col min-h-screen bg-background text-foreground">
             <Header />
 
-            <main className="flex-1 flex flex-col">
+            <main id="main" className="flex-1 flex flex-col">
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -107,6 +121,7 @@ function App() {
           </div>
         </NuqsAdapter>
       </BrowserRouter>
+      </MotionConfig>
     </HelmetProvider>
   );
 }

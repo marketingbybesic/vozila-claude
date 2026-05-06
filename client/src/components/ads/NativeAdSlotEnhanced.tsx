@@ -131,11 +131,19 @@ export const NativeAdSlot = ({ adId, userRole, isLoggedIn = false }: NativeAdSlo
           </div>
         )}
 
-        {/* HTML Ad */}
+        {/* HTML Ad — SECURITY_AUDIT S1 patch: dangerouslySetInnerHTML on
+            admin-supplied content was a stored-XSS risk (single admin
+            compromise = JS execution on every ad render with full
+            session/token access). HTML ads now render inside a sandboxed
+            iframe with no allow-* flags — full HTML+CSS but no JS in our
+            origin, no localStorage, no cookies. Third-party script ads
+            (AdSense etc) should use the image+target_link pattern. */}
         {ad.ad_type === 'html' && ad.html_content && (
-          <div
-            className="w-full h-full"
-            dangerouslySetInnerHTML={{ __html: ad.html_content }}
+          <iframe
+            title="Reklama"
+            sandbox=""
+            srcDoc={ad.html_content}
+            className="w-full h-full border-0"
           />
         )}
 
