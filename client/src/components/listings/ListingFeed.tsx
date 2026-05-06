@@ -6,7 +6,7 @@ import { getAnalytics } from '../../lib/analytics';
 import {
   Calendar, Gauge, Zap, SlidersHorizontal, ChevronDown, ChevronUp,
   Box, Clock, ArrowDown10, ArrowUp01, Eye, ChevronLeft, ChevronRight,
-  ShieldCheck, Sparkles, Star, Loader2
+  ShieldCheck, Sparkles, Star, Loader2, X
 } from 'lucide-react';
 import { navigationMenu } from '../../config/taxonomy';
 import { globalFilters, categoryFilters, FilterDefinition } from '../../config/filters';
@@ -572,8 +572,37 @@ export const ListingFeed = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  // RESPONSIVE_AUDIT R3: filter sidebar collapse on <xl. Below the xl
+  // breakpoint the inline aside is hidden and surfaced as a bottom-sheet
+  // drawer triggered by the "Filteri" button. Restores buyer-feed
+  // viewport so the listings grid is the first thing on phone/tablet.
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const sortBy = queryState.sort;
+
+  // Counter for the "Filteri (N)" badge on the mobile trigger button.
+  // Only counts filters the user has explicitly set (skips defaults).
+  const activeFilterCount = (() => {
+    let n = 0;
+    if (queryState.make) n++;
+    if (queryState.model) n++;
+    if (queryState.lat) n++;
+    for (const f of globalFilters) {
+      const v = (queryState as any)[f.id];
+      if (v !== null && v !== undefined && v !== '') n++;
+    }
+    return n;
+  })();
+
+  // Lock body scroll while the drawer is open. Without this the
+  // background page scrolls under the bottom sheet on iOS Safari.
+  useEffect(() => {
+    if (filtersOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [filtersOpen]);
 
   const currentCategory = navigationMenu.find(c => c.slug === categorySlug);
   const displayTitle = currentCategory ? currentCategory.name : 'SVI OGLASI';
@@ -920,7 +949,7 @@ export const ListingFeed = () => {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 max-w-[1700px] flex flex-col xl:flex-row gap-8 lg:gap-12">
 
-        <aside className="w-full xl:w-[320px] flex-shrink-0">
+        <aside className="hidden xl:block xl:w-[320px] flex-shrink-0">
           <div className="sticky top-24 relative">
             <div className="absolute inset-0 bg-primary/5 blur-[50px] rounded-none -z-10 pointer-events-none"></div>
 
@@ -1031,6 +1060,139 @@ export const ListingFeed = () => {
           </div>
         </aside>
 
+        {/* RESPONSIVE_AUDIT R3: Bottom-sheet filter drawer for <xl screens.
+            Same filter content as the desktop aside; toggled by the
+            "Filteri" button in the sort row. Backdrop click + close button
+            both dismiss. Body scroll-lock applied via the filtersOpen
+            useEffect above. */}
+        {filtersOpen && (
+          <div className="xl:hidden fixed inset-0 z-[120]" role="dialog" aria-modal="true" aria-label="Filteri">
+            <button
+              type="button"
+              aria-label="Zatvori filtere"
+              onClick={() => setFiltersOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            />
+            <div className="absolute inset-x-0 bottom-0 max-h-[88vh] bg-card border-t border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-300 safe-area-pb">
+              {/* Sticky header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <SlidersHorizontal className="w-5 h-5 text-primary" strokeWidth={1.5} aria-hidden="true" />
+                  <h3 className="text-sm font-black uppercase tracking-widest text-foreground">
+                    Filteri{activeFilterCount > 0 && <span className="ml-2 text-primary tabular-nums">({activeFilterCount})</span>}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  className="w-11 h-11 -mr-2 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Zatvori"
+                >
+                  <X className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
+              {/* Scrollable filter body — same content as desktop aside */}
+              <div className="flex-1 overflow-y-auto px-5 py-5 overscroll-contain">
+                <div className="space-y-2">
+                  <Accordion title="Marka i Model" defaultOpen={true}>
+                    <MakeModelFilter
+                      selectedMake={queryState.make}
+                      selectedModel={queryState.model}
+                      onMakeChange={(make) => setQueryState({ make: make || null, model: null } as any)}
+                      onModelChange={(model) => setQueryState({ model: model || null } as any)}
+                      categorySlug={categorySlug}
+                    />
+                  </Accordion>
+
+                  <Accordion title="Lokacija" defaultOpen={false}>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Grad</label>
+                        <select
+                          onChange={(e) => {
+                            const [lat, lng] = e.target.value.split(',');
+                            setQueryState({ lat: lat || null, lng: lng || null } as any);
+                          }}
+                          className="w-full bg-background/50 border border-border/60 rounded-none px-3 py-3 text-base focus:ring-1 focus:ring-primary appearance-none outline-none transition-all"
+                        >
+                          <option value="">Odaberi grad...</option>
+                          <option value="45.815,15.981">Zagreb</option>
+                          <option value="43.508,16.440">Split</option>
+                          <option value="45.327,14.442">Rijeka</option>
+                          <option value="42.650,18.094">Dubrovnik</option>
+                          <option value="45.555,18.694">Osijek</option>
+                          <option value="44.119,15.231">Zadar</option>
+                          <option value="46.304,16.337">Varaždin</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          Radijus: {queryState.radius || 50} km
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="200"
+                          value={queryState.radius || 50}
+                          onChange={(e) => setQueryState({ radius: parseInt(e.target.value) } as any)}
+                          className="w-full accent-primary"
+                        />
+                      </div>
+                    </div>
+                  </Accordion>
+
+                  <Accordion title="Osnovno" defaultOpen={true}>
+                    <div className="space-y-4">
+                      {globalFilters.map((filter) => (
+                        <div key={filter.id} className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            {filter.label} {filter.unit && `(${filter.unit})`}
+                          </label>
+                          {renderFilterInput(filter)}
+                        </div>
+                      ))}
+                    </div>
+                  </Accordion>
+
+                  {currentCatFilters && currentCatFilters.length > 0 && (
+                    <Accordion title="Karakteristike" defaultOpen={true}>
+                      <div className="space-y-4">
+                        {currentCatFilters.map((filter) => (
+                          <div key={filter.id} className="space-y-2">
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                              {filter.label} {filter.unit && `(${filter.unit})`}
+                            </label>
+                            {renderFilterInput(filter)}
+                          </div>
+                        ))}
+                      </div>
+                    </Accordion>
+                  )}
+                </div>
+              </div>
+              {/* Sticky footer — Apply button closes the drawer */}
+              <div className="flex-shrink-0 px-5 py-4 border-t border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchListings(false);
+                    try {
+                      const analytics = getAnalytics();
+                      analytics.trackSearchPerformed(queryState.make || 'filter_applied', queryState as any);
+                    } catch {
+                      // Analytics not initialized yet
+                    }
+                    setFiltersOpen(false);
+                  }}
+                  className="w-full h-12 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs hover:opacity-90 transition-opacity shadow-xl"
+                >
+                  Prikaži {totalCount > 0 ? `${totalCount} oglasa` : 'rezultate'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 flex flex-col min-w-0">
           {/* Saved searches strip — driver of return visits */}
           <SavedSearchesBar
@@ -1064,7 +1226,25 @@ export const ListingFeed = () => {
               )}
             </div>
 
-            <SortDropdown value={sortBy} onChange={(v: string) => setQueryState({ sort: v } as any)} />
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* RESPONSIVE_AUDIT R3: Filteri trigger — opens bottom-sheet drawer
+                  on <xl. Hidden on xl+ where the inline aside takes over. */}
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(true)}
+                className="xl:hidden inline-flex items-center gap-2 px-4 h-11 border border-border bg-card hover:bg-accent text-xs font-light uppercase tracking-widest text-foreground transition-colors min-w-[44px]"
+                aria-label={`Otvori filtere${activeFilterCount > 0 ? `, aktivno: ${activeFilterCount}` : ''}`}
+              >
+                <SlidersHorizontal className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+                Filteri
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-primary text-primary-foreground text-[10px] font-black tabular-nums">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+              <SortDropdown value={sortBy} onChange={(v: string) => setQueryState({ sort: v } as any)} />
+            </div>
           </div>
 
           {loading && page === 0 ? (

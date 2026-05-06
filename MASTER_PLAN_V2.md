@@ -1298,5 +1298,28 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(c)** More responsive polish: R2 (bottom-sheet menu) + R3 (filter sidebar collapse) — biggest mobile UX wins.
   - **(d)** Live runbook v2 walk-through.
 
+### Checkpoint — R3 filter sidebar collapse on mobile (2026-05-06)
+
+- **What landed:** RESPONSIVE_AUDIT R3, the single biggest mobile UX win on the buyer-feed page.
+  - `client/src/components/listings/ListingFeed.tsx` — inline `<aside>` switched from `w-full xl:w-[320px]` to `hidden xl:block xl:w-[320px]`, so it no longer takes the full mobile viewport above the listings.
+  - New "Filteri" trigger button in the sort row, visible only on `<xl` screens, with a primary-colored badge counter showing the number of active filters (make / model / city + every populated `globalFilters` value). 44×44 minimum touch target. Hidden on `xl:` desktop where the inline sidebar is sufficient.
+  - New bottom-sheet drawer rendered as a fixed `inset-0 z-[120]` overlay (z-120 to sit above MobileBottomNav at z-100). Backdrop click + X button + "Prikaži rezultate" footer button all dismiss. Body scroll-lock applied via `useEffect` on `filtersOpen`.
+  - Drawer reuses the same Accordion + MakeModelFilter + globalFilters / categoryFilters JSX as the desktop aside — no shared sub-component (intentional, no abstraction). Inputs use `py-3 text-base` instead of the desktop `py-2 text-xs` so they hit the 16px floor and avoid iOS auto-zoom (RESPONSIVE_AUDIT R9 reinforcement).
+  - Apply button calls the same `fetchListings(false)` + analytics tracking the desktop button calls, then closes the drawer.
+- **Build:** ✓ green in 2.07s. Main bundle `index-le8SzeED.js` = 458.87 kB / 143.65 kB gzip — identical to pre-change baseline.
+- **Visual proof (Playwright headless, viewports 390 / 768 / 1440):**
+  - Mobile 390×844: only the AUTOMOBILI heading, FILTERI button + sort dropdown, then content. No more giant filter wall above the listings.
+  - Tablet 768×1024: same — drawer trigger + sort, no inline aside.
+  - Desktop 1440×900: inline aside "NAPREDNA PRETRAGA" sidebar visible on the left, no FILTERI trigger button visible (`xl:hidden` hides it). Sort dropdown alone in the row.
+  - Drawer open: bottom-sheet covers ~88vh, FILTERI header + X close button sticky on top, MARKA I MODEL / LOKACIJA / OSNOVNO / KARAKTERISTIKE accordions in the scrollable body, sticky "PRIKAŽI REZULTATE" button at the bottom. MobileBottomNav correctly hidden behind the drawer (z-120 > z-100).
+- **Why this matters:** On phone, the buyer-feed page was previously: 1500px+ of stacked filter accordions before any car cards. Now the cards are above-the-fold and filters are one tap away. This is the biggest single UX delta on the most-visited page on the site.
+- **Devil's-advocate:**
+  - *Drawer duplicates ~95 lines of filter JSX rather than sharing a sub-component.* Yes — chosen deliberately. Per CLAUDE.md "minimal edits, one focused change per edit, no refactoring, preserve all other code". Extracting now would require lifting `setQueryState`, `categorySlug`, `currentCatFilters`, `renderFilterInput`, `fetchListings` into props or context — refactor risk on a working page. The duplication is bounded and audit-ably identical to the desktop block.
+  - *Body scroll-lock via `document.body.style.overflow = 'hidden'`.* Standard pattern, restores prior value on unmount, no jank observed. Doesn't lock html overflow — iOS Safari's bouncy scroll is contained by the drawer's own `overflow-y-auto overscroll-contain`.
+  - *FILTERI button ships even on viewports where the desktop aside is shown.* It does (DOM-present), but `xl:hidden` keeps `display:none` on `xl:` and up. No flash, no layout shift.
+  - *Active filter count uses a truthy heuristic on every globalFilter.* Works for the current shape. If a global filter ever ships with a non-empty default, the count will inflate. Cheap to fix when that happens.
+- **Not in this turn:** R2 bottom-sheet header menu, R4 fluid typography, R7 aspect-ratio consolidation, R10 container queries, R11 `--header-height` var, R12-R13 image srcset, R16 focus return. All polish, not broken today.
+- **Files changed (1):** `client/src/components/listings/ListingFeed.tsx` (+183 / -3).
+
 ### Checkpoint <next>
 *(append next session)*
