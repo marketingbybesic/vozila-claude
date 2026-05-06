@@ -1183,5 +1183,33 @@ Append after each session. Format: date, what shipped, build status, next concre
   - No new env vars; reuses `STRIPE_SECRET_KEY`, `RESEND_API_KEY`, `EMAIL_HMAC_SECRET`.
 - **Next:** Live runbook v2 walk-through against real Supabase + Stripe + Resend. Or a second polish pass — VIN URL refresh, partial-refund logic, cancel-reason analytics. Say `continue Vozila polish` for round 2 or report runbook results.
 
+### Checkpoint 2026-05-06 (polish round 2 — VIN URL refresh + cancel-reason analytics)
+- **Shipped:**
+  - **Migration `010_cancel_reason.sql`** (idempotent): `inspection_bookings.cancel_reason` + `cancel_notes` + `canceled_at`. `vin_reports.signed_url_expires_at` + `storage_path`. Partial indexes on both for analytics + future "URL about to expire" digest cron.
+  - **Edge Function `vin-report-refresh-url`** — POST `{report_id}`, ownership + delivered-status guard, re-signs the same `vin-reports/<user>/<id>.pdf` for another 30 days, persists fresh `report_url` + `signed_url_expires_at`. Handles legacy rows missing `storage_path` by recomputing.
+  - **`vin-report-generator`** — now persists `signed_url_expires_at` + `storage_path` on every render so the refresh function and client `isUrlStale` heuristic can pre-empt expiry.
+  - **`cancel-inspection`** — accepts `{booking_id, reason?, notes?}`. 7-value reason accept-list (`found_other_inspector`, `no_longer_buying`, `seller_unresponsive`, `scheduling_conflict`, `price_changed`, `vehicle_sold`, `other`); anything else collapses to `other`. Persists `cancel_reason` + `cancel_notes` + `canceled_at` + threads `reason` into the `inspection_canceled` notification payload.
+  - **`client/src/lib/vinReports.ts`** — `VinReportRow` extended with the two new fields. `refreshVinReportUrl(id)` helper. `isUrlStale(row)` heuristic: true when missing OR expires within 1 hour.
+  - **`client/src/lib/inspections.ts`** — `CancelReason` type + `CANCEL_REASON_LABEL_HR` Croatian label map. `cancelMyInspection(id, reason?, notes?)` signature extended.
+  - **`client/src/components/settings/CancelInspectionModal.tsx`** (new) — Radix Dialog replacing the prior `confirm()` + `alert()`. 7 reason radios + optional notes textarea + dynamic refund copy ("Iznos od X € vraćamo na karticu, 5–10 radnih dana" or "Niste plaćeni — nema povrata sredstava"). Submit shows a busy spinner.
+  - **`MyPurchasesCard`** — VIN PDF link's onClick intercepts when `isUrlStale`, calls `refreshVinReportUrl`, opens fresh URL in new tab. Fresh links work as plain anchor (no JS interception). Cancel button now opens the modal instead of `confirm()`. `onCanceled` callback handles the refund alert + reload.
+- **Build:** ✅ green, 3.45s. index **452.55 kB** (gzip **142.24 kB**, unchanged) — new code replaces removed inline confirm/alert code at roughly the same byte cost. Supabase chunk 50.74 kB gzip unchanged ✓.
+- **Mid-flight bug + recovery:** an earlier Edit to `lib/inspections.ts` silently failed file-not-read precondition. Build caught it via `[MISSING_EXPORT] CANCEL_REASON_LABEL_HR`. Re-Read + re-applied, build now green. Pattern: when sed/Write/Edit churn happens in one turn, **always grep-verify the actual exports before declaring done**. The build is the only honest gate.
+- **Open after polish 2 (deferred):**
+  - **Admin analytics tab for cancel reasons** — column is now populated; needs an admin/section=insights tile or a chart in /admin?section=overview. Trivial, deferred.
+  - **"URL about to expire" digest cron** — index is in place; could send a 7-day-pre-expiry email to nudge buyers to re-download. Low priority unless we see a tail of expired-URL refreshes.
+  - **Admin cancel-inspection (override on completed)** — currently `completed` rejects cancel; rare edge case where admin needs to refund a botched inspection. Add via admin queue.
+- **Devil's-advocate:**
+  - *URL-refresh costs nothing for buyer.* Yes — re-signing the same Storage object is free server-side, signed URLs are cheap to generate. Buyer gets infinite re-downloads as long as the row stays in `delivered`.
+  - *Reason whitelist could miss legitimate user feedback.* The `notes` free-text field captures whatever the radio doesn't. Admin reads both.
+  - *isUrlStale 1-hour buffer.* Generous — accounts for slow user clicks, slight clock drift. URL is still valid for the next 30 days post-refresh, so no harm in early refresh.
+- **Manual deploy:**
+  - `psql "$DATABASE_URL" -f server/db/migrations/010_cancel_reason.sql`
+  - `supabase functions deploy vin-report-refresh-url`
+  - `supabase functions deploy vin-report-generator` (re-deploy: now persists signed_url_expires_at)
+  - `supabase functions deploy cancel-inspection` (re-deploy: now persists cancel_reason)
+  - No new env vars.
+- **Next:** Live runbook v2 walk-through against real services (highest leverage), or `continue Vozila polish` for round 3 (admin cancel analytics tile, URL-expiry digest cron, admin cancel-inspection-on-completed).
+
 ### Checkpoint <next>
 *(append next session)*
