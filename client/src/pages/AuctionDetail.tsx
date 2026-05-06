@@ -186,7 +186,7 @@ export const AuctionDetail = () => {
         </div>
 
         {/* Sidebar — bid panel */}
-        <aside className="lg:sticky lg:top-24 self-start">
+        <aside className="lg:sticky lg:sticky-below-header self-start">
           <div className="border border-border bg-card p-5 space-y-4">
             <span className={`inline-flex px-2 py-1 text-[9px] font-light uppercase tracking-[0.25em] border ${
               isLive ? 'border-primary/40 bg-primary/5 text-primary'

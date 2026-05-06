@@ -10,6 +10,7 @@ import { SuperSearchModal } from '../search/SuperSearchModal';
 // includes the message-quick-link tile + counts, so two bells in the
 // header were redundant + confusing.
 import { NotificationsFlyout } from './NotificationsFlyout';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/Popover';
 
 export const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -108,55 +109,62 @@ export const Header = () => {
             )}
           </Link>
           <NotificationsFlyout />
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300"
+          {/* RESPONSIVE_AUDIT R16: Radix Popover handles focus return on
+              Escape/click-outside, aria-expanded/controls, focus trap. */}
+          <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
+            <PopoverTrigger asChild>
+              <button
+                aria-label={authUser ? 'Korisnički izbornik' : 'Prijava / Registracija'}
+                className="px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <User className="h-5 w-5" strokeWidth={1.5} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              sideOffset={8}
+              className="w-56 p-0 border-border z-[60]"
             >
-              <User className="h-5 w-5" strokeWidth={1.5} />
-            </button>
-            {userMenuOpen && (
-              <div className="absolute top-full right-0 mt-1 w-56 bg-background border border-border shadow-2xl z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
-                {authUser ? (
-                  <>
-                    <Link to="/profil" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                      <User className="h-4 w-4" strokeWidth={1.5} /> Profil
+              {authUser ? (
+                <div role="menu" aria-orientation="vertical">
+                  <Link to="/profil" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                    <User className="h-4 w-4" strokeWidth={1.5} /> Profil
+                  </Link>
+                  <Link to="/dashboard" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                    <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} /> Moji oglasi
+                  </Link>
+                  <Link to="/favoriti" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                    <Heart className="h-4 w-4" strokeWidth={1.5} /> Favoriti
+                  </Link>
+                  <Link to="/aukcija" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                    <Gavel className="h-4 w-4" strokeWidth={1.5} /> Aukcija
+                  </Link>
+                  <Link to="/postavke" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                    <SettingsIcon className="h-4 w-4" strokeWidth={1.5} /> Postavke
+                  </Link>
+                  {showInspectorLink && (
+                    <Link to="/inspector" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-primary hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                      <Wrench className="h-4 w-4" strokeWidth={1.5} /> Inspector queue
                     </Link>
-                    <Link to="/dashboard" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                      <LayoutDashboard className="h-4 w-4" strokeWidth={1.5} /> Moji oglasi
-                    </Link>
-                    <Link to="/favoriti" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                      <Heart className="h-4 w-4" strokeWidth={1.5} /> Favoriti
-                    </Link>
-                    <Link to="/aukcija" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                      <Gavel className="h-4 w-4" strokeWidth={1.5} /> Aukcija
-                    </Link>
-                    <Link to="/postavke" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                      <SettingsIcon className="h-4 w-4" strokeWidth={1.5} /> Postavke
-                    </Link>
-                    {showInspectorLink && (
-                      <Link to="/inspector" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-primary hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                        <Wrench className="h-4 w-4" strokeWidth={1.5} /> Inspector queue
-                      </Link>
-                    )}
-                    <div className="border-t border-border" />
-                    <button
-                      onClick={async () => { await supabase.auth.signOut(); setUserMenuOpen(false); window.location.reload(); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-xs font-light text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all duration-200 uppercase tracking-widest"
-                    >
-                      <LogOut className="h-4 w-4" strokeWidth={1.5} /> Odjava
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/profil" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
-                      <LogIn className="h-4 w-4" strokeWidth={1.5} /> Prijava / Registracija
-                    </Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+                  )}
+                  <div className="border-t border-border" />
+                  <button
+                    role="menuitem"
+                    onClick={async () => { await supabase.auth.signOut(); setUserMenuOpen(false); window.location.reload(); }}
+                    className="flex items-center gap-3 w-full px-4 py-3 text-xs font-light text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all duration-200 uppercase tracking-widest"
+                  >
+                    <LogOut className="h-4 w-4" strokeWidth={1.5} /> Odjava
+                  </button>
+                </div>
+              ) : (
+                <div role="menu" aria-orientation="vertical">
+                  <Link to="/profil" role="menuitem" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-xs font-light text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 uppercase tracking-widest">
+                    <LogIn className="h-4 w-4" strokeWidth={1.5} /> Prijava / Registracija
+                  </Link>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Right: Predaj oglas + Mobile Search + Hamburger */}

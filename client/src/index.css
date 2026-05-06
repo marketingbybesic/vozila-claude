@@ -37,6 +37,11 @@
     --fs-h1:      clamp(1.75rem, 1rem + 3vw, 3.5rem);     /* 28px → 56px (page H1s) */
     --fs-h2:      clamp(1.25rem, 0.875rem + 1.5vw, 2rem); /* 20px → 32px (section headings) */
     --fs-body:    clamp(0.9375rem, 0.875rem + 0.25vw, 1.0625rem); /* 15px → 17px (long-form body) */
+
+    /* RESPONSIVE_AUDIT R11: single source of truth for the sticky <Header>
+       inner row height (h-16 = 4rem = 64px). Sticky sidebars/sub-navs offset
+       from this var so any header-height change propagates everywhere. */
+    --header-height: 4rem;
   }
 
   .dark {
@@ -135,6 +140,12 @@
   .safe-area-bottom-offset {
     bottom: calc(60px + env(safe-area-inset-bottom, 0));
   }
+
+  /* RESPONSIVE_AUDIT R11: sticky offset that tracks the live --header-height.
+     Adds 2rem of breathing room below the sticky header so sidebars don't
+     visually butt against the row's bottom border. */
+  .sticky-below-header { top: calc(var(--header-height) + 2rem); }
+  .sticky-below-header-tight { top: var(--header-height); }
 
   /* RESPONSIVE_AUDIT R14: lift body content above the fixed mobile bottom
      nav. Lg+ screens don't have the nav so no offset needed. */

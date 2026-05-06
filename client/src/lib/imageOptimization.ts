@@ -13,10 +13,11 @@ interface ImageTransformOptions {
 }
 
 /**
- * Generate optimized image URL with Supabase transformations
- * @param originalUrl - Original image URL from Supabase
- * @param options - Transformation options
- * @returns Optimized image URL with query parameters
+ * Generate optimized image URL with Supabase Image Transform.
+ * Rewrites `/storage/v1/object/public/...` → `/storage/v1/render/image/public/...`
+ * (the only endpoint that honors width/height/quality/resize). Non-Supabase
+ * URLs (e.g. seed Unsplash photos) pass through unchanged so we never break
+ * external sources by appending query params they ignore.
  */
 export const getOptimizedImageUrl = (
   originalUrl: string,
@@ -24,27 +25,26 @@ export const getOptimizedImageUrl = (
 ): string => {
   if (!originalUrl) return '';
 
-  // Default optimization settings
-  const defaults: ImageTransformOptions = {
-    quality: 70,
-    format: 'webp',
-    resize: 'cover',
-  };
+  const isSupabasePublicObject = /\/storage\/v1\/object\/public\//.test(originalUrl);
+  if (!isSupabasePublicObject) return originalUrl;
 
+  const defaults: ImageTransformOptions = { quality: 70, format: 'webp', resize: 'cover' };
   const config = { ...defaults, ...options };
 
-  // Build query parameters
-  const params = new URLSearchParams();
+  const renderUrl = originalUrl.replace(
+    '/storage/v1/object/public/',
+    '/storage/v1/render/image/public/'
+  );
 
-  if (config.width) params.append('width', config.width.toString());
-  if (config.height) params.append('height', config.height.toString());
-  if (config.quality) params.append('quality', config.quality.toString());
-  if (config.format) params.append('format', config.format);
+  const params = new URLSearchParams();
+  if (config.width) params.append('width', String(config.width));
+  if (config.height) params.append('height', String(config.height));
+  if (config.quality) params.append('quality', String(config.quality));
+  if (config.format && config.format !== 'origin') params.append('format', config.format);
   if (config.resize) params.append('resize', config.resize);
 
-  // Append parameters to URL
-  const separator = originalUrl.includes('?') ? '&' : '?';
-  return `${originalUrl}${separator}${params.toString()}`;
+  const sep = renderUrl.includes('?') ? '&' : '?';
+  return `${renderUrl}${sep}${params.toString()}`;
 };
 
 /**
@@ -115,19 +115,36 @@ export const getMobileImageUrl = (imageUrl: string): string => {
 };
 
 /**
- * Get responsive image srcset for picture element
+ * Get responsive image srcset for a card-style listing image.
+ * Card widths in the wild: ~260px (carousel) → ~340px (xl 4-col Feed)
+ * → ~700px (mobile 1-col edge-to-edge). 2× retina headroom on each.
  */
 export const getResponsiveImageSrcset = (imageUrl: string): string => {
-  const mobile = getMobileImageUrl(imageUrl);
-  const tablet = getThumbnailUrl(imageUrl);
-  const desktop = getLargeImageUrl(imageUrl);
+  if (!imageUrl) return '';
+  // Non-Supabase URL: srcset would just repeat the same URL N times — skip.
+  if (!/\/storage\/v1\/object\/public\//.test(imageUrl)) return '';
 
-  return `
-    ${mobile} 320w,
-    ${tablet} 768w,
-    ${desktop} 1200w
-  `.trim();
+  return [320, 480, 640, 800, 1200]
+    .map((w) =>
+      `${getOptimizedImageUrl(imageUrl, {
+        width: w,
+        quality: w <= 480 ? 65 : 75,
+        format: 'webp',
+        resize: 'cover',
+      })} ${w}w`
+    )
+    .join(', ');
 };
+
+/**
+ * sizes hint matching the live grid breakpoints:
+ *   - <640px  → near full viewport (single col, ~92vw)
+ *   - 640-1024 → ~50vw (2-col)
+ *   - 1024-1280 → ~33vw (3-col)
+ *   - 1280+    → ~25vw (4-col xl Feed)
+ */
+export const RESPONSIVE_CARD_SIZES =
+  '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 92vw';
 
 /**
  * Get image with fallback for missing images

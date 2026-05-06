@@ -13,6 +13,7 @@ import { globalFilters, categoryFilters, FilterDefinition } from '../../config/f
 import { Listing } from '../../types';
 import { Helmet } from 'react-helmet-async';
 import { onImgError } from '../../lib/imageFallback';
+import { getOptimizedImageUrl, getResponsiveImageSrcset, RESPONSIVE_CARD_SIZES } from '../../lib/imageOptimization';
 import { matchScore } from '../../lib/matchScore';
 import { SavedSearchesBar, buildLabel } from '../search/SavedSearches';
 import { getLocationSilently } from '../../lib/locationDefaults';
@@ -218,13 +219,16 @@ export const ListingCard = ({ car }: { car: Listing }) => {
       <div className="relative aspect-[5/4] bg-muted overflow-hidden">
         {displayImg ? (
           <img
-            src={displayImg}
+            src={getOptimizedImageUrl(displayImg, { width: 800, quality: 75, format: 'webp', resize: 'cover' })}
+            srcSet={getResponsiveImageSrcset(displayImg) || undefined}
+            sizes={RESPONSIVE_CARD_SIZES}
             alt={car.title}
             className={`absolute inset-0 w-full h-full object-cover transition-transform duration-[900ms] ease-out ${
               isHovered ? 'scale-[1.04]' : 'scale-100'
             }`}
             onError={onImgError}
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -667,8 +671,26 @@ export const ListingFeed = () => {
       const to = from + ITEMS_PER_PAGE - 1;
       query = query.range(from, to);
 
-      const { data, count, error } = await query;
-      if (error) throw error;
+      let { data, count, error } = await query;
+      // PGRST200: live DB missing listings_user_id_fkey on profiles. Migration
+      // 012_category_slug_canonical.sql declares it; until that runs we
+      // gracefully refetch without the owner embed so the feed still renders.
+      if (error?.code === 'PGRST200' && !queryState.lat) {
+        const fallback = await supabase
+          .from('listings')
+          .select(
+            '*, categories!inner(slug), listing_images(id, url, is_primary, sort_order)',
+            { count: 'exact' }
+          )
+          .eq('status', 'active')
+          .range(from, to);
+        data = fallback.data as any;
+        count = fallback.count as any;
+        error = fallback.error;
+        if (error) throw error;
+      } else if (error) {
+        throw error;
+      }
 
       let normalized = (data as any[] || []).map((item: any) => ({
         ...item,
@@ -950,7 +972,7 @@ export const ListingFeed = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 max-w-[1700px] flex flex-col xl:flex-row gap-8 lg:gap-12">
 
         <aside className="hidden xl:block xl:w-[320px] flex-shrink-0">
-          <div className="sticky top-24 relative">
+          <div className="sticky sticky-below-header relative">
             <div className="absolute inset-0 bg-primary/5 blur-[50px] rounded-none -z-10 pointer-events-none"></div>
 
             <div className="bg-card/60 backdrop-blur-xl border border-border/40 rounded-none p-6 shadow-sm overflow-hidden">

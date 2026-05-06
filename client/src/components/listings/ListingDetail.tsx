@@ -330,7 +330,7 @@ export const ListingDetail = () => {
             </div>
             {/* Info Panel Skeleton */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-8">
+              <div className="sticky sticky-below-header space-y-8">
                 <div className="bg-card border border-border rounded-none p-8">
                   <Skeleton className="h-8 w-full mb-8" />
                   <Skeleton className="h-10 w-32 mb-8" />
@@ -673,7 +673,7 @@ export const ListingDetail = () => {
 
           {/* Right: Sticky Info Panel */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-8">
+            <div className="sticky sticky-below-header space-y-8">
               {/* Price Card */}
               <div className="bg-card border border-border rounded-none p-8">
                 <h1 className="text-2xl font-light text-foreground mb-8 leading-tight tracking-widest">
