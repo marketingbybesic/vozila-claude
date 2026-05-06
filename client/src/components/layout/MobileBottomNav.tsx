@@ -65,7 +65,7 @@ export const MobileBottomNav = () => {
             {/* Search */}
             <button
               onClick={() => setSearchModalOpen(true)}
-              className="flex flex-col items-center gap-1 p-2 text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
+              className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
             >
               <Search className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-[8px] font-light uppercase tracking-widest">PRETRAGA</span>
@@ -74,7 +74,7 @@ export const MobileBottomNav = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="flex flex-col items-center gap-1 p-2 text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
+              className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
             >
               {isDark ? (
                 <Sun className="h-5 w-5" strokeWidth={1.5} />
@@ -87,7 +87,7 @@ export const MobileBottomNav = () => {
             {/* Favorites */}
             <Link
               to="/favoriti"
-              className="relative flex flex-col items-center gap-1 p-2 text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
+              className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
             >
               <Heart className="h-5 w-5" strokeWidth={1.5} />
               {favoritesCount > 0 && (
@@ -102,7 +102,7 @@ export const MobileBottomNav = () => {
             {compareCount > 0 && (
               <Link
                 to={`/usporedba?ids=${getCompareIds().join(',')}`}
-                className="relative flex flex-col items-center gap-1 p-2 text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
+                className="relative flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
               >
                 <ArrowLeftRight className="h-5 w-5" strokeWidth={1.5} />
                 <span className="absolute top-1 right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center rounded-full">
@@ -115,7 +115,7 @@ export const MobileBottomNav = () => {
             {/* Profile */}
             <Link
               to="/profil"
-              className="flex flex-col items-center gap-1 p-2 text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
+              className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] text-foreground hover:bg-muted rounded-none transition-all duration-300 active:scale-95"
             >
               <User className="h-5 w-5" strokeWidth={1.5} />
               <span className="text-[8px] font-light uppercase tracking-widest">PROFIL</span>

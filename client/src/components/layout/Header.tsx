@@ -167,10 +167,10 @@ export const Header = () => {
           <Link to="/predaj-oglas" className="flex md:hidden items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground font-light uppercase tracking-widest text-[10px] hover:bg-primary/90 transition-all duration-300 shadow-lg whitespace-nowrap">
             <Plus className="h-3.5 w-3.5" strokeWidth={1.5} /> Oglas
           </Link>
-          <button onClick={() => setSearchModalOpen(true)} className="lg:hidden p-1 text-muted-foreground hover:text-foreground transition-colors">
+          <button aria-label="Otvori pretragu" onClick={() => setSearchModalOpen(true)} className="lg:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-colors">
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <button onClick={() => { setMobileMenuOpen(!mobileMenuOpen); if (mobileMenuOpen) setMobileDrillLevel('categories'); }} className="lg:hidden p-1 text-muted-foreground hover:text-foreground transition-colors">
+          <button aria-label={mobileMenuOpen ? 'Zatvori izbornik' : 'Otvori izbornik'} onClick={() => { setMobileMenuOpen(!mobileMenuOpen); if (mobileMenuOpen) setMobileDrillLevel('categories'); }} className="lg:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-colors">
             {mobileMenuOpen ? (
               <X className="h-6 w-6" strokeWidth={1.5} />
             ) : (
@@ -299,8 +299,9 @@ export const Header = () => {
                         </Link>
                         {category.sub.length > 0 && (
                           <button
+                            aria-label={`Otvori ${category.name}`}
                             onClick={() => setMobileDrillLevel(category.slug)}
-                            className="p-2 hover:text-foreground transition-colors"
+                            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] hover:text-foreground transition-colors"
                           >
                             <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
                           </button>

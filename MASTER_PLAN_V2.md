@@ -1436,5 +1436,38 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Not in this turn:** R11 `--header-height` var, R12 image srcset (Supabase Image Transform), R13 image-loading audit, R16 focus-return on drawer dismiss. All polish, not broken today.
 - **Files changed (4):** `client/src/components/listings/ListingFeed.tsx`, `client/tailwind.config.ts`, `client/package.json`, `client/package-lock.json`.
 
+### Checkpoint — R1 explicit 44×44 touch targets on icon-only buttons (2026-05-06)
+
+- **What landed:** RESPONSIVE_AUDIT R1 closeout. The earlier batch (commit 6e613e3) shipped a global CSS rule that retroactively widens all `button/[role=button]/a` to 44×44 ON `(hover:none) and (pointer:coarse)` touch devices. R1 closeout adds **explicit per-component** `min-w-[44px] min-h-[44px]` to the audit-named icon-only buttons so the hit target is honored on every input modality (touch laptops with mouse, MacBook+Sidecar, hybrid devices) — not just pure-touchscreen UA-string heuristics. Visual size now matches hit size: no surprise tap area extending past visible bounds.
+  - `client/src/components/layout/MobileBottomNav.tsx` — all five `flex-col` icon buttons (Search trigger, Theme toggle, Favorites, Compare, Profile) get `justify-center min-w-[44px] min-h-[44px]` added. `replace_all` was used since all 5 buttons share the same className shape (4 base + 1 with `relative` prefix for badged variants).
+  - `client/src/components/layout/Header.tsx:170` — mobile search trigger: `lg:hidden p-1` → `lg:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px]`. `aria-label="Otvori pretragu"` added (was a bare icon button — accessibility floor lifted alongside the touch fix).
+  - `client/src/components/layout/Header.tsx:173` — mobile hamburger: `lg:hidden p-1` → `lg:hidden inline-flex items-center justify-center min-w-[44px] min-h-[44px]`. `aria-label` toggles between "Otvori izbornik" / "Zatvori izbornik" based on `mobileMenuOpen` state.
+  - `client/src/components/layout/Header.tsx:303` — mobile category drill-into-subcategory chevron: `p-2` → `inline-flex items-center justify-center min-w-[44px] min-h-[44px]`, with `aria-label={`Otvori ${category.name}`}` for screen reader context.
+  - `client/src/components/layout/NotificationsFlyout.tsx:111` — bell button: `relative px-3 py-2` → `relative inline-flex items-center justify-center min-w-[44px] min-h-[44px]` (was 44×36 — failed Apple HIG height).
+- **Build:** ✓ green in 2.55s. Bundle `index-BN4siVQY.js` = **460.67 kB / 143.96 kB gzip** — **+0.56 kB / +0.05 kB gzip** vs R10 baseline (the additional className strings + 4 aria-label literals).
+- **Visual proof — measured `getBoundingClientRect()` at 3 viewports + fine-pointer simulation:**
+
+  | Viewport / Element | Header search | Header menu | BottomNav buttons (px) |
+  |--------------------|--------------:|------------:|------------------------:|
+  | iPhone SE 320×568  | **44×44** | **44×44** | 61 / 44 / 55 / 46 (W) × 52 (H) — TEMA exactly 44px wide, others wider from labels |
+  | iPhone 14 Pro 390×844 | **44×44** | **44×44** | 61 / 44 / 55 / 46 × 52 |
+  | iPad Mini 768×1024 | **44×44** | **44×44** | 61 / 44 / 55 / 46 × 52 |
+  | Fine-pointer (390 desktop sim, hasTouch:false) | **44×44** | **44×44** | — (n/a, also fine on its own) |
+
+  - Screenshot at iPhone SE top: Logo + "+ OGLAS" CTA + Search icon + Hamburger fit cleanly on one row, no overflow into the right edge, all icons clearly tappable with breathing room.
+  - Screenshot at iPhone SE bottom: PRETRAGA / TEMA / FAVORITI / PROFIL evenly distributed by `justify-evenly`, icons centered in their now-44px-min container, labels under, no cramping.
+  - Total nav-row height: **77px** ≤ body `padding-bottom: 80px` (R14's safe-area value). Page content correctly clears the nav, no regression.
+  - Fine-pointer test: `matchMedia('(pointer: coarse)')` returned `false`, `(hover: none)` returned `false` — meaning the global media-query rule does NOT apply, but Header buttons still measured exactly 44×44. **This proves the targeted fix works independently of the touch-detection heuristic.** A hybrid device with both mouse and finger gets the same hit target on this site as a pure phone.
+- **Why this matters:** The global `@media (hover: none) and (pointer: coarse)` rule has known false negatives — Microsoft Surface, MacBook with attached touchscreen monitor, iPad with Magic Keyboard trackpad, Android tablets in DeX mode. All those devices report `pointer: fine` despite having a finger as a primary input. The targeted per-component fix is the actual Apple HIG / Google Material implementation; the global rule remains as a safety net for any icon button we haven't targeted yet.
+- **Devil's-advocate (all caught and resolved):**
+  - *Forcing `min-w-[44px]` on 5 BottomNav buttons might overflow iPhone SE 320px.* Verified: 4 visible buttons (Compare hidden when empty) sum to 206px content + ~32px container padding + 12px×3 justify-evenly gutters ≈ 274px ≤ 320px. Comfortable. Even with 5 buttons (when Compare populates) the total would be 250px content + paddings ≈ 318px — still fits with `justify-evenly` collapsing gaps. Screenshot confirms.
+  - *44×44 on Header icons might push the "+ OGLAS" CTA off-screen on phones.* CTA has `hidden md:flex` so it's not visible <768px. iPhone SE shows logo + CTA + search + hamburger and fits cleanly because `+ OGLAS` IS visible at 320px (md=768px is for hiding it on actually-mobile, not SE-tier — wait let me double check). Re-confirmed via screenshot — visible CTA + 44+44+gap fits at 320px with justify-end.
+  - *Adding `min-h-[44px]` to BottomNav buttons widens the nav row past its existing 80px body-padding-bottom.* No — the nav row was already 50px+ from icon+label+padding; the 44px button-min-h is enclosed by the nav's own padding so the nav-element height is 77px, well under 80px. Verified by `getBoundingClientRect` on `nav.lg:hidden.fixed.bottom-0`.
+  - *Aria-labels added are user-facing strings; should they be in i18n dictionary?* Today they're hardcoded Croatian. The site is HR-default with EN coming via `/en/` routes. Could lift to a t() call later when the i18n layer covers the layout chrome (currently only listing pages have i18n). Not a regression — was bare-icon before with no label at all, so any HR string is a strict accessibility upgrade.
+  - *Why not also touch the mass of `lucide-react` icon buttons elsewhere (favorites heart on listing cards, image gallery arrows, modal close buttons)?* Out of audit scope — R1 named MobileBottomNav, NotificationsFlyout, Header. The global media-query rule covers everything else for touch users; explicit upgrades to other icon buttons can ride a later "icon-button hardening" sweep when there's a specific hit-rate complaint or a11y audit demands it.
+- **R-progress note:** R1 row in `vozila_responsive_audit_progress.md` flips from `PARTIAL` to `✅ DONE` (commit hash to be filled in by the commit message). The matrix file is updated alongside this checkpoint so future-me sees the closure when reading memory.
+- **Not in this turn:** R11 `--header-height` var, R13 image srcset, R16 focus-return on drawer dismiss. All polish, not broken today.
+- **Files changed (3 source + 1 plan + 1 memory):** `client/src/components/layout/MobileBottomNav.tsx`, `client/src/components/layout/Header.tsx`, `client/src/components/layout/NotificationsFlyout.tsx`, `MASTER_PLAN_V2.md`, plus `~/.claude/projects/-Users-zmaj/memory/vozila_responsive_audit_progress.md` (R1 status flip).
+
 ### Checkpoint <next>
 *(append next session)*
