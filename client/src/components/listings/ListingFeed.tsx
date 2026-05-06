@@ -206,7 +206,7 @@ export const ListingCard = ({ car }: { car: Listing }) => {
   // draws under the title. That's the entire interaction language.
   return (
     <div
-      className={`group flex flex-col cursor-pointer h-full transition-colors duration-500 ${
+      className={`group @container/card flex flex-col cursor-pointer h-full transition-colors duration-500 ${
         car.is_featured
           ? 'bg-card border border-primary/40'
           : 'bg-transparent border border-transparent hover:border-border'
@@ -312,16 +312,16 @@ export const ListingCard = ({ car }: { car: Listing }) => {
         )}
       </div>
 
-      {/* Body: generous breath, restrained typography */}
-      <div className="px-1 pt-6 pb-2 flex flex-col flex-grow">
+      {/* Body: generous breath, restrained typography. Padding scales with card width. */}
+      <div className="px-1 pt-5 pb-2 @[260px]/card:pt-6 @[340px]/card:px-2 flex flex-col flex-grow">
         {/* Eyebrow: location/year micro-cap — feels like a magazine kicker */}
         <p className="text-[9px] font-light uppercase tracking-[0.3em] text-muted-foreground mb-3">
           {(specs.lokacija || car.location || 'Hrvatska')}
           {(specs.godina || car.year) ? ` · ${specs.godina || car.year}` : ''}
         </p>
 
-        {/* Title */}
-        <h3 className="text-base xl:text-lg font-light uppercase tracking-[0.08em] text-foreground leading-snug mb-3 line-clamp-2">
+        {/* Title — size driven by card width, not viewport */}
+        <h3 className="text-sm @[260px]/card:text-base @[340px]/card:text-lg font-light uppercase tracking-[0.08em] text-foreground leading-snug mb-3 line-clamp-2">
           {car.title}
         </h3>
 
@@ -348,11 +348,11 @@ export const ListingCard = ({ car }: { car: Listing }) => {
         {/* Price block — large, light, sharp. The piece of typographic confidence. */}
         <div className="mt-6 pt-5 border-t border-border flex items-baseline justify-between gap-3">
           {Number(car.price) === 0 ? (
-            <span className="text-2xl font-light tracking-widest text-primary">
+            <span className="text-xl @[260px]/card:text-2xl font-light tracking-widest text-primary">
               Na upit
             </span>
           ) : (
-            <span className="text-2xl xl:text-3xl font-light tracking-tight text-foreground tabular-nums">
+            <span className="text-xl @[260px]/card:text-2xl @[340px]/card:text-3xl font-light tracking-tight text-foreground tabular-nums">
               {Number(car.price).toLocaleString('hr-HR')}
               <span className="ml-1 text-sm text-muted-foreground">{car.currency || '€'}</span>
             </span>

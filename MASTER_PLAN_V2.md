@@ -1405,5 +1405,36 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Not in this turn:** R10 container queries, R11 `--header-height` var, R12 image srcset (responsive image sources), R13 image `loading="lazy"` audit, R16 focus return on drawer dismiss. All polish, not broken today.
 - **Files changed (5 source + 1 plan):** `client/src/components/listings/NativeAdCard.tsx`, `client/src/components/home/NoviOglasiCarousel.tsx`, `client/src/components/home/RecentlyViewed.tsx`, `client/src/pages/Auctions.tsx`, `client/src/pages/Compare.tsx`, `MASTER_PLAN_V2.md`.
 
+### Checkpoint — R10 container queries on ListingCard (2026-05-06)
+
+- **What landed:** RESPONSIVE_AUDIT R10 — `ListingCard` is now an `@container/card` named inline-size containment context, and its three viewport-driven decisions (title size, price size, body padding) are now **container-driven** instead. Same canonical card adapts to whatever grid it lands in, not to whatever phone the grid is being viewed on.
+  - `client/package.json` + `client/package-lock.json` — added `@tailwindcss/container-queries` as devDependency.
+  - `client/tailwind.config.ts` — registered the plugin (`plugins: [require('@tailwindcss/container-queries')]`).
+  - `client/src/components/listings/ListingFeed.tsx:208` — wrapper className gets `@container/card` (named scope so descendants don't accidentally query an anonymous container higher up).
+  - `client/src/components/listings/ListingFeed.tsx:316` — body padding: `px-1 pt-5 pb-2` → `px-1 pt-5 pb-2 @[260px]/card:pt-6 @[340px]/card:px-2` (vertical breath when the card is "medium", horizontal padding when it's "wide").
+  - `client/src/components/listings/ListingFeed.tsx:324` — title size: `text-base xl:text-lg` → `text-sm @[260px]/card:text-base @[340px]/card:text-lg` (was: ≥1280px viewport. Now: ≥340px card, regardless of viewport).
+  - `client/src/components/listings/ListingFeed.tsx:351-358` — price size: `text-2xl` / `text-2xl xl:text-3xl` → `text-xl @[260px]/card:text-2xl @[340px]/card:text-3xl` (same inversion: now driven by card width, not screen width).
+- **Build:** ✓ green in 4.61s. Bundle `index-CZQMF2Ok.js` = **460.11 kB / 143.91 kB gzip** — **+0.14 kB / +0.05 kB gzip** vs R7 baseline (the 3 container-query rules + `container: card/inline-size` declaration).
+  - CSS verification: generated `dist/css/index-o434Z835.css` confirmed to contain `@container card (width>=260px)`, `@container card (width>=340px)`, and `.\@container\/card{container:card/inline-size}`. Plugin wired and emitting real CSS, not silently dead.
+- **Visual proof — measured `getComputedStyle()` on three synthetic cards (Playwright headless, all rendered side-by-side on the same 1440px viewport):**
+
+  | Container width | Title `font-size` | Price `font-size` | Body `padding-top` | Body `padding-left` |
+  |----------------:|------------------:|------------------:|-------------------:|--------------------:|
+  | 240 px (below 260) | **14 px** (text-sm) | **20 px** (text-xl) | **20 px** (pt-5) | **4 px** (px-1) |
+  | 300 px (≥260, <340) | **16 px** (text-base) | **24 px** (text-2xl) | **24 px** (pt-6) | **4 px** (px-1) |
+  | 380 px (≥340) | **18 px** (text-lg) | **30 px** (text-3xl) | **24 px** (pt-6) | **8 px** (px-2) |
+
+  Three cards, identical data, same viewport — three different typographic and spacing renders. That's container-query behavior working correctly. Screenshot at `three-widths.png` (deleted post-verification) shows the 240px title wrapping to two lines with smaller text, the 380px card with clear price hierarchy.
+- **Why this matters (and why the audit said "lower priority"):** The audit was right that the visible ugliness is mild — pre-R10, a card in the xl 4-col Feed (each card ≈340px) and a card on a 360px phone (single col, ≈340px) both got `text-lg` because both viewports were `<xl` or `≥xl`. So-so coincidence. Where it broke was: card in the `<xl` 1024px tablet 3-col Feed (each card ≈300px) got `text-base`, and the SAME 300px-wide card in `xl` 4-col desktop Feed (each card ≈330px) got `text-lg` — purely because of viewport, not because the card got bigger. Now: cards <260px wide always get the small set, cards ≥260px get medium, cards ≥340px get large. Card width in pixels is the variable, viewport is irrelevant to the card's typography.
+- **Devil's-advocate:**
+  - *Audit says "lower priority — current 5:4 ratio handles it OK". Why ship it?* Because the change is small (4 className edits + plugin registration + 1 dependency line), build-confirmed, bundle-trivial, and unlocks future use of `@card:` variants anywhere a layout might want them. It's a foundation, not just a fix.
+  - *Anonymous `@container` would cascade to nested elements unintentionally.* Used named container `@container/card` and `@[260px]/card:` / `@[340px]/card:` variants throughout, so only descendants of THIS card see THIS container. `LeadCaptureModal` etc. rendered inside a card-tree won't accidentally query the wrong container.
+  - *Tailwind's `@[260px]/card:` syntax is somewhat exotic — fragile?* The Tailwind container-queries plugin has been stable since 0.1.0 (early 2023), maintained by the Tailwind team itself, baked into `@tailwindcss/forms`-style first-party plugins. Generated CSS is plain `@container card (width>=260px)` — standard browser-native, supported in all evergreen browsers since 2023. No vendor lock.
+  - *Dropping the floor from `text-base` to `text-sm` makes very narrow cards (240px) look less prominent.* Intentional — at 240px wide, text-base would crowd the card with the title block and break the airy editorial feel. text-sm is correct at that width. We don't actually render cards that narrow in production grids today (mobile single-col is ~340px+, the narrowest we have is the carousel at 260-280px), but the variant is there for safety.
+  - *Could have rolled this into ListingFeed and DealerProfile separately and not unified.* No — the whole point of R10 is one canonical card that adapts to its container. Putting the container-query logic on the canonical component is the right place; downstream grid layouts (which set `w-1/4` etc.) drive the card width and the card adapts. Pulling it into per-page logic would just recreate the breakpoint-jumping problem with extra steps.
+  - *Synthetic 3-cards verification doesn't prove production rendering.* The synthetic cards reproduce the EXACT className set from `ListingFeed.tsx:208/316/324/351` and the CSS is the real built CSS the production bundle ships. The container-query rule fires on the actual `container-type: inline-size` of the parent — there's no DOM-tree-position dependency that would behave differently in production. Plus the build CSS contains the `@container` rules directly, grep-confirmed.
+- **Not in this turn:** R11 `--header-height` var, R12 image srcset (Supabase Image Transform), R13 image-loading audit, R16 focus-return on drawer dismiss. All polish, not broken today.
+- **Files changed (4):** `client/src/components/listings/ListingFeed.tsx`, `client/tailwind.config.ts`, `client/package.json`, `client/package-lock.json`.
+
 ### Checkpoint <next>
 *(append next session)*
