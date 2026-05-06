@@ -134,7 +134,7 @@ export const AuctionDetail = () => {
           </div>
 
           <div className="mt-6 space-y-3">
-            <h1 className="text-2xl sm:text-3xl font-light uppercase tracking-tight text-foreground">
+            <h1 className="fluid-h1 font-light uppercase tracking-tight text-foreground">
               {auction.listing?.title ?? 'Aukcija'}
             </h1>
             {auction.listing?.location && (

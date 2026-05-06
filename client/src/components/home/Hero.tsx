@@ -118,7 +118,7 @@ export const Hero = () => {
             </p>
             <h1
               key={activeSlide}
-              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-light uppercase tracking-tight leading-[1.05] text-foreground animate-in fade-in slide-in-from-bottom-2 duration-700"
+              className="fluid-display font-light uppercase tracking-tight text-foreground animate-in fade-in slide-in-from-bottom-2 duration-700"
             >
               {SLIDES[activeSlide].label}
             </h1>

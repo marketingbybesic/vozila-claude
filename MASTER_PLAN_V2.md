@@ -1346,5 +1346,40 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Not in this turn:** R4 fluid typography, R7 aspect-ratio consolidation, R10 container queries, R11 `--header-height` var, R12-R13 image srcset, R16 focus return. All polish, not broken today.
 - **Files changed (1):** `client/src/components/layout/Header.tsx` (~+30 / -5 net).
 
+### Checkpoint — R4 fluid typography (2026-05-06)
+
+- **What landed:** RESPONSIVE_AUDIT R4 — fluid typography scale via `clamp()` CSS custom properties + 4 utility classes, applied to display headlines on Hero, Pricing, AuctionDetail.
+  - `client/src/index.css` :root — 4 new custom properties:
+    - `--fs-display: clamp(2rem, 1rem + 5vw, 5rem)` (32→80px) — Hero only
+    - `--fs-h1:      clamp(1.75rem, 1rem + 3vw, 3.5rem)` (28→56px) — page H1s
+    - `--fs-h2:      clamp(1.25rem, 0.875rem + 1.5vw, 2rem)` (20→32px) — section headings
+    - `--fs-body:    clamp(0.9375rem, 0.875rem + 0.25vw, 1.0625rem)` (15→17px) — long-form body
+  - `client/src/index.css` @layer utilities — 4 utility classes (`.fluid-display`, `.fluid-h1`, `.fluid-h2`, `.fluid-body`) bind the size to the custom property + a tasteful default `line-height` per scale step.
+  - `components/home/Hero.tsx:121` — Hero h1: `text-4xl sm:text-5xl lg:text-6xl xl:text-7xl ... leading-[1.05]` → `fluid-display ...` (line-height now baked into the utility).
+  - `pages/Pricing.tsx:117` — Pricing h1: `text-3xl sm:text-4xl lg:text-5xl ...` → `fluid-h1 ...`
+  - `pages/Pricing.tsx:149` — Pricing per-tier price span: `text-4xl sm:text-5xl ...` → `fluid-h1 ...`
+  - `pages/AuctionDetail.tsx:137` — AuctionDetail h1: `text-2xl sm:text-3xl ...` → `fluid-h1 ...`
+- **Build:** ✓ green. Bundle: `index-DW-g44qQ.js` = 459.97 kB / 143.87 kB gzip — basically identical to R2 baseline (CSS additions add ~150 bytes, replaced classes save the difference).
+- **Visual proof — measured Computed Style at 4 viewports (Playwright `getComputedStyle.fontSize`):**
+
+  | Viewport | Hero (`--fs-display` clamp 32→80) | Pricing (`--fs-h1` clamp 28→56) |
+  |----------|----------------------------------:|-------------------------------:|
+  | 390 px   | **35.5 px** | **28 px** (clamped to min) |
+  | 700 px   | **51 px**   | **37 px** |
+  | 1024 px  | **67.2 px** | **46.72 px** |
+  | 1440 px  | **80 px** (clamped to max) | **56 px** (clamped to max) |
+
+  Compare to the static Tailwind it replaces — Hero used to be 36/48/60/72 px (with hard jumps at sm:/lg:/xl:); now it interpolates smoothly through 35.5/51/67.2/80 px. Pricing used to be 30/36/48/48 px (no further scale beyond lg:); now it interpolates 28/37/46.72/56 px. Linear scaling between breakpoints, no jarring jumps.
+  - Screenshots captured at all 4 viewports for both Home and Pricing — no layout breakage, no overflow, all text reads correctly.
+- **Why this matters:** Static Tailwind text scales had ugly visible jumps at sm/lg/xl breakpoints — at e.g. 1023px Hero was 48px, then at 1024px it leapt to 60px on a single pixel of resize. Real users on tablets and 1366×768 laptops sit right on these jump zones. Fluid `clamp()` interpolates linearly so text grows smoothly with viewport.
+- **Devil's-advocate:**
+  - *Could have just used Tailwind's `text-[clamp(...)]` arbitrary syntax inline.* Yes, but custom properties give a single source of truth for the scale — tweaking the entire site's display headline size means editing one `:root` line, not grepping for inline clamp() expressions.
+  - *clamp() linear-interpolates in `vw` which doesn't account for aspect ratio.* True, and that's the point — the visual weight tracks the horizontal viewport, which is what the user perceives as "page is bigger now".
+  - *Hero used to leading-[1.05] inline; new utility hard-codes `line-height: 1.05`.* Same value, baked into the utility for consistency. If a one-off needs different leading, Tailwind's `leading-tight` etc. still wins (last specificity).
+  - *`--fs-display` max=80px is bigger than the old `text-7xl=72px`.* Intentional — the 8px increase at desktop is barely perceptible but better fills wide screens. The fluid scale also means non-`xl` viewports (1024-1280px range) get sizes the static scale never reached.
+  - *Only 4 components touched, not the whole site.* Per RESPONSIVE_AUDIT scope — the audit explicitly named Hero, Pricing, AuctionDetail. Leaving the rest of the site on static Tailwind keeps risk low; can extend to other display headlines (DealerProfile h1, MakeLanding h1) in a future polish round if the visual benefit is worth the touch.
+- **Not in this turn:** R7 aspect-ratio consolidation, R10 container queries, R11 `--header-height` var, R12-R13 image srcset, R16 focus return. All polish, not broken today.
+- **Files changed (4):** `client/src/index.css`, `client/src/components/home/Hero.tsx`, `client/src/pages/Pricing.tsx`, `client/src/pages/AuctionDetail.tsx`.
+
 ### Checkpoint <next>
 *(append next session)*

@@ -24,6 +24,19 @@
     --input: 240 5.9% 90%;
     --ring: 210 100% 45%;
     --radius: 0.5rem;
+
+    /* RESPONSIVE_AUDIT R4: fluid typography scale.
+       Each clamp(min, preferred, max):
+         min = mobile size in rem (390-768px range)
+         preferred = "rem + vw" formula that interpolates smoothly
+         max = desktop size in rem (1280px+)
+       Linear interpolation so text scales between breakpoints
+       without the jarring jumps that Tailwind's static utilities
+       cause at sm/md/lg/xl thresholds. */
+    --fs-display: clamp(2rem, 1rem + 5vw, 5rem);          /* 32px → 80px (Hero, full-bleed display) */
+    --fs-h1:      clamp(1.75rem, 1rem + 3vw, 3.5rem);     /* 28px → 56px (page H1s) */
+    --fs-h2:      clamp(1.25rem, 0.875rem + 1.5vw, 2rem); /* 20px → 32px (section headings) */
+    --fs-body:    clamp(0.9375rem, 0.875rem + 0.25vw, 1.0625rem); /* 15px → 17px (long-form body) */
   }
 
   .dark {
@@ -75,6 +88,15 @@
 }
 
 @layer utilities {
+  /* RESPONSIVE_AUDIT R4: fluid typography utilities. Pair with
+     Tailwind's tracking/leading/weight utilities — these set
+     font-size only via the CSS custom-property scale defined in
+     :root. Override with `text-[size]` if a one-off is needed. */
+  .fluid-display { font-size: var(--fs-display); line-height: 1.05; }
+  .fluid-h1      { font-size: var(--fs-h1); line-height: 1.1; }
+  .fluid-h2      { font-size: var(--fs-h2); line-height: 1.2; }
+  .fluid-body    { font-size: var(--fs-body); line-height: 1.6; }
+
   .sheen {
     background-image: linear-gradient(to top, rgba(255, 255, 255, 0.05), transparent);
   }

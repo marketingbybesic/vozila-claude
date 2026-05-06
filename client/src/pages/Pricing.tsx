@@ -114,7 +114,7 @@ export const Pricing = () => {
             <Building2 className="w-3 h-3" strokeWidth={1.5} aria-hidden="true" />
             Za autosalone i prodavače
           </p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light uppercase tracking-tight text-foreground mb-5">
+          <h1 className="fluid-h1 font-light uppercase tracking-tight text-foreground mb-5">
             Tri paketa. Jasna cijena.
           </h1>
           <p className="text-sm font-light text-muted-foreground max-w-xl mx-auto leading-relaxed">
@@ -146,7 +146,7 @@ export const Pricing = () => {
 
               <div className="mb-6">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl sm:text-5xl font-light text-foreground tabular-nums">
+                  <span className="fluid-h1 font-light text-foreground tabular-nums">
                     {tier.priceEur}
                   </span>
                   <span className="text-base text-muted-foreground">€</span>
