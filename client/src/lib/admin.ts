@@ -430,6 +430,39 @@ async function notifyAuctionDecision(auctionId: string, kind: 'approved' | 'reje
 }
 
 // ----------------------------------------------------------------------------
+// Cancel-reason analytics (inspection bookings).
+// ----------------------------------------------------------------------------
+
+export interface CancelReasonStat {
+  reason: string;
+  count: number;
+  refunded_eur: number;
+}
+
+export async function getCancelReasonStats(days = 30): Promise<CancelReasonStat[]> {
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  const { data } = await supabase
+    .from('inspection_bookings')
+    .select('cancel_reason, paid_eur')
+    .eq('status', 'canceled')
+    .gte('canceled_at', since)
+    .not('cancel_reason', 'is', null)
+    .limit(2000);
+  if (!data) return [];
+  const buckets = new Map<string, { count: number; refunded: number }>();
+  for (const row of data as { cancel_reason: string | null; paid_eur: number | null }[]) {
+    if (!row.cancel_reason) continue;
+    const cur = buckets.get(row.cancel_reason) ?? { count: 0, refunded: 0 };
+    cur.count += 1;
+    cur.refunded += Number(row.paid_eur ?? 0);
+    buckets.set(row.cancel_reason, cur);
+  }
+  return [...buckets.entries()]
+    .map(([reason, v]) => ({ reason, count: v.count, refunded_eur: v.refunded }))
+    .sort((a, b) => b.count - a.count);
+}
+
+// ----------------------------------------------------------------------------
 // Search insights.
 // ----------------------------------------------------------------------------
 

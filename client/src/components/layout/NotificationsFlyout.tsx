@@ -232,6 +232,7 @@ function iconFor(type: string): typeof Bell {
     case 'auction_approved':
     case 'auction_rejected':      return Sparkles;
     case 'vin_report_ready':      return AlertCircle;
+    case 'vin_url_expiring':      return AlertCircle;
     case 'inspection_assigned':
     case 'inspection_canceled':   return AlertCircle;
     default:                      return Bell;

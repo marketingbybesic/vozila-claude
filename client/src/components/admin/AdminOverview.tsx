@@ -1,14 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Car, Users, ShieldCheck, AlertTriangle, MessageCircle, TrendingUp, Sparkles, Mail, ArrowUpRight } from 'lucide-react';
-import { getAdminOverview, type AdminOverviewKpis } from '../../lib/admin';
+import { Loader2, Car, Users, ShieldCheck, AlertTriangle, MessageCircle, TrendingUp, Sparkles, Mail, ArrowUpRight, X } from 'lucide-react';
+import { getAdminOverview, getCancelReasonStats, type AdminOverviewKpis, type CancelReasonStat } from '../../lib/admin';
+
+const CANCEL_REASON_LABEL: Record<string, string> = {
+  found_other_inspector: 'Drugi inspektor',
+  no_longer_buying:      'Više ne kupuje',
+  seller_unresponsive:   'Prodavač ne javlja',
+  scheduling_conflict:   'Termin ne odgovara',
+  price_changed:         'Cijena promijenjena',
+  vehicle_sold:          'Vozilo prodano',
+  other:                 'Drugo',
+};
 
 export const AdminOverview = () => {
   const [kpis, setKpis] = useState<AdminOverviewKpis | null>(null);
+  const [reasons, setReasons] = useState<CancelReasonStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
-    getAdminOverview().then((d) => { if (alive) { setKpis(d); setLoading(false); } });
+    Promise.all([getAdminOverview(), getCancelReasonStats(30)]).then(([k, r]) => {
+      if (!alive) return;
+      setKpis(k);
+      setReasons(r);
+      setLoading(false);
+    });
     return () => { alive = false; };
   }, []);
 
@@ -32,8 +48,11 @@ export const AdminOverview = () => {
     { label: 'Prodano',          value: kpis.listings_sold,    icon: Car,           accent: false },
   ];
 
+  const totalCancels = reasons.reduce((s, r) => s + r.count, 0);
+  const totalRefunded = reasons.reduce((s, r) => s + r.refunded_eur, 0);
+
   return (
-    <div>
+    <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {cards.map((c) => {
           const Icon = c.icon;
@@ -53,6 +72,39 @@ export const AdminOverview = () => {
           );
         })}
       </div>
+
+      {/* Cancel reasons (last 30 days) */}
+      {reasons.length > 0 && (
+        <div className="border border-neutral-800 bg-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <X className="w-3.5 h-3.5 text-white/40" strokeWidth={1.5} />
+            <p className="text-[9px] font-light uppercase tracking-[0.3em] text-white/40">
+              Razlozi otkazivanja inspekcija (30 dana)
+            </p>
+            <span className="ml-auto text-[10px] font-light uppercase tracking-[0.25em] text-white/40 tabular-nums">
+              {totalCancels} otkaza · {totalRefunded.toLocaleString('hr-HR')} € povrata
+            </span>
+          </div>
+          <ul className="space-y-2">
+            {reasons.map((r) => {
+              const pct = totalCancels > 0 ? (r.count / totalCancels) * 100 : 0;
+              return (
+                <li key={r.reason}>
+                  <div className="flex items-center justify-between text-[10px] font-light uppercase tracking-[0.2em] text-white/60 mb-1 tabular-nums">
+                    <span>{CANCEL_REASON_LABEL[r.reason] ?? r.reason}</span>
+                    <span>
+                      {r.count} · {pct.toFixed(0)}% · {r.refunded_eur.toLocaleString('hr-HR')} €
+                    </span>
+                  </div>
+                  <div className="h-1 bg-white/5">
+                    <div className="h-full bg-primary/60" style={{ width: `${pct}%` }} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

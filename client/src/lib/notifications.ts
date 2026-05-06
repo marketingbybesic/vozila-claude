@@ -126,6 +126,7 @@ export function notificationLink(n: NotificationRow): string | null {
       const url = n.payload?.report_url;
       return typeof url === 'string' && url ? url : '/postavke';
     }
+    case 'vin_url_expiring':
     case 'inspection_assigned':
     case 'inspection_canceled':
       return '/postavke';
@@ -178,6 +179,10 @@ export function notificationTitle(n: NotificationRow): string {
     case 'vin_report_ready': {
       const vin = n.payload?.vin;
       return vin ? `VIN izvještaj spreman — ${vin}` : 'VIN izvještaj spreman';
+    }
+    case 'vin_url_expiring': {
+      const vin = n.payload?.vin;
+      return vin ? `VIN link uskoro istječe — ${vin}` : 'VIN link uskoro istječe';
     }
     case 'inspection_assigned':
       return 'Inspektor je preuzeo rezervaciju';
