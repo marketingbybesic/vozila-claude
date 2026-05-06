@@ -1236,5 +1236,31 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(b)** Polish round 4 — admin cancel-on-completed UI + scheduled reminder for inspector before assigned date + small accessibility audit.
   - **(c)** New feature work — sub-domain `aukcija.vozila.hr` for the auction track (currently `/aukcija` path).
 
+### Checkpoint 2026-05-06 (Tier 0 — 5 critical bug fixes from AUDIT_VS_AVTONET)
+- **Shipped:** All 5 Tier 0 bugs from `AUDIT_VS_AVTONET.md`.
+  - **A1** — `/predaj-oglas` now points to `CreateListingWizard` (was legacy `ListingWizard.tsx` missing 8 phases of work). Deleted `ListingWizard.tsx` + `CreateListing.tsx` placeholder. **The seller flow now actually has every shipped feature.**
+  - **A8** — Header now renders only `NotificationsFlyout`. Legacy `NotificationsBell.tsx` deleted (its only call-site was Header).
+  - **A2** — `Favorites.tsx` now imports the canonical `ListingCard` from `components/listings/ListingFeed` (with `VerifiedDealerBadge` + matchScore + 5:4 aspect). Wrapped in `<Link>` since the consolidated card doesn't include navigation. Deleted standalone `components/listing/ListingCard.tsx` + empty parent dir.
+  - **A4** — `InspectionBookingButton` fails loud in production when `VITE_SUPABASE_FUNCTIONS_URL` is missing. Dev keeps the silent fallback (admin manually marks paid for local testing without Stripe wired).
+  - **A7** — `DealerProfile` no longer selects email from `users`. Query whitelists 9 public-safe columns; `DealerData` interface drops the email field entirely. Removed `mailto:` link from the contact strip — buyers contact via `/poruke` (anti-scam) or the dealer's listed business phone. Display fallback uses `dealerSlug` URL param.
+- **Build:** ✅ green, 2.06s. **Bundle:**
+  - `ListingWizard` chunk **fully eliminated** (was 103.43 kB raw / **29.50 kB gzip**)
+  - `index-*.js` 452.71 → **451.54 kB** (gzip 142.29 → **142.13 kB**, **−0.16 kB**)
+  - 4 files deleted
+  - `supabase-*.js` 50.74 kB gzip — unchanged ✓
+- **What this completes:** The audit doc's Tier 0 (bugs that were shipping broken or visibly inferior to avto.net). Any seller hitting the wizard now gets the full feature set. Buyer-side: one notification bell, one ListingCard, no leaked dealer emails. Production deploys with missing env now fail loudly instead of silently swallowing inspection bookings.
+- **Devil's-advocate:**
+  - *Slug fallback display when email-local-part was the historical name:* dealers with company_name set are unaffected (most dealers); only dealers with no company_name see `dealerSlug` (which IS the email-local-part anyway). Display is identical for the common case.
+  - *Email lookup still happens server-side via Supabase RLS-gated query.* The fix is "email no longer reaches public component state or DOM," not "email is removed from the database." Lookups still work; the wire just doesn't carry it to unauthenticated pages.
+  - *The InspectionBookingButton dev fallback is a feature, not a bug, in dev.* PROD-only hard-error guards production while keeping local dev workflow intact.
+- **Open after Tier 0 (next slice — Tier 1 buyer parity with avto.net):**
+  - **C2** — Equipment taxonomy + multi-select filter (~60 standard items: Climatronic, Tempomat, Bi-Xenon, parking sensors, lane assist…). **Biggest single buyer-side gap.** Today buyer wanting "automatic + leather + sunroof" has to scroll every result.
+  - **C5** — Click-attribute-to-search on ListingDetail (click "Diesel" → all Diesels).
+  - **C7** — Mapbox map view of search results.
+  - **C13** — Realtime "X ljudi gledaju ovo vozilo" via Supabase Presence.
+  - **C14** — Listing expiry mechanism. **Vozila has none.** Listings stay active forever. Add `listings.expires_at` (default created_at + 60d) + pre-expiry email + expire cron.
+- **Manual deploy:** No DB changes, no Edge Function changes — purely client + auto-deploy via main push.
+- **Next concrete action:** Pick first Tier 1 slice. **Recommended: C2 (equipment taxonomy)** — single biggest buyer-facing feature gap; without it search filtering feels primitive vs avto.net. Say `continue Vozila C2` or pick another C-item.
+
 ### Checkpoint <next>
 *(append next session)*
