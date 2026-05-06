@@ -1321,5 +1321,30 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Not in this turn:** R2 bottom-sheet header menu, R4 fluid typography, R7 aspect-ratio consolidation, R10 container queries, R11 `--header-height` var, R12-R13 image srcset, R16 focus return. All polish, not broken today.
 - **Files changed (1):** `client/src/components/listings/ListingFeed.tsx` (+183 / -3).
 
+### Checkpoint — R2 header menu → bottom-sheet drawer (2026-05-06)
+
+- **What landed:** RESPONSIVE_AUDIT R2 — converted the mobile/tablet header navigation from the legacy `fixed inset-0` full-screen overlay into a bottom-sheet drawer that visually matches the R3 filter drawer.
+  - `client/src/components/layout/Header.tsx` — wrapper changed from `lg:hidden fixed inset-0 z-[100] bg-background` to a `lg:hidden fixed inset-0 z-[120]` overlay containing a backdrop button (`bg-black/60 backdrop-blur-sm`) + sheet (`absolute inset-x-0 bottom-0 h-[92vh] bg-background slide-in-from-bottom`).
+  - Added grab-handle pill (`w-10 h-1 bg-muted-foreground/40 rounded-full`) at the top of the sheet — standard mobile UX affordance signaling the surface is dismissable.
+  - Added X close button (44×44 touch target, lucide `X` icon) to top-right of the brand header inside the sheet, alongside the existing categories/subcategory drill panels (preserved unchanged).
+  - Backdrop click + X button + Natrag (back) button + category Link clicks all dismiss; backdrop also resets `mobileDrillLevel` back to `'categories'` so reopening shows the top-level menu.
+  - Added body scroll-lock `useEffect` matching the R3 filter drawer pattern.
+  - **Critical fix:** wrapped the entire drawer JSX in `createPortal(..., document.body)` because the parent `<header>` element is `position: sticky z-50`, which creates its own stacking context. Without the portal, the drawer's z-120 was scoped under `<header>`'s z-50, so the page-level `ConsentBanner` (z-50) and `MobileBottomNav` (z-100) leaked through visually. Confirmed via `elementFromPoint` hit-test before/after the portal change.
+- **Build:** ✓ green in 2.23s. Main bundle `index-Bqg_45m1.js` = 460.01 kB / 143.89 kB gzip — +1.14 kB / +0.24 kB gzip vs the R3 baseline (drawer wrapper, scroll-lock effect, grab handle, portal call).
+- **Visual proof (Playwright headless, viewports 390 / 768 / 1440 + DOM hit-test):**
+  - Mobile 390×844: tap hamburger → bottom-sheet slides up from bottom, ~92vh tall, dimmed page header above, grab handle at top, brand + X close + category list. ConsentBanner and MobileBottomNav properly hidden behind the sheet.
+  - Tablet 768×1024: same — covers viewport bottom 92%, full category list (AUTOMOBILI through USLUGE) visible without leaking the bottom nav or consent banner.
+  - Desktop 1440×900: hamburger trigger doesn't render (`lg:hidden`), no drawer, desktop top-nav/category-bar intact.
+  - DOM hit-test at y=700/800/830/840 returns the drawer's category row, not the consent banner/bottom-nav — proves z-stacking is correct after the portal fix.
+- **Why this matters:** Previously the mobile menu was a full-screen overlay that felt heavy and dated (BaT, Airbnb, modern banking apps all use bottom-sheets). Now Vozila's mobile nav matches the R3 filter drawer pattern, giving the whole site a consistent bottom-sheet language for any modal surface. The grab handle communicates dismissability the way iOS users expect.
+- **Devil's-advocate (caught one real bug, fixed it):**
+  - *Drawer first-pass leaked ConsentBanner + MobileBottomNav through the bottom of the sheet.* Real bug — the `<header>` sticky-z-50 stacking context was capping the drawer's effective z-index. Found via DOM hit-test, fixed by portaling to `document.body`. The R3 filter drawer was already outside any sticky stacking context (it's rendered inside ListingFeed's normal flow), so it didn't hit this — Header's sticky wrapper is unique.
+  - *Sheet height 92vh leaves an 8vh dimmed strip at the top.* Intentional — communicates "tap the dim area to dismiss" the way bottom-sheets always do. Full-height would lose the affordance.
+  - *Body scroll-lock can collide with R3's identical lock if both drawers were open simultaneously.* Mutually exclusive in practice (you can't open the header menu while you're in ListingFeed's filter drawer — different routes/components). The lock-prev-value pattern restores correctly even if they did stack.
+  - *Portal target is `document.body` directly, which means the drawer mounts outside the React Router context tree.* The drawer doesn't use route hooks (only `Link` components which work via the `BrowserRouter` provider higher in the tree). Confirmed all `Link to=...` clicks navigate correctly inside the portaled drawer.
+  - *Adding `react-dom`'s `createPortal` import is not new (already in dep tree) — no bundle delta beyond the JSX itself.* Verified.
+- **Not in this turn:** R4 fluid typography, R7 aspect-ratio consolidation, R10 container queries, R11 `--header-height` var, R12-R13 image srcset, R16 focus return. All polish, not broken today.
+- **Files changed (1):** `client/src/components/layout/Header.tsx` (~+30 / -5 net).
+
 ### Checkpoint <next>
 *(append next session)*

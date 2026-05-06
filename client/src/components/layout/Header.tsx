@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { X, Plus, Sun, Moon, Heart, User, ChevronDown, Search, ChevronRight, LayoutDashboard, Settings as SettingsIcon, LogOut, LogIn, Wrench, Gavel } from 'lucide-react';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
@@ -24,6 +25,17 @@ export const Header = () => {
   const activeCategory = location.pathname.startsWith('/')
     ? location.pathname.split('/').filter(Boolean)[0] ?? null
     : null;
+
+  // RESPONSIVE_AUDIT R2: lock body scroll while the bottom-sheet menu is
+  // open. Without this the background page scrolls under the sheet on
+  // iOS Safari. Same pattern as the R3 filter drawer in ListingFeed.
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     const isDarkMode = document.documentElement.classList.contains('dark');
@@ -211,12 +223,43 @@ export const Header = () => {
         </NavigationMenu.Root>
       </div>
 
-      {/* MOBILE FULL-SCREEN MENU */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-[100] bg-background">
-          <div className="max-w-7xl mx-auto h-full flex flex-col relative overflow-hidden">
+      {/* MOBILE BOTTOM-SHEET MENU — RESPONSIVE_AUDIT R2.
+          Replaces the prior `fixed inset-0` full-screen overlay with a
+          bottom-sheet that slides up from the viewport floor. Backdrop
+          click + X close button + Natrag (back) all dismiss / drill.
+          Body scroll-lock applied via the mobileMenuOpen useEffect.
+          z-[120] sits above MobileBottomNav (z-100) and the R3 filter
+          drawer (also z-120) — only one of them is open at a time.
+          Portaled to document.body so the parent <header> stacking
+          context (z-50) doesn't trap the drawer behind the consent
+          banner (z-50) or MobileBottomNav (z-100). */}
+      {mobileMenuOpen && createPortal((
+        <div className="lg:hidden fixed inset-0 z-[120]" role="dialog" aria-modal="true" aria-label="Glavni izbornik">
+          {/* Backdrop — click to dismiss */}
+          <button
+            type="button"
+            aria-label="Zatvori izbornik"
+            onClick={() => { setMobileMenuOpen(false); setMobileDrillLevel('categories'); }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          />
+          {/* Bottom sheet — 92vh tall, slides up from bottom */}
+          <div className="absolute inset-x-0 bottom-0 h-[92vh] bg-background border-t border-border shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-300 safe-area-pb">
+            {/* Grab handle — visual affordance that this is dismissable */}
+            <div className="flex-shrink-0 flex justify-center pt-2.5 pb-1">
+              <div className="w-10 h-1 bg-muted-foreground/40 rounded-full" aria-hidden="true" />
+            </div>
+            <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col relative overflow-hidden">
             {/* Branding Header */}
-            <div className="flex flex-col items-center pt-12 pb-6 border-b border-border">
+            <div className="flex flex-col items-center pt-6 pb-6 border-b border-border relative">
+              {/* Close button — top-right corner, 44×44 touch target */}
+              <button
+                type="button"
+                onClick={() => { setMobileMenuOpen(false); setMobileDrillLevel('categories'); }}
+                className="absolute right-3 top-3 w-11 h-11 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Zatvori"
+              >
+                <X className="h-5 w-5" strokeWidth={1.5} />
+              </button>
               <img
                 src="/vozilahrlogo-light.svg"
                 alt="Vozila.hr"
@@ -302,9 +345,10 @@ export const Header = () => {
                 })()}
               </div>
             )}
+            </div>
           </div>
         </div>
-      )}
+      ), document.body)}
 
       {/* Super Search Modal */}
       <SuperSearchModal open={searchModalOpen} onOpenChange={setSearchModalOpen} />
