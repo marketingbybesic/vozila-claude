@@ -270,6 +270,8 @@ async function processOne(row: VinReportRow): Promise<{ ok: boolean; reason?: st
     .update({
       status: "delivered",
       report_url: signed.signedUrl,
+      signed_url_expires_at: expiresAt,
+      storage_path: path,
       vpic_data: vpicMap,
       cross_references: crossRefs,
       generated_at: new Date().toISOString(),

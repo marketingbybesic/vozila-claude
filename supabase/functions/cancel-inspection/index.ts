@@ -21,9 +21,16 @@ Deno.serve(async (req) => {
   if (pre) return pre;
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  let body: { booking_id?: string };
+  let body: { booking_id?: string; reason?: string; notes?: string };
   try { body = await req.json(); } catch { return json({ error: "Bad JSON" }, 400); }
   if (!body.booking_id) return json({ error: "booking_id required" }, 400);
+
+  // Accept-list of cancel reasons; anything else collapses to 'other'.
+  const REASON_WHITELIST = new Set([
+    "found_other_inspector", "no_longer_buying", "seller_unresponsive",
+    "scheduling_conflict", "price_changed", "vehicle_sold", "other",
+  ]);
+  const reason = body.reason && REASON_WHITELIST.has(body.reason) ? body.reason : "other";
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) return json({ error: "Auth required" }, 401);
@@ -81,6 +88,9 @@ Deno.serve(async (req) => {
     .update({
       status: "canceled",
       inspector_id: null,
+      cancel_reason: reason,
+      cancel_notes: body.notes?.trim() || null,
+      canceled_at: new Date().toISOString(),
     })
     .eq("id", booking.id);
   if (updErr) {
@@ -96,6 +106,7 @@ Deno.serve(async (req) => {
       refunded: refundEligible,
       refund_id: refundId,
       paid_eur: booking.paid_eur,
+      reason,
     },
   });
 

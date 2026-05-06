@@ -88,7 +88,30 @@ async function notifyInspectionAssigned(bookingId: string): Promise<void> {
 }
 
 // Buyer-initiated cancel — refunds via Stripe if paid.
-export async function cancelMyInspection(id: string): Promise<{ ok: boolean; refunded?: boolean; refund_id?: string | null; error?: string }> {
+export type CancelReason =
+  | 'found_other_inspector'
+  | 'no_longer_buying'
+  | 'seller_unresponsive'
+  | 'scheduling_conflict'
+  | 'price_changed'
+  | 'vehicle_sold'
+  | 'other';
+
+export const CANCEL_REASON_LABEL_HR: Record<CancelReason, string> = {
+  found_other_inspector: 'Pronašao sam drugog inspektora',
+  no_longer_buying:      'Više ne kupujem ovo vozilo',
+  seller_unresponsive:   'Prodavač se ne javlja',
+  scheduling_conflict:   'Termin mi ne odgovara',
+  price_changed:         'Cijena se promijenila',
+  vehicle_sold:          'Vozilo je prodano',
+  other:                 'Drugi razlog',
+};
+
+export async function cancelMyInspection(
+  id: string,
+  reason?: CancelReason,
+  notes?: string,
+): Promise<{ ok: boolean; refunded?: boolean; refund_id?: string | null; error?: string }> {
   const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
   if (!fnUrl) return { ok: false, error: 'Servis nije dostupan.' };
   const { data: { session } } = await supabase.auth.getSession();
@@ -98,7 +121,7 @@ export async function cancelMyInspection(id: string): Promise<{ ok: boolean; ref
     const res = await fetch(`${fnUrl}/cancel-inspection`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ booking_id: id }),
+      body: JSON.stringify({ booking_id: id, reason, notes }),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: j?.error ?? `(${res.status})` };

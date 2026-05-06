@@ -1,18 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FileSearch, Wrench, ExternalLink, Loader2, X, Check } from 'lucide-react';
+import { FileSearch, ExternalLink, Loader2, X, Check } from 'lucide-react';
 import {
   listMyVinReports,
+  refreshVinReportUrl,
+  isUrlStale,
   VIN_STATUS_LABEL_HR,
   type VinReportRow,
 } from '../../lib/vinReports';
 import {
   listMyInspections,
-  cancelMyInspection,
   STATUS_LABEL_HR as INSPECTION_STATUS_LABEL,
   TIME_WINDOW_LABEL_HR,
   type InspectionRow,
 } from '../../lib/inspections';
+import { CancelInspectionModal } from './CancelInspectionModal';
 
 // "Moje kupnje" — buyer-facing inventory of paid products on /postavke.
 // Two sub-sections: VIN reports + Inspekcije. Recovery surface so buyers
@@ -21,7 +23,8 @@ export const MyPurchasesCard = () => {
   const [vinReports, setVinReports] = useState<VinReportRow[]>([]);
   const [inspections, setInspections] = useState<InspectionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<InspectionRow | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -33,18 +36,21 @@ export const MyPurchasesCard = () => {
 
   useEffect(() => { reload(); }, [reload]);
 
-  const onCancelInspection = async (id: string) => {
-    if (!confirm('Otkazati rezervaciju? Ako je plaćeno, povrat ide automatski.')) return;
-    setBusy(id);
-    const res = await cancelMyInspection(id);
-    setBusy(null);
-    if (!res.ok) {
-      alert(res.error || 'Greška.');
+  // Click handler for VIN PDF link. If the signed URL is stale (or about
+  // to expire), re-sign first then open. This prevents the dead-link 404
+  // that would happen if the buyer waited > 30 days post-purchase.
+  const onClickVinPdf = async (e: React.MouseEvent<HTMLAnchorElement>, row: VinReportRow) => {
+    if (!isUrlStale(row)) return;  // fresh — let the link work as-is
+    e.preventDefault();
+    setRefreshingId(row.id);
+    const res = await refreshVinReportUrl(row.id);
+    setRefreshingId(null);
+    if (!res.ok || !res.report_url) {
+      alert(res.error || 'Osvježavanje linka nije uspjelo.');
       return;
     }
-    if (res.refunded) {
-      alert(`Otkazano. Povrat sredstava pokrenut (${res.refund_id ?? 'Stripe'}). Sredstva stižu u 5-10 radnih dana.`);
-    }
+    // Open the fresh URL + reload the row state.
+    window.open(res.report_url, '_blank', 'noopener,noreferrer');
     reload();
   };
 
@@ -85,11 +91,16 @@ export const MyPurchasesCard = () => {
                 {r.status === 'delivered' && r.report_url ? (
                   <a
                     href={r.report_url}
+                    onClick={(e) => onClickVinPdf(e, r)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
                   >
-                    <ExternalLink className="w-3 h-3" strokeWidth={1.5} />
+                    {refreshingId === r.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" strokeWidth={1.5} />
+                    ) : (
+                      <ExternalLink className="w-3 h-3" strokeWidth={1.5} />
+                    )}
                     Preuzmi PDF
                   </a>
                 ) : (
@@ -160,11 +171,10 @@ export const MyPurchasesCard = () => {
                     </div>
                     {cancelable && (
                       <button
-                        onClick={() => onCancelInspection(b.id)}
-                        disabled={busy === b.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.2em] border border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400 disabled:opacity-40 transition-colors flex-shrink-0"
+                        onClick={() => setCancelTarget(b)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-light uppercase tracking-[0.2em] border border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400 transition-colors flex-shrink-0"
                       >
-                        {busy === b.id ? <Loader2 className="w-3 h-3 animate-spin" strokeWidth={1.5} /> : <X className="w-3 h-3" strokeWidth={1.5} />}
+                        <X className="w-3 h-3" strokeWidth={1.5} />
                         Otkaži
                       </button>
                     )}
@@ -179,6 +189,24 @@ export const MyPurchasesCard = () => {
             })}
           </ul>
         </div>
+      )}
+
+      {/* Cancel-inspection modal — open when user clicks 'Otkaži' on a row */}
+      {cancelTarget && (
+        <CancelInspectionModal
+          bookingId={cancelTarget.id}
+          refundEligible={cancelTarget.status === 'paid' || cancelTarget.status === 'assigned'}
+          paidEur={cancelTarget.paid_eur ?? null}
+          open={!!cancelTarget}
+          onOpenChange={(open) => { if (!open) setCancelTarget(null); }}
+          onCanceled={(refunded, refundId) => {
+            setCancelTarget(null);
+            if (refunded) {
+              alert(`Otkazano. Povrat sredstava pokrenut${refundId ? ` (${refundId})` : ''}. Sredstva stižu u 5-10 radnih dana.`);
+            }
+            reload();
+          }}
+        />
       )}
     </div>
   );
