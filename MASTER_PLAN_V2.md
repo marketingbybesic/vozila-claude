@@ -1127,5 +1127,28 @@ Append after each session. Format: date, what shipped, build status, next concre
   - **(c)** Polish — wizard `?edit=<id>` photo manager, "my VIN reports" inventory card on `/postavke`, PDF refresh endpoint.
   - Recommendation: **(b)** — at this point we've shipped 16 phases of code. The next high-leverage move is verifying everything end-to-end against real services before adding more features. Say `continue Vozila phase 17` if you'd rather keep coding, or report runbook results.
 
+### Checkpoint 2026-05-06 (phase 17 — Inspection Stripe Checkout)
+- **Shipped:**
+  - `supabase/functions/create-inspection-checkout/index.ts` (new) — POST `/create-inspection-checkout` with `{booking_id}`. Validates user owns the booking + status is `pending`, creates Stripe Checkout (one-shot 100 EUR via `STRIPE_PRICE_INSPECTION`), persists `stripe_session_id` for webhook matching. The existing `stripe-webhook` `kind=inspection` branch from phase 11 flips status to `paid` + records `paid_eur=100`.
+  - `client/src/components/listings/InspectionBookingButton.tsx` — flow rebuilt as two-step: insert row → immediately call `create-inspection-checkout` → redirect to Stripe. CTA now reads "Plati i rezerviraj · 100€" + reassurance copy ("Plaćanje preko Stripe-a. Iznos se vraća ako prodavač odbije termin."). Dev fallback when `VITE_SUPABASE_FUNCTIONS_URL` unset: row stays pending, modal closes silently. Old `done` success-state removed since we always redirect on the happy path.
+- **Build:** ✅ green, 2.25s. **Bundle:**
+  - `index-*.js` 452.27 → **452.27 kB** (gzip 142.18 → **142.17 kB**, -0.01 — `Check` import dropped, slight tree-shake)
+  - `ListingDetail` 112.92 → 112.87 kB (-0.05) — InspectionBookingButton lives inside this chunk
+  - `supabase-*.js` 50.74 kB gzip unchanged ✓
+- **What this completes:** all paid products (Boost, Subs, VIN, Inspection) are now real Stripe Checkout flows with webhook fulfilment. No "captured intent" stubs left.
+- **Open after 17 (deferred):**
+  - **Refund-on-seller-decline.** The CTA promises a refund if the seller declines the appointment, but no automated path exists yet. For v1, admin manually refunds via Stripe Dashboard. Adding `cancel-inspection` Edge Function with auto-refund is a future polish.
+  - **Inspector assignment notification.** When admin assigns an inspector to a paid booking, the buyer should be notified. Currently they only learn after the inspector marks complete (which fires the existing flow).
+  - **Buyer-facing "my inspections" card** on `/postavke` — same gap as VIN reports. Should ship together as a small inventory section.
+- **Devil's-advocate:**
+  - *Race between insert-row + call-checkout?* Booking row writes first; if checkout call fails, the row exists in `pending` (admin can recover). Worst case a row sits unpaid; admin queue already filters by status.
+  - *RLS on inspection_bookings already restricts to self+admin.* Edge Function uses user-JWT path so RLS holds; service-role only used for the optional `stripe_session_id` write (defensive — the webhook actually keys off `metadata.booking_id`).
+  - *Dev fallback could mask a missing-env bug.* Acceptable: the modal still closes, no money charged, admin sees the pending row in `/admin?section=...` (no inspection tab yet — currently visible via SQL or future polish).
+- **Manual deploy:**
+  1. Stripe Dashboard → Catalog → create one-time price 100 EUR product "Vozila Inspekcija". Copy Price ID.
+  2. Add `STRIPE_PRICE_INSPECTION=price_...` to `supabase/.env.local` and `supabase secrets set --env-file ./supabase/.env.local`.
+  3. `supabase functions deploy create-inspection-checkout`.
+- **Next:** Run live runbook v2 — at this point all 17 phases are code-complete and every revenue line has end-to-end fulfilment. Or polish: "my VIN reports + my inspections" card on `/postavke`, refund flow, inspector-assigned notification. Say `continue Vozila polish` for the polish pass, or report runbook results.
+
 ### Checkpoint <next>
 *(append next session)*
