@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Check, Loader2, Wrench } from 'lucide-react';
+import { X, Loader2, Wrench } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Props {
@@ -9,14 +9,14 @@ interface Props {
   defaultAddress?: string;
 }
 
-// Vozila Inspection booking — €100 stub. Inserts into inspection_bookings
-// with status='pending'. Stripe Checkout in phase 11.x once we wire up the
-// vin-report path the same way; for now we capture intent + admin manually
-// fulfils first 10 to validate demand.
+// Vozila Inspection booking — €100, paid via Stripe Checkout.
+// Two-step flow: insert pending row → call create-inspection-checkout
+// Edge Function → redirect to Stripe. Webhook (kind=inspection) flips the
+// row to 'paid' on success. If env is missing, falls back to capture-only
+// so dev doesn't break.
 export const InspectionBookingButton = ({ listingId, defaultAddress }: Props) => {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState(defaultAddress ?? '');
   const [date, setDate] = useState('');
@@ -34,7 +34,8 @@ export const InspectionBookingButton = ({ listingId, defaultAddress }: Props) =>
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setError('Prijavite se za rezervaciju inspekcije.'); setBusy(false); return; }
-      const { error: insErr } = await supabase
+
+      const { data: booking, error: insErr } = await supabase
         .from('inspection_bookings')
         .insert({
           user_id: user.id,
@@ -43,10 +44,37 @@ export const InspectionBookingButton = ({ listingId, defaultAddress }: Props) =>
           preferred_date: date || null,
           preferred_time_window: timeWindow,
           notes: notes.trim() || null,
-        });
+        })
+        .select('id')
+        .single();
       if (insErr) throw insErr;
-      setDone(true);
-      setTimeout(() => { setOpen(false); setDone(false); }, 2400);
+      if (!booking) throw new Error('Rezervacija nije uspjela.');
+
+      // Hand off to Stripe Checkout — webhook flips status to 'paid'.
+      const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+      if (fnUrl) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error('Sesija je istekla.');
+        const res = await fetch(`${fnUrl}/create-inspection-checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ booking_id: booking.id }),
+        });
+        if (res.ok) {
+          const j = await res.json();
+          if (j.url) {
+            window.location.href = j.url as string;
+            return;
+          }
+          throw new Error('Nedostaje Checkout URL.');
+        }
+        const txt = await res.text().catch(() => '');
+        throw new Error(`(${res.status}) ${txt || 'Greška pri kreiranju kupnje.'}`);
+      }
+      // Dev fallback (no env): leave row pending, just close the modal so
+      // the user gets visual confirmation. Admin can manually mark paid.
+      setOpen(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Greška.');
     } finally {
@@ -80,12 +108,7 @@ export const InspectionBookingButton = ({ listingId, defaultAddress }: Props) =>
             </Dialog.Close>
           </div>
 
-          {done ? (
-            <div className="flex items-center gap-3 p-4 border border-green-500/30 bg-green-500/5 text-sm font-light text-green-400">
-              <Check className="w-4 h-4" strokeWidth={2} />
-              Rezervacija primljena. Javit ćemo se za potvrdu termina.
-            </div>
-          ) : (
+          {(
             <div className="space-y-3">
               <label className="block">
                 <span className="block text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground mb-1.5">Adresa vozila</span>
@@ -137,8 +160,11 @@ export const InspectionBookingButton = ({ listingId, defaultAddress }: Props) =>
                 className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground text-[10px] font-light uppercase tracking-[0.25em] hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />}
-                Pošalji zahtjev
+                Plati i rezerviraj · 100€
               </button>
+              <p className="text-[10px] font-light text-muted-foreground/70 leading-relaxed text-center">
+                Plaćanje preko Stripe-a. Iznos se vraća ako prodavač odbije termin.
+              </p>
             </div>
           )}
         </Dialog.Content>
