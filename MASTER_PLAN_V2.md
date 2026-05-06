@@ -1211,5 +1211,30 @@ Append after each session. Format: date, what shipped, build status, next concre
   - No new env vars.
 - **Next:** Live runbook v2 walk-through against real services (highest leverage), or `continue Vozila polish` for round 3 (admin cancel analytics tile, URL-expiry digest cron, admin cancel-inspection-on-completed).
 
+### Checkpoint 2026-05-06 (polish round 3 — cancel-reason analytics + VIN URL expiry digest)
+- **Shipped:**
+  - **`client/src/lib/admin.ts`** — `getCancelReasonStats(days=30)`: query canceled `inspection_bookings`, bucket by `cancel_reason`, return per-reason count + sum of refunded euros. `CancelReasonStat` type.
+  - **`AdminOverview`** — new "Razlozi otkazivanja inspekcija (30 dana)" tile below the 10-card KPI grid. Per-row progress bar (% of total cancels) + count + refund euros. Croatian label map for the 7 reasons. Header shows total cancels + total refunded. Renders only when there's data.
+  - **`supabase/functions/vin-url-expiry-digest`** (new cron): daily 09:00 Europe/Zagreb. Finds `delivered` VIN reports whose `signed_url_expires_at` is within 7 days AND not already past. 30-day notifications-row dedupe keyed on `(user_id, 'vin_url_expiring', payload->>report_id)` prevents multi-day spam. Drops notification row + sends `tplVinReportExpiring` Croatian email linking to `/postavke` (where the click-to-refresh flow lives). Wrapped in `withCron`. Returns `{processed, sent, skipped}`.
+  - **`_shared/email-vin.ts`** — `tplVinReportExpiring` template added: monospace VIN block, "Otvori postavke" CTA, reassurance "Bez troška — vaš PDF ostaje sigurno pohranjen".
+  - **`lib/notifications.ts` + `NotificationsFlyout`** — `vin_url_expiring` cases: link → `/postavke`, title → "VIN link uskoro istječe — <VIN>", icon → AlertCircle.
+- **Build:** ✅ green, 1.90s. index 452.55 → **452.71 kB** (gzip 142.24 → **142.29 kB**, +0.05 — analytics fn + flyout case). Supabase chunk 50.74 kB unchanged.
+- **Mid-flight bug + recovery:** an earlier Edit to `lib/admin.ts` silently failed file-not-read precondition. Build caught it via `[MISSING_EXPORT] getCancelReasonStats`. Re-Read + re-applied, build now green. Same pattern as polish round 2 — the build is the only honest gate.
+- **Manual deploy:**
+  - `supabase functions deploy vin-url-expiry-digest --no-verify-jwt`
+  - Schedule daily 09:00 Europe/Zagreb cron via pg_cron + pg_net (same SQL pattern as `auction-settle` in runbook section 6, just swap the URL + cron schedule to `0 9 * * *`).
+- **What this completes:** the VIN report product now has full lifecycle protection — paid → fulfilled → emailed → recovery card → 7-day expiry nudge → click-to-refresh. Buyer can never end up with a dead-link 404 silently. Admin gets analytics on why people cancel inspections.
+- **Open after polish 3 (still deferred):**
+  - **Admin cancel-inspection-on-completed override** (rare botched-inspection refund) — needs a new admin queue surface; deferred until volume warrants.
+  - **Same expiry-digest pattern for inspection reports** if/when those go to Storage instead of URL-paste. Inspector reports currently use buyer-pasted URLs (no Storage upload yet) so no expiry to track.
+- **Devil's-advocate:**
+  - *Cron horizon vs schedule cadence.* Daily cron + 7-day horizon = a row could be picked up across 7 different days, but the 30-day dedupe window means each buyer is nudged at most once per 30 days about the same report. Verified.
+  - *What if a buyer never visits `/postavke`?* They still get the email; if they ignore it the URL eventually expires; they call support; admin re-runs the refresh function. Acceptable graceful degradation.
+  - *Cancel-reason analytics could leak per-user info via the bucketed counts.* Admin-only view, RLS gates the underlying query at the row level; counts are aggregate across all buyers. Safe.
+- **Next concrete action options:**
+  - **(a)** Run the live runbook v2 against your real Supabase + Stripe + Resend accounts (~90 min). All 18 phases + 3 polish rounds are code-complete.
+  - **(b)** Polish round 4 — admin cancel-on-completed UI + scheduled reminder for inspector before assigned date + small accessibility audit.
+  - **(c)** New feature work — sub-domain `aukcija.vozila.hr` for the auction track (currently `/aukcija` path).
+
 ### Checkpoint <next>
 *(append next session)*
