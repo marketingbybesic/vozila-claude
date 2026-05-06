@@ -13,7 +13,6 @@ import { ListingFeed } from './components/listings/ListingFeed';
 // Code-split the heavy / rarely-visited routes. Reduces initial JS by ~40%.
 // Keeps Home + ListingFeed eager since they're the high-traffic landing routes.
 const Dashboard           = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
-const ListingWizard       = lazy(() => import('./components/listings/ListingWizard').then(m => ({ default: m.ListingWizard })));
 const CreateListingWizard = lazy(() => import('./components/listings/CreateListingWizard').then(m => ({ default: m.CreateListingWizard })));
 const ListingDetail       = lazy(() => import('./components/listings/ListingDetail').then(m => ({ default: m.ListingDetail })));
 const MobileUpload        = lazy(() => import('./pages/MobileUpload').then(m => ({ default: m.MobileUpload })));
@@ -62,7 +61,12 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/predaj-oglas" element={<ListingWizard />} />
+                  {/* /predaj-oglas + /create-listing both point at the same wizard.
+                      The legacy ListingWizard.tsx was deleted in Tier 0 — it was
+                      missing 8 phases of work (no user_id fix, no listing limits,
+                      no VIN quick-fill, no AI copywriter, no auction toggle, no
+                      ?edit mode). Don't recreate it. */}
+                  <Route path="/predaj-oglas" element={<CreateListingWizard />} />
                   <Route path="/create-listing" element={<CreateListingWizard />} />
                   <Route path="/listing/:id" element={<ListingDetail />} />
                   <Route path="/mobile-upload" element={<MobileUpload />} />

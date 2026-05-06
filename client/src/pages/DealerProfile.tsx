@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { ShieldCheck, MapPin, Phone, Mail, Star } from 'lucide-react';
+import { ShieldCheck, MapPin, Phone, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { ListingCard } from '../components/listings/ListingFeed';
 import { VerifiedDealerBadge } from '../components/listings/VerifiedDealerBadge';
@@ -9,9 +9,14 @@ import { DealerReviews } from '../components/listings/DealerReviews';
 import type { SubTierId, SubStatus } from '../lib/subscription';
 import type { Listing } from '../types';
 
+// Bug A7 fix: dropped the email field from the public dealer view + the
+// mailto link in the contact strip. Email lives in auth.users only and
+// never reaches a public page now. Buyers contact via /poruke (messaging
+// is the anti-scam path) or via the dealer's listed business phone.
+// Slug ↔ dealer is resolved through the email's local-part lookup but
+// the email itself is never selected into UI state.
 interface DealerData {
   id: string;
-  email: string;
   role: string;
   dealer_verified: boolean;
   company_name?: string;
@@ -38,10 +43,16 @@ export const DealerProfile = () => {
   useEffect(() => {
     const run = async () => {
       try {
-        // dealerSlug is the email's local-part for the demo (e.g. 'demo' → demo@vozila.hr)
+        // Resolve slug → user. The email's local-part is the slug for v1.
+        // We look up auth.users.email to find the id, then ONLY select the
+        // public-safe columns from users. Email never enters component state
+        // — keeps it off the wire to any unauthenticated request.
         const email = dealerSlug?.includes('@') ? dealerSlug : `${dealerSlug}@vozila.hr`;
         const { data: u } = await supabase
-          .from('users').select('*').eq('email', email).maybeSingle();
+          .from('users')
+          .select('id, role, dealer_verified, company_name, office_address, business_phone, whatsapp_number, bio, logo_url, created_at')
+          .eq('email', email)
+          .maybeSingle();
         const dealerRow = u as DealerData | null;
 
         // Pull subscription state from profiles (canonical source).
@@ -104,7 +115,9 @@ export const DealerProfile = () => {
     );
   }
 
-  const display = dealer.company_name || dealer.email.split('@')[0];
+  // Display name falls back to slug since email is no longer in component
+  // state (bug A7 fix). dealerSlug is always present here.
+  const display = dealer.company_name || (dealerSlug ?? 'Salon');
 
   return (
     <div className="min-h-screen bg-background">
@@ -165,7 +178,9 @@ export const DealerProfile = () => {
                 </span>
               </div>
 
-              {/* Contact line */}
+              {/* Contact line — email removed (bug A7). Buyers contact via
+                  /poruke for anti-scam protection; phone stays as direct CTA
+                  when the dealer has chosen to publish it. */}
               <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
                 {dealer.office_address && (
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground">
@@ -177,9 +192,6 @@ export const DealerProfile = () => {
                     <Phone className="w-3 h-3" strokeWidth={1.5} /> {dealer.business_phone}
                   </a>
                 )}
-                <a href={`mailto:${dealer.email}`} className="inline-flex items-center gap-1.5 text-[10px] font-light uppercase tracking-[0.25em] text-foreground hover:text-primary transition-colors">
-                  <Mail className="w-3 h-3" strokeWidth={1.5} /> {dealer.email}
-                </a>
               </div>
             </div>
           </div>

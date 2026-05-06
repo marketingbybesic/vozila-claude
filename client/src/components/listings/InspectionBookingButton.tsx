@@ -51,30 +51,36 @@ export const InspectionBookingButton = ({ listingId, defaultAddress }: Props) =>
       if (!booking) throw new Error('Rezervacija nije uspjela.');
 
       // Hand off to Stripe Checkout — webhook flips status to 'paid'.
+      // Bug A4 fix: only fall back silently in DEV. In production a missing
+      // VITE_SUPABASE_FUNCTIONS_URL means a misconfigured deploy + we'd
+      // be silently swallowing bookings. Hard-error instead.
       const fnUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
-      if (fnUrl) {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        if (!token) throw new Error('Sesija je istekla.');
-        const res = await fetch(`${fnUrl}/create-inspection-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ booking_id: booking.id }),
-        });
-        if (res.ok) {
-          const j = await res.json();
-          if (j.url) {
-            window.location.href = j.url as string;
-            return;
-          }
-          throw new Error('Nedostaje Checkout URL.');
+      if (!fnUrl) {
+        if (import.meta.env.PROD) {
+          throw new Error('Plaćanje trenutno nije dostupno (servis nije konfiguriran). Javite se podršci.');
         }
-        const txt = await res.text().catch(() => '');
-        throw new Error(`(${res.status}) ${txt || 'Greška pri kreiranju kupnje.'}`);
+        // Dev only — admin manually marks paid.
+        setOpen(false);
+        return;
       }
-      // Dev fallback (no env): leave row pending, just close the modal so
-      // the user gets visual confirmation. Admin can manually mark paid.
-      setOpen(false);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Sesija je istekla.');
+      const res = await fetch(`${fnUrl}/create-inspection-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ booking_id: booking.id }),
+      });
+      if (res.ok) {
+        const j = await res.json();
+        if (j.url) {
+          window.location.href = j.url as string;
+          return;
+        }
+        throw new Error('Nedostaje Checkout URL.');
+      }
+      const txt = await res.text().catch(() => '');
+      throw new Error(`(${res.status}) ${txt || 'Greška pri kreiranju kupnje.'}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Greška.');
     } finally {

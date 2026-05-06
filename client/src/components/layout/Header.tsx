@@ -5,7 +5,9 @@ import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { navigationMenu } from '../../config/taxonomy';
 import { supabase } from '../../lib/supabase';
 import { SuperSearchModal } from '../search/SuperSearchModal';
-import { NotificationsBell } from './NotificationsBell';
+// Bug A8 fix: dropped legacy NotificationsBell — the flyout already
+// includes the message-quick-link tile + counts, so two bells in the
+// header were redundant + confusing.
 import { NotificationsFlyout } from './NotificationsFlyout';
 
 export const Header = () => {
@@ -93,7 +95,6 @@ export const Header = () => {
               <span className="absolute top-0 right-0 h-4 w-4 bg-primary text-primary-foreground text-[10px] font-light flex items-center justify-center shadow-sm">{favoritesCount}</span>
             )}
           </Link>
-          <NotificationsBell />
           <NotificationsFlyout />
           <div className="relative">
             <button

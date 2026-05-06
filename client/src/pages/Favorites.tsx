@@ -4,7 +4,10 @@ import { ArrowLeft, Heart, Loader2 } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
 import { supabase } from '../lib/supabase';
 import type { Listing } from '../types';
-import { ListingCard } from '../components/listing/ListingCard';
+// Bug A2 fix: consolidated to the single ListingCard exported from
+// ListingFeed (the one with tier-aware VerifiedDealerBadge + matchScore
+// pill + 5:4 aspect). Standalone components/listing/ListingCard.tsx deleted.
+import { ListingCard } from '../components/listings/ListingFeed';
 
 export const Favorites = () => {
   const { favorites, loading: favLoading } = useFavorites();
@@ -56,7 +59,9 @@ export const Favorites = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
+            <Link key={listing.id} to={`/listing/${listing.id}`} className="block">
+              <ListingCard car={listing} />
+            </Link>
           ))}
         </div>
       )}
