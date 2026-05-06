@@ -1262,5 +1262,41 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Manual deploy:** No DB changes, no Edge Function changes — purely client + auto-deploy via main push.
 - **Next concrete action:** Pick first Tier 1 slice. **Recommended: C2 (equipment taxonomy)** — single biggest buyer-facing feature gap; without it search filtering feels primitive vs avto.net. Say `continue Vozila C2` or pick another C-item.
 
+### Checkpoint 2026-05-06 (security + responsive — 2 audit docs + 5 critical patches)
+- **Audits written (read-before-patch reference docs):**
+  - `SECURITY_AUDIT.md` — 17 findings graded CRITICAL/HIGH/MEDIUM/LOW. Top 3 critical: stored XSS via `dangerouslySetInnerHTML` on admin HTML ads (S1), 5 legacy tables with NO RLS letting anon dump every dealer email/phone/VAT (S2), `ads` table missing admin-only insert RLS (S3). Plus CORS wildcard, env interpolation patterns, lead-spam vector, no CSP, signed-URL sharing, etc.
+  - `RESPONSIVE_AUDIT.md` — 16 findings vs current modern responsive patterns. Top 5: undersized touch targets (R1), missing safe-area CSS though referenced (R6), iOS auto-zoom on <16px form inputs (R9), bottom nav obscures content (R14), no `prefers-reduced-motion` respect (R8). Plus fluid typography, bottom-sheet patterns, container queries, image srcset gap.
+- **Patches shipped this turn (5 highest-leverage):**
+  - **S2 + S3 — `011_legacy_rls.sql`** (idempotent): retrofits RLS on 5 legacy tables (`users`, `categories`, `listing_analytics`, `listing_images`, `favorites`) + admin-only RLS on `ads`. Self-or-admin select on `users` + admin-write on `categories`. New `public_dealer_directory` view strips email/vat/whatsapp from anonymous reads.
+  - **S4 — CORS allowlist** in `_shared/cors.ts`: wildcard `*` replaced with origin echo gated by allowlist (`vozila.hr` + `testiranje.cloud` + dev ports). `CORS_EXTRA_ORIGINS` env override. Backward-compat `corsHeaders` export preserved.
+  - **S1 — iframe sandbox for HTML ads:** `dangerouslySetInnerHTML` → `<iframe sandbox="" srcDoc={ad.html_content}>`. Closes the admin-compromise → stored-XSS attack chain.
+  - **R6 + R14 + R9 + R1 — `index.css` utility additions:** `safe-area-pb/pt/pl/pr` classes, body bottom-padding 80px+safe on `<lg`, 16px input floor under `md` to kill iOS auto-zoom, 44×44 min touch target via `(hover: none) and (pointer: coarse)` media query (with inline-anchor exemption).
+  - **R8 + R15 — `App.tsx`:** `<MotionConfig reducedMotion="user">` wraps the entire app (WCAG 2.3.3). Skip-to-content link visually-hidden until focus, targets new `<main id="main">`.
+- **Build:** ✅ green, 2.13s. index 451.54 → **453.74 kB** (gzip 142.13 → **143.02 kB**, +0.89 — MotionConfig glue + skip-link). `proxy-*.js` 122.49 → 124.95 kB (gzip +0.95 — framer-motion reduced-motion machinery). Supabase chunk 50.74 kB unchanged ✓.
+- **What this completes:**
+  - **CRITICAL data exposure closed.** Pre-S2 anon could `SELECT *` from `users` to dump every dealer email + VAT + phone. Pre-S3 anon could `INSERT` malicious `html_content` into `ads`. Both shut.
+  - **CRITICAL XSS closed.** Compromise of an admin account no longer = JS execution on every page that renders an ad slot. Sandbox iframe blocks JS in our origin.
+  - **iPhone usability fixed.** Mobile sticky bar no longer overlaps home indicator (R6). Form inputs no longer trigger auto-zoom on tap (R9). Bottom nav no longer hides content (R14). Touch targets no longer fail Apple HIG (R1).
+  - **Accessibility floor raised.** Reduced-motion respected (R8). Skip-to-content link (R15).
+- **Honest scope of what's NOT in this turn:**
+  - SECURITY: S5 (category-slug FK), S6 (analytics interpolation), S8-S17 — defense-in-depth, no concrete attack today. Documented for next turn.
+  - RESPONSIVE: R2 (bottom-sheet menu), R3 (filter sidebar collapse — biggest feed UX win), R4 (fluid typography), R10-R13, R16 — polish, not broken today.
+- **Devil's-advocate:**
+  - *011 migration backfills RLS but `users` already has data accessible if Supabase anon key was already leaked.* Correct — this is a forward fix. No way to know what was already scraped. Document in `LIVE_RUNBOOK_V2.md` Section 14 with "rotate Supabase anon key after running 011".
+  - *iframe sandbox breaks legitimate AdSense / partner code.* Yes — those ads have to use the `image` + `target_link` ad type instead, or we add `sandbox="allow-scripts allow-same-origin"` on a per-ad-trust basis. AdSense itself runs from `googlesyndication.com` and IS designed to run in a sandboxed iframe with `allow-scripts`. Add a per-ad `is_trusted` boolean if/when needed.
+  - *MotionConfig at root affects every framer-motion usage including auction countdown ticker.* Reduced-motion users get instant transitions instead of animations — correct behavior, not a regression.
+  - *Skip-to-content link's z-index 200 may stack over modals.* Visible only when keyboard-focused; modals trap focus so the link can't steal it during a modal. Verified.
+  - *Body bottom-padding 80px on `<lg` adds visual gap on tablets that don't show the bottom nav.* MobileBottomNav uses `lg:hidden` so it does show on tablets <1024px — padding matches. Verified.
+- **Manual deploy:**
+  - `psql "$DATABASE_URL" -f server/db/migrations/011_legacy_rls.sql`
+  - `supabase functions deploy ...` for all 17 functions (they share `_shared/cors.ts`)
+  - Optional: `CORS_EXTRA_ORIGINS=https://staging.vozila.hr` for preview environments
+  - **After 011 lands, ROTATE the Supabase anon key** (Supabase Dashboard → Project Settings → API → Reset anon key) and update `client/.env` + redeploy. Otherwise old anon-key copies in browsers can still read what 011 just blocked, until they re-fetch.
+- **Next concrete action options:**
+  - **(a)** Tier 1 Vozila C-items (avto.net parity): C2 equipment taxonomy is the biggest single buyer-side feature gap.
+  - **(b)** More security hardening: S5 + S10 (lead-spam) + S12 (CSP).
+  - **(c)** More responsive polish: R2 (bottom-sheet menu) + R3 (filter sidebar collapse) — biggest mobile UX wins.
+  - **(d)** Live runbook v2 walk-through.
+
 ### Checkpoint <next>
 *(append next session)*
