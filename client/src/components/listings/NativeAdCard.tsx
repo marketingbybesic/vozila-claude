@@ -39,7 +39,7 @@ export const NativeAdCard = ({
       className="group relative block bg-card border border-border rounded-none overflow-hidden hover:border-foreground/30 transition-all duration-300"
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+      <div className="relative aspect-[5/4] bg-muted overflow-hidden">
         {imageUrl ? (
           <img
             src={imageUrl}

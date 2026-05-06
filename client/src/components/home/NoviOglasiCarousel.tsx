@@ -198,7 +198,7 @@ export const NoviOglasiCarousel = () => {
                 className="group flex-shrink-0 w-full sm:w-1/2 lg:w-1/4 min-w-[260px] px-2"
               >
                 <div className="border border-border bg-black overflow-hidden">
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                  <div className="relative aspect-[5/4] overflow-hidden">
                     <img
                       src={img}
                       alt={listing.title}

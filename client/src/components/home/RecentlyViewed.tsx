@@ -45,7 +45,7 @@ export const RecentlyViewed = () => {
             className="group flex-shrink-0 w-[260px] sm:w-[280px] block"
             aria-label={`Vrati se na ${it.title}`}
           >
-            <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+            <div className="relative aspect-[5/4] overflow-hidden bg-muted">
               <img
                 src={it.imageUrl || PLACEHOLDER_CAR}
                 alt={it.title}

@@ -1381,5 +1381,29 @@ Append after each session. Format: date, what shipped, build status, next concre
 - **Not in this turn:** R7 aspect-ratio consolidation, R10 container queries, R11 `--header-height` var, R12-R13 image srcset, R16 focus return. All polish, not broken today.
 - **Files changed (4):** `client/src/index.css`, `client/src/components/home/Hero.tsx`, `client/src/pages/Pricing.tsx`, `client/src/pages/AuctionDetail.tsx`.
 
+### Checkpoint — R7 listing card aspect-ratio consolidation (2026-05-06)
+
+- **What landed:** RESPONSIVE_AUDIT R7 — single source of truth `aspect-[5/4]` for every listing-card image grid across the site. Six spots that had drifted onto `aspect-[4/3]` are now aligned with the canonical ListingCard / dealer-profile export ratio.
+  - `client/src/components/listings/NativeAdCard.tsx:42` — sponsored-card image tile `aspect-[4/3]` → `aspect-[5/4]` (so native ads slot identically into Feed grids without breaking row alignment).
+  - `client/src/components/home/NoviOglasiCarousel.tsx:201` — "Najnovije u ponudi" carousel slide `aspect-[4/3]` → `aspect-[5/4]`.
+  - `client/src/components/home/RecentlyViewed.tsx:48` — "Tu si stao" recently-viewed strip card `aspect-[4/3]` → `aspect-[5/4]`.
+  - `client/src/pages/Auctions.tsx:103` — auction-list card image `aspect-[4/3]` → `aspect-[5/4]`.
+  - `client/src/pages/Compare.tsx:104` — Compare-table image cell `aspect-[4/3]` → `aspect-[5/4]`.
+  - `client/src/pages/Compare.tsx:119` — Compare-table "+ Dodaj vozilo" placeholder `aspect-[4/3]` → `aspect-[5/4]` (so the empty add-slot matches the filled cells visually).
+- **Build:** ✓ green in 2.60s. Bundle `index-DW-g44qQ.js` = **459.97 kB / 143.86 kB gzip** — byte-identical to the R4 baseline. Pure string replacement, no behavior change.
+- **Visual proof:**
+  - Programmatic side-by-side reference shot (`/tmp/r7-shots/aspect-comparison.png`) overlays a 300×240 (5/4, ratio 1.250) tile next to a 300×225 (4/3, ratio 1.333) tile to make the visual delta concrete — 5/4 gives ~7% more vertical space for the car photo, which matters because cars are the subject and need height.
+  - DOM measurement on `/` confirms the canonical ListingCard already renders at exactly 5/4 (299×239 = ratio 1.250) — meaning the 6 spots above were the outliers, not the rule.
+  - Screenshots captured at 1440 viewport for Home (`home-cards-section.png`), Auctions empty-state (`auctions-1440.png`), and Compare empty-state (`compare-1440.png`). Live listing cards couldn't be screenshotted from localhost — the local preview build can't authenticate against prod Supabase from a dev origin, so listings query returns nothing — but the change is purely CSS, applies to every render, and the source diff is mechanically auditable on all 6 spots.
+- **Why this matters:** Listing-card photos used to be subtly different heights between Feed (5/4), NativeAdCard ads sprinkled into the Feed (4/3), Recently Viewed strip (4/3), Auctions list (4/3), and Compare cells (4/3). Result: native ads broke Feed-row alignment, the "Tu si stao" strip looked shorter than the cards above it, and the Compare table felt cramped. With one canonical ratio everything aligns, and the slightly-taller 5/4 better suits typical car photography (front-three-quarter angle benefits from vertical space).
+- **Devil's-advocate:**
+  - *Why 5/4 specifically and not 4/3 or 16/9?* The canonical `ListingCard` (used in dealer profile + feed grid + favorites + similar-vehicles) was already 5/4 by previous decision. Either we rolled outliers up to 5/4, or we rolled the canonical down to 4/3 and changed every grid in the app. The first delta is six 4-character string replacements; the second would have been hundreds of cards' worth of scroll-jank during PR review. Aligning to the existing canon is the small, safe move.
+  - *Why not also touch `CategoryGrid` 16:4 banners or `Hero` 16:9 image?* Those are intentionally different — category banners are full-width landscape banners not card faces, and the Hero image is cinematic. Card-face listings = 5/4; landscape banners = 16:4 or 16:9. Two distinct families, both intentional.
+  - *Bundle is byte-identical — does that mean nothing changed?* Tailwind generates the same single `aspect-[5/4]` class regardless of how many call-sites use it; the 6 sites previously emitted `aspect-[4/3]` (which is no longer used anywhere → tree-shaken out) and now reuse the existing `aspect-[5/4]` class. So the byte parity is exactly what proves the change is pure CSS reassignment.
+  - *Compare's `aspect-[5/4]` "+ placeholder" loses ~6.7% horizontal whitespace inside the dashed border vs the old 4/3.* Trivial — the `+` icon centers at 50/50 in both, only the box height changes. Compared visually in the empty-state screenshot, looks correct.
+  - *Empty Auctions / empty Compare / empty Feed pages can't visually prove the change in this preview run.* True — but R7 is mechanical. The diff is six `[4/3]` → `[5/4]` replacements, all in `className` attributes, with the build proving every replacement compiled. Production renders the same Tailwind class every time. No way for this to silently revert without a string change in source.
+- **Not in this turn:** R10 container queries, R11 `--header-height` var, R12 image srcset (responsive image sources), R13 image `loading="lazy"` audit, R16 focus return on drawer dismiss. All polish, not broken today.
+- **Files changed (5 source + 1 plan):** `client/src/components/listings/NativeAdCard.tsx`, `client/src/components/home/NoviOglasiCarousel.tsx`, `client/src/components/home/RecentlyViewed.tsx`, `client/src/pages/Auctions.tsx`, `client/src/pages/Compare.tsx`, `MASTER_PLAN_V2.md`.
+
 ### Checkpoint <next>
 *(append next session)*

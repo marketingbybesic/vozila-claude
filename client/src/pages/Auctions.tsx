@@ -100,7 +100,7 @@ const AuctionCard = ({ a, now }: { a: AuctionRow; now: number }) => {
   return (
     <Link to={`/aukcija/${a.id}`} className="block group">
       <article className="bg-card border border-border hover:border-primary/40 transition-colors overflow-hidden">
-        <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+        <div className="relative aspect-[5/4] bg-muted overflow-hidden">
           {a.listing?.main_image ? (
             <img src={a.listing.main_image} alt={a.listing.title}
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />

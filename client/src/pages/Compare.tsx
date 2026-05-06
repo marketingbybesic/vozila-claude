@@ -101,7 +101,7 @@ export const Compare = () => {
                           <X className="w-3.5 h-3.5" strokeWidth={1.5} />
                         </button>
                         <Link to={`/listing/${l.id}`} className="block">
-                          <div className="relative aspect-[4/3] mb-3 overflow-hidden bg-muted">
+                          <div className="relative aspect-[5/4] mb-3 overflow-hidden bg-muted">
                             <img src={img} alt={l.title} onError={onImgError} className="absolute inset-0 w-full h-full object-cover" />
                           </div>
                           <p className="text-xs font-light uppercase tracking-[0.08em] text-foreground line-clamp-2 leading-snug">
@@ -116,7 +116,7 @@ export const Compare = () => {
                   })}
                   {listings.length < 4 && (
                     <th className="text-left p-4 align-top">
-                      <Link to="/pretraga" className="block aspect-[4/3] border border-dashed border-border flex items-center justify-center hover:border-primary text-muted-foreground hover:text-primary transition-colors">
+                      <Link to="/pretraga" className="block aspect-[5/4] border border-dashed border-border flex items-center justify-center hover:border-primary text-muted-foreground hover:text-primary transition-colors">
                         <Plus className="w-5 h-5" strokeWidth={1.5} />
                       </Link>
                       <p className="mt-3 text-[10px] font-light uppercase tracking-[0.25em] text-muted-foreground">
