@@ -1,5 +1,6 @@
 import imageCompression from 'browser-image-compression';
 import { watermarkFile } from './watermark';
+import { autoOrderPhotos } from './photoAutoOrder';
 import { supabase } from './supabase';
 
 interface CompressionOptions {
@@ -93,11 +94,16 @@ export const uploadImages = async (
   zone: 'hero' | 'gallery' | 'damage',
   onProgress?: (progress: number) => void
 ): Promise<string[]> => {
+  // Auto-order gallery photos so the best (front-three-quarter, well-lit,
+  // saturated) lands at index 0. Hero/damage zones uploaded in user order
+  // since users typically want to control those explicitly.
+  const ordered = zone === 'gallery' ? await autoOrderPhotos(files).catch(() => files) : files;
+
   const urls: string[] = [];
-  const totalFiles = files.length;
+  const totalFiles = ordered.length;
 
   for (let i = 0; i < totalFiles; i++) {
-    const file = files[i];
+    const file = ordered[i];
     const progress = Math.round(((i + 1) / totalFiles) * 100);
 
     try {

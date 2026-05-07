@@ -21,6 +21,7 @@ import { onImgError, PLACEHOLDER_CAR } from '../../lib/imageFallback';
 import { pushRecent } from '../../lib/recentlyViewed';
 import { VerifiedDealerBadge } from './VerifiedDealerBadge';
 import { ReportListingButton } from './ReportListingButton';
+import { SimilarListings } from './SimilarListings';
 import { ensureConversation, NotAuthedError } from '../../lib/messaging';
 import { useNavigate } from 'react-router-dom';
 import { LeadCaptureModal } from './LeadCaptureModal';
@@ -242,7 +243,22 @@ export const ListingDetail = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxSlides, setLightboxSlides] = useState<{ src: string }[]>([]);
-  const [phoneRevealed, setPhoneRevealed] = useState(false);
+  // S8: persist phone-reveal in localStorage keyed on listing id so refresh
+  // doesn't re-prompt + lead_tracking doesn't double-count.
+  const phoneRevealKey = `vozila_phone_revealed_${id ?? 'unknown'}`;
+  const [phoneRevealed, setPhoneRevealedRaw] = useState<boolean>(() => {
+    try {
+      return typeof window !== 'undefined' && window.localStorage.getItem(phoneRevealKey) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const setPhoneRevealed = (v: boolean) => {
+    setPhoneRevealedRaw(v);
+    try {
+      if (v) window.localStorage.setItem(phoneRevealKey, '1');
+    } catch { /* private mode */ }
+  };
   const [messagingError, setMessagingError] = useState<string | null>(null);
 
   const startMessage = async () => {
@@ -907,6 +923,11 @@ export const ListingDetail = () => {
           </div>
         </div>
       )}
+
+      {/* KNN similar vehicles (Phase 13.x — DB-ranked nearby listings) */}
+      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <SimilarListings listingId={listing.id as string} />
+      </div>
 
       {/* Premium Lightbox - Pitch Black Backdrop, keyboard nav, anti-context-menu */}
       <Lightbox

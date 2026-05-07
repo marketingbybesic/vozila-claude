@@ -8,6 +8,9 @@
 const RUNTIME_VERSION = 'v1';
 const SHELL_CACHE = `vozila-shell-${RUNTIME_VERSION}`;
 const IMG_CACHE = `vozila-img-${RUNTIME_VERSION}`;
+// S11: cacheable third-party image hosts. Add new hosts here when we
+// onboard a CDN; SW won't blindly cache strangers.
+const IMG_HOSTS = ['images.unsplash.com', 'flagcdn.com'];
 const SHELL_URLS = [
   '/',
   '/index.html',
@@ -48,8 +51,8 @@ self.addEventListener('fetch', (event) => {
   // Never intercept the dev server HMR
   if (url.pathname.startsWith('/@vite/')) return;
 
-  // Listing images — cache-first
-  if (url.pathname.startsWith('/img/') || url.hostname === 'images.unsplash.com') {
+  // Listing images — cache-first (local /img + parameterized 3rd-party hosts)
+  if (url.pathname.startsWith('/img/') || IMG_HOSTS.includes(url.hostname)) {
     event.respondWith(cacheFirst(req, IMG_CACHE));
     return;
   }
