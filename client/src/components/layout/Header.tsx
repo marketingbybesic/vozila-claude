@@ -99,7 +99,7 @@ export const Header = () => {
           <button onClick={() => setSearchModalOpen(true)} className="px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300">
             <Search className="h-5 w-5" strokeWidth={1.5} />
           </button>
-          <button onClick={toggleTheme} className="px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300">
+          <button onClick={toggleTheme} aria-label={isDark ? 'Prebaci na svijetlu temu' : 'Prebaci na tamnu temu'} className="px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300">
             {isDark ? <Sun className="h-5 w-5" strokeWidth={1.5} /> : <Moon className="h-5 w-5" strokeWidth={1.5} />}
           </button>
           <Link to="/favorites" className="relative px-3 py-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-all duration-300">

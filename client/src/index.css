@@ -61,8 +61,11 @@
     --muted-foreground: 240 5% 64.9%;
     --accent: 3 90% 10%;
     --accent-foreground: 3 90% 55%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    /* Borders/inputs lifted from 15.9% → 22% L so dividers are perceivable
+       on pitch-black bg. 15.9% gave 1.41:1 contrast (invisible); 22% lands
+       at ~1.96:1 (visible without screaming). */
+    --border: 240 3.7% 22%;
+    --input: 240 3.7% 22%;
     --ring: 3 90% 55%;
   }
 }

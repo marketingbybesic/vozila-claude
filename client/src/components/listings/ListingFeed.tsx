@@ -15,6 +15,7 @@ import { Helmet } from 'react-helmet-async';
 import { onImgError } from '../../lib/imageFallback';
 import { getOptimizedImageUrl, getResponsiveImageSrcset, RESPONSIVE_CARD_SIZES } from '../../lib/imageOptimization';
 import { useFieldDistribution, type DistributionField } from '../../lib/useFieldDistribution';
+import { buildSearchSlug } from '../../lib/searchSlug';
 import { matchScore } from '../../lib/matchScore';
 import { SavedSearchesBar, buildLabel } from '../search/SavedSearches';
 import { getLocationSilently } from '../../lib/locationDefaults';
@@ -994,6 +995,16 @@ export const ListingFeed = () => {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={`Pronađite ${queryState.make || 'vozilo'} ${queryState.model || ''} na Vozila.hr — najvećem hrvatskom auto tržištu. ${totalCount} oglasa.`} />
+        {/* Canonical link: collapse /pretraga?... and /pretraga/:slug
+            duplicates onto a single canonical URL. When meaningful filters
+            are set we prefer the slug form (keyword-rich). */}
+        {(() => {
+          const slug = buildSearchSlug(queryState as any);
+          const canonical = slug
+            ? `https://vozila.hr/pretraga/${slug}`
+            : `https://vozila.hr${categorySlug ? `/${categorySlug}` : '/pretraga'}`;
+          return <link rel="canonical" href={canonical} />;
+        })()}
       </Helmet>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 max-w-[1700px] flex flex-col xl:flex-row gap-8 lg:gap-12">
