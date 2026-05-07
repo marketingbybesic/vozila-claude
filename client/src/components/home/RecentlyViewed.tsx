@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, ChevronRight } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { loadRecent, RecentEntry } from '../../lib/recentlyViewed';
 import { onImgError, PLACEHOLDER_CAR } from '../../lib/imageFallback';
 

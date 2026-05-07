@@ -9,6 +9,7 @@ import { NoviOglasiCarousel } from '../components/home/NoviOglasiCarousel';
 import { RecentlyViewed } from '../components/home/RecentlyViewed';
 import { TrendingSearches } from '../components/home/TrendingSearches';
 import { ListingCard as FeedListingCard } from '../components/listings/ListingFeed';
+import { SEOHeadHome } from '../components/seo/SEOHead';
 
 export const Home = () => {
   const [trendingListings, setTrendingListings] = useState<Listing[]>([]);
@@ -49,6 +50,7 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEOHeadHome />
       {/* Hero Component */}
       <Hero />
 

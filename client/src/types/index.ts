@@ -9,6 +9,9 @@ export interface ListingImage {
 
 export interface Category {
   slug: string;
+  name?: string;
+  name_en?: string;
+  name_hr?: string;
 }
 
 export type ListingStatus = 'draft' | 'active' | 'sold';

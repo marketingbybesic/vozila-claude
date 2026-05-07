@@ -38,7 +38,7 @@ export const PriceIntel = ({ listing }: Props) => {
           for (const f of filters) q = f(q);
           const { data, error } = await q;
           if (error) return [] as number[];
-          return (data || []).map((r: any) => Number(r.price)).filter((p) => p > 0);
+          return (data || []).map((r: any) => Number(r.price)).filter((p: number) => p > 0);
         };
 
         const filterSets: Array<Array<(q: any) => any>> = [];

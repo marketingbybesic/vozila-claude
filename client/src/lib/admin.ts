@@ -97,6 +97,7 @@ export interface AdminListingRow {
   user_id: string | null;
   category_slug: string | null;
   is_featured: boolean | null;
+  featured_tier: string | null;
   featured_until: string | null;
   views_count: number | null;
   created_at: string;

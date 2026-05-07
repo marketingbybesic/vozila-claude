@@ -6,7 +6,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import {
   Calendar, Gauge, Zap, MapPin, Phone, Mail, User,
   TrendingDown, TrendingUp, Minus,
-  MessageCircle, ArrowLeft, AlertCircle, ShieldCheck,
+  MessageCircle, AlertCircle, ShieldCheck,
   Fuel, Sparkles
 } from 'lucide-react';
 import { Listing } from '../../types';
