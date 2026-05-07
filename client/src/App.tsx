@@ -37,6 +37,7 @@ const MakeLanding         = lazy(() => import('./pages/MakeLanding').then(m => (
 const Auctions            = lazy(() => import('./pages/Auctions').then(m => ({ default: m.Auctions })));
 const AuctionDetail       = lazy(() => import('./pages/AuctionDetail').then(m => ({ default: m.AuctionDetail })));
 const Inspector           = lazy(() => import('./pages/Inspector').then(m => ({ default: m.Inspector })));
+const SearchSlugRoute     = lazy(() => import('./pages/SearchSlugRoute').then(m => ({ default: m.SearchSlugRoute })));
 
 const RouteFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -108,6 +109,8 @@ function App() {
                   <Route path="/inspector" element={<Inspector />} />
                   {/* /pretraga — general search with nuqs URL state */}
                   <Route path="/pretraga" element={<ListingFeed />} />
+                  {/* /pretraga/:slug — SEO slug seeds nuqs from URL words (Phase 13) */}
+                  <Route path="/pretraga/:slug" element={<SearchSlugRoute />} />
                   <Route path="/:categorySlug" element={<CategoryRouteGuard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

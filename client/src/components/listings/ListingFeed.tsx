@@ -14,6 +14,7 @@ import { Listing } from '../../types';
 import { Helmet } from 'react-helmet-async';
 import { onImgError } from '../../lib/imageFallback';
 import { getOptimizedImageUrl, getResponsiveImageSrcset, RESPONSIVE_CARD_SIZES } from '../../lib/imageOptimization';
+import { useFieldDistribution, type DistributionField } from '../../lib/useFieldDistribution';
 import { matchScore } from '../../lib/matchScore';
 import { SavedSearchesBar, buildLabel } from '../search/SavedSearches';
 import { getLocationSilently } from '../../lib/locationDefaults';
@@ -401,6 +402,41 @@ const NativeAdSlotEnhanced = () => (
     </div>
   </div>
 );
+
+// --- RANGE HISTOGRAM (real DB-derived distribution, Phase 12) ---
+
+const RANGE_HISTOGRAM_FIELD: Record<string, DistributionField | undefined> = {
+  price: { kind: 'price' },
+  year: { kind: 'year' },
+  mileage: { kind: 'mileage' },
+  power: { kind: 'power' },
+};
+
+const RangeHistogram = ({
+  filterId,
+  categorySlug,
+}: {
+  filterId: string;
+  categorySlug: string | null;
+}) => {
+  const field = RANGE_HISTOGRAM_FIELD[filterId];
+  // For ranges we don't recognize (e.g. registration_year, displacement),
+  // keep the static placeholder bars so the row renders at the right height.
+  const staticBars = [40, 60, 80, 100, 90, 70, 85, 95, 75, 50];
+  const { heights } = useFieldDistribution(field ?? { kind: 'price' }, categorySlug);
+  const bars = field ? heights : staticBars;
+  return (
+    <div className="flex items-end justify-between gap-0.5 h-8 px-1">
+      {bars.map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 bg-primary/20 transition-all duration-300 hover:bg-primary/40"
+          style={{ height: `${Math.max(h, 6)}%` }}
+        />
+      ))}
+    </div>
+  );
+};
 
 // --- MAKE/MODEL CASCADE COMPONENT ---
 
@@ -849,18 +885,9 @@ export const ListingFeed = () => {
 
   const renderFilterInput = (filter: FilterDefinition) => {
     if (filter.type === 'range') {
-      const histogramHeights = [40, 60, 80, 100, 90, 70, 85, 95, 75, 50];
       return (
         <div className="space-y-3">
-          <div className="flex items-end justify-between gap-0.5 h-8 px-1">
-            {histogramHeights.map((height, idx) => (
-              <div
-                key={idx}
-                className="flex-1 bg-primary/20 transition-all duration-300 hover:bg-primary/40"
-                style={{ height: `${height}%` }}
-              />
-            ))}
-          </div>
+          <RangeHistogram filterId={filter.id} categorySlug={categorySlug ?? null} />
           <div className="flex gap-2">
             <input
               type="number"
