@@ -105,5 +105,34 @@ BEGIN
   END IF;
 END $$;
 
+-- ----------------------------------------------------------------------------
+-- 6. S5 hardening: enforce category_slug ⊆ categories.slug at insert time.
+-- The sync trigger sets category_id from category_slug, but a malicious
+-- client could plant a slug that has no matching category row (the trigger
+-- silently leaves category_id null). Reject such inserts so the search-log
+-- + admin queue never see ghost slugs.
+-- ----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.enforce_listing_category_slug()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.category_slug IS NOT NULL THEN
+    IF NOT EXISTS (SELECT 1 FROM categories WHERE slug = NEW.category_slug) THEN
+      RAISE EXCEPTION 'Unknown category_slug: %', NEW.category_slug
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS enforce_listing_category_slug_trg ON listings;
+CREATE TRIGGER enforce_listing_category_slug_trg
+  BEFORE INSERT OR UPDATE OF category_slug ON listings
+  FOR EACH ROW EXECUTE FUNCTION public.enforce_listing_category_slug();
+
+COMMENT ON FUNCTION public.enforce_listing_category_slug() IS
+  'S5: rejects listings.category_slug values that do not exist in categories.slug';
+
 -- Refresh PostgREST schema cache so embeds resolve immediately.
 NOTIFY pgrst, 'reload schema';

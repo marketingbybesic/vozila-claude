@@ -95,6 +95,14 @@ class AnalyticsManager {
   private initMetaPixel(): void {
     if (this.metaPixelLoaded || !this.config.metaPixelId) return;
     if (!this.consent.marketing) return;
+    // S6: whitelist Meta Pixel ID format (digits only) before interpolating
+    // it into a `<script>`. Defense-in-depth: the source is build-time env
+    // today but a future code path may pull it from user-supplied config.
+    if (!/^\d{10,16}$/.test(this.config.metaPixelId)) {
+      // eslint-disable-next-line no-console
+      console.warn('[analytics] metaPixelId failed format check, skipping init');
+      return;
+    }
 
     this.metaPixelLoaded = true;
 

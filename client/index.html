@@ -21,6 +21,11 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Supabase: warm the TLS handshake before the first listings query fires.
+         dns-prefetch is the cheap fallback for browsers that ignore preconnect
+         on cross-origin without crossorigin attribute. -->
+    <link rel="preconnect" href="https://supabase.co" crossorigin>
+    <link rel="dns-prefetch" href="https://supabase.co">
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,900;1,800;1,900&display=swap" rel="stylesheet">
     
     <!-- Primary Meta Tags -->
