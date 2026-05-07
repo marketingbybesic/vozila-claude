@@ -7,6 +7,8 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { ConsentBanner } from './components/analytics/ConsentBanner';
+import { ErrorBoundary } from './components/system/ErrorBoundary';
+import { CategoryRouteGuard } from './components/system/CategoryRouteGuard';
 import { initializeAnalytics } from './lib/analytics';
 import { Home } from './pages/Home';
 import { ListingFeed } from './components/listings/ListingFeed';
@@ -71,6 +73,7 @@ function App() {
             <Header />
 
             <main id="main" className="flex-1 flex flex-col">
+              <ErrorBoundary>
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -105,10 +108,11 @@ function App() {
                   <Route path="/inspector" element={<Inspector />} />
                   {/* /pretraga — general search with nuqs URL state */}
                   <Route path="/pretraga" element={<ListingFeed />} />
-                  <Route path="/:categorySlug" element={<ListingFeed />} />
+                  <Route path="/:categorySlug" element={<CategoryRouteGuard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </ErrorBoundary>
             </main>
 
             <Footer />

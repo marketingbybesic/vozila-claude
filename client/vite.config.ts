@@ -39,6 +39,24 @@ export default defineConfig({
     chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
+        // Split vendor groups so app-only deploys don't bust the heavy
+        // framework/UI chunk caches. Long-tail repeat-visit TTI win.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('@radix-ui')) return 'vendor-radix';
+          if (id.includes('framer-motion')) return 'vendor-framer';
+          if (id.includes('@supabase')) return 'vendor-supabase';
+          if (id.includes('yet-another-react-lightbox')) return 'vendor-lightbox';
+          if (id.includes('react-helmet-async')) return 'vendor-helmet';
+          if (id.includes('lucide-react')) return 'vendor-lucide';
+          if (id.includes('vaul') || id.includes('cmdk') || id.includes('sonner') || id.includes('embla')) return 'vendor-ui-extras';
+          if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod') || id.includes('react-day-picker') || id.includes('date-fns')) return 'vendor-forms';
+          if (id.includes('nuqs')) return 'vendor-nuqs';
+          if (
+            /node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(id)
+          ) return 'vendor-react';
+          return 'vendor-misc';
+        },
         chunkFileNames: 'js/[name]-[hash].js',
         entryFileNames: 'js/[name]-[hash].js',
         assetFileNames: (assetInfo) => {

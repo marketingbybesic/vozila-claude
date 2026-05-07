@@ -1,6 +1,14 @@
-# Static SPA routing for Hostinger (overrides any inherited Passenger config)
+# vozila.hr — Hostinger Apache config.
+# - SPA rewrite (proven working with Hostinger Passenger override)
+# - Security headers mirroring public/_headers
+# - Long-cache fingerprinted assets, no-cache index/sw.js
+
 Options -MultiViews
 RewriteEngine On
+
+# Force HTTPS (Hostinger SSL)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
 # Serve real files/dirs as-is
 RewriteCond %{REQUEST_FILENAME} -f [OR]
@@ -10,17 +18,45 @@ RewriteRule ^ - [L]
 # All other paths -> index.html (client-side routing)
 RewriteRule ^ index.html [L]
 
-# Cache static assets aggressively
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType image/jpeg "access plus 1 year"
-  ExpiresByType image/png "access plus 1 year"
-  ExpiresByType image/svg+xml "access plus 1 year"
-  ExpiresByType text/css "access plus 1 month"
-  ExpiresByType application/javascript "access plus 1 month"
+# Security headers (Hostinger has mod_headers enabled)
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(self), camera=(), microphone=(), payment=(self), interest-cohort=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' blob: data: https://*.supabase.co https://*.supabase.in https://www.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://images.unsplash.com https://flagcdn.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://*.analytics.google.com https://connect.facebook.net https://www.facebook.com; frame-src 'self' https://www.googletagmanager.com https://www.facebook.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
 </IfModule>
 
-# Gzip
-<IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+# Cache fingerprinted assets aggressively, never cache index.html / sw.js
+<IfModule mod_headers.c>
+  <FilesMatch "\.(?:js|mjs|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|otf)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "^(index\.html|sw\.js)$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
 </IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml application/xml font/ttf font/otf application/wasm
+</IfModule>
+
+# MIME safety
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType application/wasm .wasm
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+# Block hidden + sensitive files
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+RedirectMatch 404 /\.env
+RedirectMatch 404 /\.git

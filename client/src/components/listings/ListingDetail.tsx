@@ -265,11 +265,23 @@ export const ListingDetail = () => {
       if (!id) return;
       
       try {
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('listings')
           .select('*, categories(name, slug), listing_images(id, url, is_primary, sort_order), owner:profiles!listings_user_id_fkey(id, company_name, logo_url, subscription_tier, subscription_status, is_verified, dealer_verified)')
           .eq('id', id)
           .single();
+
+        // PGRST200: live DB missing listings_user_id_fkey on profiles.
+        // Migration 012 declares it; until run, fall back to no-owner query.
+        if (error && (error as any).code === 'PGRST200') {
+          const fallback = await supabase
+            .from('listings')
+            .select('*, categories(name, slug), listing_images(id, url, is_primary, sort_order)')
+            .eq('id', id)
+            .single();
+          data = fallback.data as any;
+          error = fallback.error;
+        }
 
         if (error) throw error;
         const normalized = {
